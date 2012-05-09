@@ -99,9 +99,21 @@ for csvrow in csvreader:
 		elfEmitter = SubElement(elfset, 'feature', {'name':'Emitter'})
 		elfEmitter.text = curr_turn_emitter
 		elfResources = SubElement(elfset, 'feature', {'name':'Resources'})
-		elfResources.text = curr_turn_res
-		elfBuildups = SubElement(elfset, 'feature', {'name':'Buildups'})
-		elfBuildups.text = curr_turn_builds
+		elfResources.text = curr_turn_res.split("; unknown=")[0]
+		elfBuildups = SubElement(elfset, 'feature', {'name':'Developments'})
+		# To parse and (re)present in a suitable manner !
+		curr_parsed_turn_builds = ""
+		if len(curr_turn_builds) > 0:
+			for item in curr_turn_builds.split("];"):
+				if ']' not in item:
+					item += ']'
+				curr_parsed_turn_builds += item.split("=")[0]
+				curr_parsed_turn_builds += "="
+				curr_parsed_turn_builds += str(len(set(eval(item.split("=")[1].replace("; ", ",")))))
+				curr_parsed_turn_builds += "; "
+		curr_parsed_turn_builds = curr_parsed_turn_builds.strip("; ")
+		#print curr_parsed_turn_builds
+		elfBuildups.text = curr_parsed_turn_builds
 		elfComments = SubElement(elfset, 'feature', {'name':'Comments'})
 		elfComments.text = 'Please write in remarks...'
 		pos = SubElement(unit, 'positioning')
