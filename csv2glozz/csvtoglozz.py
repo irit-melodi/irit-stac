@@ -31,7 +31,9 @@ csvreader = csv.reader(incsvfile, delimiter='\t')
 firstcsvrow = csvreader.next()
 dialoguetext = ' ' # for the .ac file
 i=0
-
+nb_dialogues = 0
+dialog_leftborders = []
+dialog_rightborders = []
 for csvrow in csvreader:
 	i += 1
 	if csvrow != firstcsvrow:
@@ -78,6 +80,7 @@ for csvrow in csvreader:
 		typendpos = SubElement(typpos, 'end')
 		typactualendpos = SubElement(typendpos, 'singlePosition', {'index':str(len(dialoguetext)-1)})
 		# .aa actual pre-annotations (Turn ID, Timestamp, Emitter)
+		# a "Dialogue" Unit should be added, that is, Turns between Server's contributions containing "rolled"
 		unit = SubElement(root, 'unit', {'id':'stac_'+str(int(time.mktime(datetime.datetime.now().timetuple())+i))})
 		metadata = SubElement(unit, 'metadata')
 		author = SubElement(metadata, 'author')
@@ -151,6 +154,63 @@ for csvrow in csvreader:
 				sactualstpos = SubElement(sstartpos, 'singlePosition', {'index':str(seg_leftborders[k]+1)})
 				sendpos = SubElement(spos, 'end')
 				sactualendpos = SubElement(sendpos, 'singlePosition', {'index':str(seg_rightborders[k])})
+	if curr_turn_emitter == "Server" and "rolled a" in curr_turn_text: # dialogue right boundary
+	# hence, a dialogue is between the beginning and such a text (minus server's turns), or between such a text + 1 and another such text (minus server's turns).
+#		print nb_dialogues
+		print dialog_leftborders
+		print dialog_rightborders
+		if nb_dialogues == 0:
+			dialog_leftborders = [0]
+			dialog_rightborders = [len(dialoguetext)-1]
+		else:
+			dialog_leftborders.append(dialog_rightborders[-1])
+			dialog_rightborders.append(len(dialoguetext)-1)
+		nb_dialogues += 1
+		# Generate the actual annotation !
+		if dialog_leftborders[-1] != dialog_rightborders[-1]:
+			dialogue = SubElement(root, 'unit', {'id':'stac_'+str(int(time.mktime(datetime.datetime.now().timetuple())+100000+nb_dialogues))})
+			dmetadata = SubElement(dialogue, 'metadata')
+			dauthor = SubElement(dmetadata, 'author')
+			dauthor.text='stac'
+			dcreation_date = SubElement(dmetadata, 'creation-date')
+			dcreation_date.text = str(int(time.mktime(datetime.datetime.now().timetuple())+100000*i+nb_dialogues))
+			dlast_modif = SubElement(dmetadata, 'lastModifier')
+			dlast_modif.text = 'n/a'
+			dlast_modif_date = SubElement(dmetadata, 'lastModificationDate')
+			dlast_modif_date.text = '0'
+			dcharact = SubElement(dialogue, 'characterisation')
+			deltype = SubElement(dcharact, 'type')
+			deltype.text = 'Dialogue'
+			delfset = SubElement(dcharact, 'featureSet')
+			dpos = SubElement(dialogue, 'positioning')
+			dstartpos = SubElement(dpos, 'start')
+			dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_leftborders[-1])})
+			dendpos = SubElement(dpos, 'end')
+			dactualendpos = SubElement(dendpos, 'singlePosition', {'index':str(dialog_rightborders[-1])})
+# last dialogue :
+dialogue = SubElement(root, 'unit', {'id':'stac_'+str(int(time.mktime(datetime.datetime.now().timetuple())+100000+nb_dialogues+1))})
+dmetadata = SubElement(dialogue, 'metadata')
+dauthor = SubElement(dmetadata, 'author')
+dauthor.text='stac'
+dcreation_date = SubElement(dmetadata, 'creation-date')
+dcreation_date.text = str(int(time.mktime(datetime.datetime.now().timetuple())+100000*i+nb_dialogues+1))
+dlast_modif = SubElement(dmetadata, 'lastModifier')
+dlast_modif.text = 'n/a'
+dlast_modif_date = SubElement(dmetadata, 'lastModificationDate')
+dlast_modif_date.text = '0'
+dcharact = SubElement(dialogue, 'characterisation')
+deltype = SubElement(dcharact, 'type')
+deltype.text = 'Dialogue'
+delfset = SubElement(dcharact, 'featureSet')
+dpos = SubElement(dialogue, 'positioning')
+dstartpos = SubElement(dpos, 'start')
+dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_rightborders[-1]+1)})
+dendpos = SubElement(dpos, 'end')
+dactualendpos = SubElement(dendpos, 'singlePosition', {'index':str(len(dialoguetext))})
+for b in range(0,len(dialog_leftborders)):
+	print ">>>>>>>>>>>"
+	print dialoguetext[dialog_leftborders[b]:dialog_rightborders[b]]
+	print "<<<<<<<<<<<"
 outtxtfile = codecs.open(sys.argv[1].split(".")[0]+".ac", "w")
 outtxtfile.write(dialoguetext)
 outtxtfile.close()
