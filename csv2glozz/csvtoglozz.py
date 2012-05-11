@@ -34,10 +34,14 @@ i=0
 nb_dialogues = 0
 dialog_leftborders = []
 dialog_rightborders = []
+csvrows = []
+
 for csvrow in csvreader:
+	csvrows.append(csvrow)
+for r in range(0,len(csvrows)):
 	i += 1
-	if csvrow != firstcsvrow:
-		[curr_turn_id, curr_turn_timestamp, curr_turn_emitter, curr_turn_res, curr_turn_builds, curr_turn_text, curr_turn_annot, curr_turn_comment] = csvrow
+	if csvrows[r] != firstcsvrow:
+		[curr_turn_id, curr_turn_timestamp, curr_turn_emitter, curr_turn_res, curr_turn_builds, curr_turn_text, curr_turn_annot, curr_turn_comment] = csvrows[r]
 	if curr_turn_emitter != "Server":
 		dialoguetext +=curr_turn_id+' : '+curr_turn_emitter+' : '
 		seg_leftborders = [len(dialoguetext)-1]
@@ -131,7 +135,7 @@ for csvrow in csvreader:
 		print seg_leftborders
 		print seg_rightborders
 		print nosegs
-		print csvrow
+		print csvrows[r]
 		print "##"
 		if len(seg_leftborders) == len(seg_rightborders):
 			for k in range(0,len(seg_leftborders)):
@@ -156,6 +160,18 @@ for csvrow in csvreader:
 				sactualendpos = SubElement(sendpos, 'singlePosition', {'index':str(seg_rightborders[k])})
 	if curr_turn_emitter == "Server" and "rolled a" in curr_turn_text: # dialogue right boundary
 	# hence, a dialogue is between the beginning and such a text (minus server's turns), or between such a text + 1 and another such text (minus server's turns).
+		dice_rollings = []
+		trades = []
+		for rr in range(r+1,len(csvrows)):
+			if csvrows[rr][2] == 'Server':
+				if 'rolled a' in csvrows[rr][5]:
+					# append to Dice_rolling feature values
+					dice_rollings.append(csvrows[rr][5])
+				if 'gets' in csvrows[rr][5]:
+					# append to Trades feature values
+					trades.append(csvrows[rr][5])
+			else:
+				break
 #		print nb_dialogues
 		print dialog_leftborders
 		print dialog_rightborders
@@ -182,6 +198,18 @@ for csvrow in csvreader:
 			deltype = SubElement(dcharact, 'type')
 			deltype.text = 'Dialogue'
 			delfset = SubElement(dcharact, 'featureSet')
+			delfDiceroll = SubElement(delfset, 'feature', {'name':'Dice_rolling'})
+			delfDiceroll.text = curr_turn_text
+			# extra rollings
+			if len(dice_rollings) >= 1:
+				for roll in range(0,len(dice_rollings)):
+					delfDiceroll.text += ' '+dice_rollings[roll]
+			delfTrades = SubElement(delfset, 'feature', {'name':'Trades'})
+			delfTrades.text = ''
+			# extra trades
+			if len(trades) >= 1:
+				for trade in range(0,len(trades)):
+					delfTrades.text += ' '+trades[trade]
 			dpos = SubElement(dialogue, 'positioning')
 			dstartpos = SubElement(dpos, 'start')
 			dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_leftborders[-1])})
