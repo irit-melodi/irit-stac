@@ -35,7 +35,7 @@ nb_dialogues = 0
 dialog_leftborders = []
 dialog_rightborders = []
 csvrows = []
-
+r_old = 0
 for csvrow in csvreader:
 	csvrows.append(csvrow)
 for r in range(0,len(csvrows)):
@@ -161,20 +161,29 @@ for r in range(0,len(csvrows)):
 	if curr_turn_emitter == "Server" and "rolled a" in curr_turn_text: # dialogue right boundary
 	# hence, a dialogue is between the beginning and such a text (minus server's turns), or between such a text + 1 and another such text (minus server's turns).
 		dice_rollings = []
-		trades = []
+		gets = []
+		trades = ''
+		#trades = []
 		for rr in range(r+1,len(csvrows)):
 			if csvrows[rr][2] == 'Server':
 				if 'rolled a' in csvrows[rr][5]:
 					# append to Dice_rolling feature values
 					dice_rollings.append(csvrows[rr][5])
 				if 'gets' in csvrows[rr][5]:
-					# append to Trades feature values
-					trades.append(csvrows[rr][5])
+					# append to Gets feature values
+					gets.append(csvrows[rr][5])
 			else:
+				break
+		print "r_old : " + str(r_old)
+		for rrr in range(r, r_old-1, -1):
+			if csvrows[rrr][2] == 'Server' and 'traded' in csvrows[rrr][5]:
+				# append to Trades feature values
+				trades = csvrows[rrr][5]
 				break
 #		print nb_dialogues
 		print dialog_leftborders
 		print dialog_rightborders
+		r_old = r
 		if nb_dialogues == 0:
 			dialog_leftborders = [0]
 			dialog_rightborders = [len(dialoguetext)-1]
@@ -204,12 +213,19 @@ for r in range(0,len(csvrows)):
 			if len(dice_rollings) >= 1:
 				for roll in range(0,len(dice_rollings)):
 					delfDiceroll.text += ' '+dice_rollings[roll]
+			delfGets = SubElement(delfset, 'feature', {'name':'Gets'})
+			delfGets.text = ''
+			# extra gets
+			if len(gets) >= 1:
+				for get in range(0,len(gets)):
+					delfGets.text += ' '+gets[get]
 			delfTrades = SubElement(delfset, 'feature', {'name':'Trades'})
 			delfTrades.text = ''
 			# extra trades
-			if len(trades) >= 1:
-				for trade in range(0,len(trades)):
-					delfTrades.text += ' '+trades[trade]
+			#if len(trades) >= 1:
+			#	for trade in range(0,len(trades)):
+			#		delfTrades.text += ' '+trades[trade]
+			delfTrades.text = trades
 			dpos = SubElement(dialogue, 'positioning')
 			dstartpos = SubElement(dpos, 'start')
 			dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_leftborders[-1])})
