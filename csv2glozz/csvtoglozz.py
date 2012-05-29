@@ -48,6 +48,8 @@ for r in range(0,len(csvrows)):
 		seg_rightborders = [] # For dealing with ampersands which stand for segments' right borders
 		# .ac buffer
 		dialoguetext +=curr_turn_text+' '
+		#dialog_leftborders = [0]
+		#dialog_rightborders = [len(dialoguetext)-1]
 		nosegs = 1
 		for d in dialoguetext:
 			if d == '&':
@@ -231,26 +233,31 @@ for r in range(0,len(csvrows)):
 			dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_leftborders[-1])})
 			dendpos = SubElement(dpos, 'end')
 			dactualendpos = SubElement(dendpos, 'singlePosition', {'index':str(dialog_rightborders[-1])})
-# last dialogue :
-dialogue = SubElement(root, 'unit', {'id':'stac_'+str(int(time.mktime(datetime.datetime.now().timetuple())+100000+nb_dialogues+1))})
-dmetadata = SubElement(dialogue, 'metadata')
-dauthor = SubElement(dmetadata, 'author')
-dauthor.text='stac'
-dcreation_date = SubElement(dmetadata, 'creation-date')
-dcreation_date.text = str(int(time.mktime(datetime.datetime.now().timetuple())+100000*i+nb_dialogues+1))
-dlast_modif = SubElement(dmetadata, 'lastModifier')
-dlast_modif.text = 'n/a'
-dlast_modif_date = SubElement(dmetadata, 'lastModificationDate')
-dlast_modif_date.text = '0'
-dcharact = SubElement(dialogue, 'characterisation')
-deltype = SubElement(dcharact, 'type')
-deltype.text = 'Dialogue'
-delfset = SubElement(dcharact, 'featureSet')
-dpos = SubElement(dialogue, 'positioning')
-dstartpos = SubElement(dpos, 'start')
-dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_rightborders[-1]+1)})
-dendpos = SubElement(dpos, 'end')
-dactualendpos = SubElement(dendpos, 'singlePosition', {'index':str(len(dialoguetext))})
+# last dialogue : only if it doesn't end in a Server's statement !!
+
+if len(dialog_rightborders) == 0 or dialog_rightborders[-1] != len(dialoguetext)-1:
+	dialogue = SubElement(root, 'unit', {'id':'stac_'+str(int(time.mktime(datetime.datetime.now().timetuple())+100000+nb_dialogues+1))})
+	dmetadata = SubElement(dialogue, 'metadata')
+	dauthor = SubElement(dmetadata, 'author')
+	dauthor.text='stac'
+	dcreation_date = SubElement(dmetadata, 'creation-date')
+	dcreation_date.text = str(int(time.mktime(datetime.datetime.now().timetuple())+100000*i+nb_dialogues+1))
+	dlast_modif = SubElement(dmetadata, 'lastModifier')
+	dlast_modif.text = 'n/a'
+	dlast_modif_date = SubElement(dmetadata, 'lastModificationDate')
+	dlast_modif_date.text = '0'
+	dcharact = SubElement(dialogue, 'characterisation')
+	deltype = SubElement(dcharact, 'type')
+	deltype.text = 'Dialogue'
+	delfset = SubElement(dcharact, 'featureSet')
+	dpos = SubElement(dialogue, 'positioning')
+	dstartpos = SubElement(dpos, 'start')
+	if len(dialog_leftborders) >= 1:
+		dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(dialog_leftborders[-1])})
+	else:
+		dactualstpos = SubElement(dstartpos, 'singlePosition', {'index':str(0)})
+	dendpos = SubElement(dpos, 'end')
+	dactualendpos = SubElement(dendpos, 'singlePosition', {'index':str(len(dialoguetext))})
 for b in range(0,len(dialog_leftborders)):
 	print ">>>>>>>>>>>"
 	print dialoguetext[dialog_leftborders[b]:dialog_rightborders[b]]
