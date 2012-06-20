@@ -108,18 +108,165 @@ class Game(object):
 class Dialogue(object):
 	def __init__(self, id, span, turns, players, Trades):
 		self.__ID = id
-		self.__Span.Start_pos = span.Start_pos
-		self.__Span.End_pos = span.End_pos
+		self.__Span = span
 		import copy
 		copy.deepcopy(self.__Turns, turns)
 		copy.deepcopy(self.__Players, players) 
 		del copy
+		self.Trades = Trades
+	@property
+	def ID(self):
+		return self.__ID
+	@property
+	def Span(self):
+		return self.__Span
+	@Span.setter
+	def Span(self, span):
+		if not isinstance(span, Span):
+			raise TypeError("Dialogue.Span:: Error: must be a 'Span' object instance!")
+		self.__Span = span
+	@Span.deleter
+	def Span(self):
+		raise TypeError("Dialogue.Span:: Error: cannot delete property!")
+	@property
+	def Turns(self):
+		return self.__Turns
+	@Turns.setter
+	def Turns(self, liste):
+		if not isinstance(liste, list):
+			raise TypeError("Dialogue.Turns:: Error: must be a list!")
+		import copy
+		copy.deepcopy(self.__Turns, liste)
+		del copy
+	@Turns.deleter
+	def Turns(self):
+		raise TypeError("Dialogue.Turns:: Error: cannot delete property!")
+	@property
+	def Players(self):
+		return self.__Players
+	@Players.setter
+	def Players(self, liste):
+		if not isinstance(liste, list):
+			raise TypeError("Dialogue.Players:: Error: must be a list!")
+		import copy
+		copy.deepcopy(self.__Players, liste)
+		del copy
+	@Players.deleter
+	def Players(self):
+		raise TypeError("Dialogue.Players:: Error: cannot delete property!")
+
 # Add getters and setters for the attributes with are (lists of) other class instances!
 
 class Trade(object):
 	def __init__(self, Gets, Dice_rolling, Exchange):
-		self.__Gets.Players = Gets.Players
+		import copy
+		copy.deepcopy(self.Gets, Gets)
+		copy.deepcopy(self.Dice_rolling, Dice_rolling)
+		del copy
+		self.Exchange = Exchange
 
+class Get(object):
+	def __init__(self, player, Resources):
+		self.__Player = player
+		import copy
+		copy.deepcopy(self.__Resources, Resources)
+		del copy
+	@property
+	def Player(self):
+		return self.__Player
+	@Player.setter
+	def Player(self, player):
+		if not isinstance(player, str):
+			raise TypeError("Get.Player:: Error: must be a string!")
+		self.__Player = player
+	@Player.deleter
+	def Player(self):
+		self.__Player = None
+	@property
+	def Resources(self):
+		return self.__Resources
+	@Resources.setter
+	def Resources(self, Res):
+		if not isinstance(Res, list):
+			raise TypeError("Get.Resources:: Error: must be a list!")
+		import copy
+		copy.deepcopy(self.__Resources, Res)
+		del copy
+	@Resources.deleter
+	def Resources(self):
+		self.__Resources = []
+
+class Die_roll(object):
+	def __init__(self, player, Dice):
+		self.__Player = player
+		import copy
+		copy.deepcopy(self.__Dice, Dice)
+		del copy
+	@property
+	def Player(self):
+		return self.__Player
+	@Player.setter
+	def Player(self, player):
+		if not isinstance(player, str):
+			raise TypeError("Die_roll.Player:: Error: must be a str!")
+		self.__Player = player
+	@Player.deleter
+	def Player(self):
+		self.__Player = None
+	@property
+	def Dice(self):
+		return self.__Dice
+	@Dice.setter
+	def Dice(self, dicelist):
+		if not isinstance(dicelist, list):
+			raise TypeError("Die_roll.Dice:: Error: must be a list!")
+		import copy
+		copy.deepcopy(self.__Dice, dicelist)
+		del copy
+	@Dice.deleter
+	def Dice(self):
+		self.__Dice =  []
+
+class Exchange(object):
+	def __init__(self, fromplayer, toplayer, fromres, tores):
+		self.__From_player = fromplayer
+		self.__To_player = toplayer
+		self.__From_resource = fromres
+		self.__To_resource = tores
+	@property
+	def From_player(self):
+		return self.__From_player
+	@From_player.setter
+	def From_player(self, fplayer):
+		if not isinstance(fplayer, str):
+			raise TypeError("Exchange.From_player:: Error: must be a str!")
+		self.__From_player = fplayer
+	@From_player.deleter
+	def From_player(self):
+		self.__From_player = None
+	@property
+	def To_player(self):
+		return self.__To_player
+	@To_player.setter
+	def To_player(self, tplayer):
+		if not isinstance(tplayer, str):
+			raise TypeError("Exchange.To_player:: Error: must be a str!")
+		self.__To_player = tplayer
+	@To_player.deleter
+	def To_player(self):
+		self.__To_player = None
+	@property
+	def From_resource(self):
+		return self.__From_resource
+	@From_resource.setter
+	def From_resource(self, fres):
+		if not isinstance(fres, Resource):
+			raise TypeError("Exchange.From_resource:: Error: must be a Resource instance!")
+		self.__From_Resource = fres
+	@From_resource.deleter
+	def From_resource(self):
+		self.__From_resource = None
+		
 # We should be doing it bottom up, from the most detailed classes to the most "enclosing" ones!
 
 
