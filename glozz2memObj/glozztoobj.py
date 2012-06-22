@@ -50,22 +50,22 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 					-- 'Kind': string
 					-- 'Amount': number
 	-- 'Comments': string
--- a "Turn" instance contains several "Segment" object instances
--- a "Segment" instance has the following attributes:
-	-- 'ID': number
+-- a "Turn" instance contains several "Offer/Other/Counteroffer/Strategic_comment/Accept/Refusal" object instances, which are inherited from the "Segment" class
+-- such an instance has the following attributes:
+	-- 'ID': number % inherited from the "Segment" class
 	-- 'Receiver': string
 	-- 'Surface_act_type': string
 	-- 'Resources': list % of Resource.IDs; can be []
 	-- 'Preferences': list % of Preference.IDs; can be []
-	-- 'Span': "Span" instance
--- a "Segment" instance contains zero, one or several "Resource" object instances
+	-- 'Span': "Span" instance % inherited from the "Segment" class
+-- such an instance instance contains zero, one or several "Resource" object instances
 	-- an "VerbalizedResource" object which inherits the "Resource" class and has the following attributes:
-		-- 'ID': number
-		-- 'Span': "Span" instance
+		-- 'ID': number % inherited from the "Resource" class
+		-- 'Span': "Span" instance 
 		-- 'Status': string
-		-- 'Kind': string
-		-- 'Quantity': string
--- a "Segment" instance contains zero, one or several "Preference" object instances
+		-- 'Kind': string % inherited from the "Resource" class
+		-- 'Quantity': string % inherited from the "Resource" class
+-- such an instance instance contains zero, one or several "Preference" object instances
 	-- a "Preference" object has the following attributes:
 		-- 'ID': number
 		-- 'Span': "Span" instance
@@ -258,8 +258,8 @@ class Exchange(object):
 		return self.__From_resource
 	@From_resource.setter
 	def From_resource(self, fres):
-		if not isinstance(fres, Resource):
-			raise TypeError("Exchange.From_resource:: Error: must be a Resource instance!")
+		if not isinstance(fres, VerbalizedResource):
+			raise TypeError("Exchange.From_resource:: Error: must be a VerbalizedResource instance!")
 		self.__From_Resource = fres
 	@From_resource.deleter
 	def From_resource(self):
@@ -269,8 +269,8 @@ class Exchange(object):
 		return self.__To_resource
 	@To_resource.setter
 	def To_resource(self, tres):
-		if not isinstance(tres, Resource):
-			raise TypeError("Exchange.To_resource:: Error: must be a Resource instance!")
+		if not isinstance(tres, VerbalizedResource):
+			raise TypeError("Exchange.To_resource:: Error: must be a VerbalizedResource instance!")
 		self.__To_Resource = tres
 	@From_resource.deleter
 	def To_resource(self):
@@ -298,6 +298,7 @@ class Turn(object):
 			raise TypeError("Turn.Span:: Error: must be a Span instance!")
 		self.__Span = span
 	@Span.deleter
+	def Span(self):
 		raise TypeError("Turn.Span:: Error: cannot delete property!")
 	@property
 	def Segments(self):
@@ -320,6 +321,7 @@ class Turn(object):
 			raise TypeError("Turn.State:: Error: has to be a State instance!")
 		self.__State = state
 	@State.deleter
+	def State(self):
 		raise TypeError("Turn.State:: Error: cannot delete property!")
 	# I think what follows is legitimate because each Turn can only have one single State instance
 	@property
@@ -328,8 +330,180 @@ class Turn(object):
 	@property
 	def Resources(self): # wrapper of the State object; shortcut to the Resources
 		return self.__State.Resources
-		
+
+class State(object):
+	def __init__(self, Resources, Developments):
+		import copy
+		copy.deepcopy(self.__Resources, Resources)
+		copy.deepcopy(self.__Developments, Developments)
+		del copy
+	@property
+	def Resources(self):
+		return self.__Resources
+	@Resources.setter
+	def Resources(self, newResources):
+		if not isinstance(newResources, list):
+			raise TypeError("State.Resources:: Error: must be a list!")
+		import copy
+		copy.deepcopy(self.__Resources, newResources)
+		del copy
+	@Resources.deleter
+	def Resources(self):
+		raise TypeError("State.Resources: cannot delete property!")
+	@property
+	def Developments(self):
+		return self.__Developments
+	@Developments.setter
+	def Developments(self, newDevelopments):
+		if not isinstance(newDevelopments, list):
+			raise TypeError("State.Developments:: Error: must be a list!")
+		import copy
+		copy.deepcopy(self.__Developments, newDevelopments)
+		del copy
+	@Developments.deleter
+	def Developments(self):
+		raise TypeError("State.Developments: cannot delete property!")
+
+class Item(object):
+	def __init__(self, id, kind):
+		self.__ID = id
+		self.Kind = kind
+	@property
+	def ID(self):
+		return self.__ID
+# From the "Item" class both "Resource" and "Development" will inherit
+
+class Resource(Item):
+	def __init__(self, id, kind, quantity):
+		Item.__init__(self, id, kind)
+		self.Quantity = quantity
+
+class Development(Item):
+	def __init__(self, id, kind, amount):
+		Item.__init__(self, id, kind)
+		self.Amount = amount
+
+class Segment(object):
+	def __init__(self, id, span):
+		self.__ID = id
+		self.__Span = span
+	@property
+	def ID(self):
+		return self.__ID
+	@ID.deleter
+	def ID(self):
+		raise TypeError("Segment.ID:: Error: cannot delete property!")
+	@property
+	def Span(self):
+		return self.__Span
+	@Span.setter
+	def Span(self, span):
+		if not isinstance(span, Span):
+			raise TypeError("Segment.Span:: Error: must be a Span instance!")
+		self.__Span = span
+	@Span.deleter
+	def Span(self):
+		raise TypeError("Segment.Span:: Error: cannot delete property!")
+
+class Offer(Segment):
+	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+		Segment.__init__(self, id, span)
+		self.Receiver = receiver
+		self.Surface_act_type = surface_act_type
+		import copy
+		copy.deepcopy(self.Resources, Resouces)
+		copy.deepcopy(self.Preferences, Preferences)
+		del copy
+
+class Counteroffer(Segment):
+	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+		Segment.__init__(self, id, span)
+		self.Receiver = receiver
+		self.Surface_act_type = surface_act_type
+		import copy
+		copy.deepcopy(self.Resources, Resouces)
+		copy.deepcopy(self.Preferences, Preferences)
+		del copy
+
+class Accept(Segment):
+	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+		Segment.__init__(self, id, span)
+		self.Receiver = receiver
+		self.Surface_act_type = surface_act_type
+		import copy
+		copy.deepcopy(self.Resources, Resouces)
+		copy.deepcopy(self.Preferences, Preferences)
+		del copy
+
+class Refusal(Segment):
+	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+		Segment.__init__(self, id, span)
+		self.Receiver = receiver
+		self.Surface_act_type = surface_act_type
+		import copy
+		copy.deepcopy(self.Resources, Resouces)
+		copy.deepcopy(self.Preferences, Preferences)
+		del copy
+
+class Strategic_comment(Segment):
+	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+		Segment.__init__(self, id, span)
+		self.Receiver = receiver
+		self.Surface_act_type = surface_act_type
+		import copy
+		copy.deepcopy(self.Resources, Resouces)
+		copy.deepcopy(self.Preferences, Preferences)
+		del copy
+
+class Other(Segment):
+	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+		Segment.__init__(self, id, span)
+		self.Receiver = receiver
+		self.Surface_act_type = surface_act_type
+		import copy
+		copy.deepcopy(self.Resources, Resouces)
+		copy.deepcopy(self.Preferences, Preferences)
+		del copy
+	
+class VerbalizedResource(Resource):
+	def __init__(self, id, span, status, kind, quantity):
+		Resource.__init__(self, id, kind, quantity)
+		self.__Span = span
+		self.Status = status
+	@property
+	def Span(self):
+		return self.__Span
+	@Span.setter
+	def Span(self, span):
+		if not isinstance(span, Span):
+			raise TypeError("VerbalizedResource.Span: Error: must be a Span instance!")
+		self.__Span = span
+	@Span.deleter
+	def Span(self):
+		raise TypeError("VerbalizedResource.Span: Error: cannot delete property!")
+
+class VerbalizedPreference(Segment):
+	def __init__(self, id, span):
+		Segment.__init__(id, span)
+
+class Span(object):
+	def __init__(self, spos, epos):
+		if spos <= epos:
+			self.__Start_pos = spos
+			self.__End_pos = epos
+		else:
+			raise ValueError("Span:: Error: starting position after ending position!")
+	@property
+	def Start_pos(self):
+		return self.__Start_pos
+	@property
+	def End_pos(self):
+		return self.__End_pos
 # We should be doing it bottom up, from the most detailed classes to the most "enclosing" ones!
 
 import sys, codecs
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+
+g = Game(['p1', 'p2', 'p3'], ['d1', 'd2'])
+
+dial1 = Dialogue()
