@@ -73,8 +73,8 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 class Game(object):
 	def __init__(self, players, dialogues):
 		import copy
-		copy.deepcopy(self.__Players, players)
-		copy.deepcopy(self.__Dialogues, dialogues)
+		self.__Players = copy.deepcopy(players)
+		self.__Dialogues = copy.deepcopy(dialogues)
 		del copy
 	@property
 	def Players(self):
@@ -84,7 +84,7 @@ class Game(object):
 		if not isinstance(liste, list):
 			raise TypeError("Game.Players:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Players, liste)
+		self.__Players = copy.deepcopy(liste)
 		del copy
 	@Players.deleter
 	def Players(self):
@@ -97,7 +97,7 @@ class Game(object):
 		if not isinstance(liste, list):
 			raise TypeError("Game.Dialogues:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Dialogues, liste)
+		self.__Dialogues = copy.deepcopy(liste)
 		del copy
 	@Dialogues.deleter
 	def Dialogues(self):
@@ -108,8 +108,8 @@ class Dialogue(object):
 		self.__ID = id
 		self.__Span = span
 		import copy
-		copy.deepcopy(self.__Turns, turns)
-		copy.deepcopy(self.__Players, players) 
+		self.__Turns = copy.deepcopy(turns)
+		self.__Players = copy.deepcopy(players) 
 		del copy
 		self.Trades = Trades
 	@property
@@ -134,7 +134,7 @@ class Dialogue(object):
 		if not isinstance(liste, list):
 			raise TypeError("Dialogue.Turns:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Turns, liste)
+		self.__Turns = copy.deepcopy(liste)
 		del copy
 	@Turns.deleter
 	def Turns(self):
@@ -147,7 +147,7 @@ class Dialogue(object):
 		if not isinstance(liste, list):
 			raise TypeError("Dialogue.Players:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Players, liste)
+		self.__Players = copy.deepcopy(liste)
 		del copy
 	@Players.deleter
 	def Players(self):
@@ -158,8 +158,8 @@ class Dialogue(object):
 class Trade(object):
 	def __init__(self, Gets, Dice_rolling, Exchange):
 		import copy
-		copy.deepcopy(self.Gets, Gets)
-		copy.deepcopy(self.Dice_rolling, Dice_rolling)
+		self.Gets = copy.deepcopy(Gets)
+		self.Dice_rolling = copy.deepcopy(Dice_rolling)
 		del copy
 		self.Exchange = Exchange
 
@@ -167,7 +167,7 @@ class Get(object):
 	def __init__(self, player, Resources):
 		self.__Player = player
 		import copy
-		copy.deepcopy(self.__Resources, Resources)
+		self.__Resources = copy.deepcopy(Resources)
 		del copy
 	@property
 	def Player(self):
@@ -188,7 +188,7 @@ class Get(object):
 		if not isinstance(Res, list):
 			raise TypeError("Get.Resources:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Resources, Res)
+		self.__Resources = copy.deepcopy(Res)
 		del copy
 	@Resources.deleter
 	def Resources(self):
@@ -198,7 +198,7 @@ class Die_roll(object):
 	def __init__(self, player, Dice):
 		self.__Player = player
 		import copy
-		copy.deepcopy(self.__Dice, Dice)
+		self.__Dice = copy.deepcopy(Dice)
 		del copy
 	@property
 	def Player(self):
@@ -219,7 +219,7 @@ class Die_roll(object):
 		if not isinstance(dicelist, list):
 			raise TypeError("Die_roll.Dice:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Dice, dicelist)
+		self.__Dice = copy.deepcopy(dicelist)
 		del copy
 	@Dice.deleter
 	def Dice(self):
@@ -281,7 +281,7 @@ class Turn(object):
 		self.__ID = id
 		self.__Span = span
 		import copy
-		copy.deepcopy(self.__Segments, Segments)
+		self.__Segments = copy.deepcopy(Segments)
 		del copy
 		self.Emitter = emitter
 		self.__State = state
@@ -334,8 +334,8 @@ class Turn(object):
 class State(object):
 	def __init__(self, Resources, Developments):
 		import copy
-		copy.deepcopy(self.__Resources, Resources)
-		copy.deepcopy(self.__Developments, Developments)
+		self.__Resources = copy.deepcopy(Resources)
+		self.__Developments = copy.deepcopy(Developments)
 		del copy
 	@property
 	def Resources(self):
@@ -345,7 +345,7 @@ class State(object):
 		if not isinstance(newResources, list):
 			raise TypeError("State.Resources:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Resources, newResources)
+		self.__Resources = copy.deepcopy(newResources)
 		del copy
 	@Resources.deleter
 	def Resources(self):
@@ -358,7 +358,7 @@ class State(object):
 		if not isinstance(newDevelopments, list):
 			raise TypeError("State.Developments:: Error: must be a list!")
 		import copy
-		copy.deepcopy(self.__Developments, newDevelopments)
+		self.__Developments = copy.deepcopy(newDevelopments)
 		del copy
 	@Developments.deleter
 	def Developments(self):
@@ -411,8 +411,8 @@ class Offer(Segment):
 		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		copy.deepcopy(self.Resources, Resouces)
-		copy.deepcopy(self.Preferences, Preferences)
+		self.Resources = copy.deepcopy(Resouces)
+		self.Preferences = copy.deepcopy(Preferences)
 		del copy
 
 class Counteroffer(Segment):
@@ -504,6 +504,65 @@ class Span(object):
 import sys, codecs
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
-g = Game(['p1', 'p2', 'p3'], ['d1', 'd2'])
+sd1 = Span(1, 400)
+sd2 = Span(401, 750)
 
-dial1 = Dialogue()
+sr1 = Span(423, 452)
+sr2 = Span(582, 595)
+
+vr1 = VerbalizedResource(1006, sr1, 'Givable', 'clay', '3')
+vr2 = VerbalizedResource(1007, sr2, 'Receivable', 'wood', '?')
+
+d11 = Die_roll('p1', [2, 4])
+d12 = Die_roll('p2', [1, 6])
+
+d21 = Die_roll('p1', [1, 3])
+d31 = Die_roll('p3', [2, 6])
+
+ex2 = Exchange('p1', 'p3', vr1, vr2)
+
+r111 = Resource(1001, 'clay', '2')
+r112 = Resource(1002, 'sheep', '1')
+r121 = Resource(1003, 'wheat', '4')
+r211 = Resource(1004, 'clay', '3')
+r311 = Resource(1005, 'wood', '1')
+
+g11 = Get('p1', [r111, r112])
+g12 = Get('p2', [r121])
+
+g21 = Get('p1', [r211])
+g31 = Get('p3', [r311])
+
+t1 = Trade([g11, g12], [d11, d12], None)
+t2 = Trade([g21], [d21], ex2)
+t3 = Trade([g31], [d31], None)
+
+# To complete the initialization of the Turn objects (hence, Segment and State objects).
+
+tu11 = Turn(11, st11, )
+tu12 = Turn(12, st12, )
+tu21 = Turn(21, st21, )
+tu22 = Turn(22, st22, )
+tu23 = Turn(23, st23, )
+tu24 = Turn(24, st24, )
+
+dial1 = Dialogue(1, sd1, [tu11.ID, tu12.ID], ['p1', 'p2'], [t1])
+
+dial2 = Dialogue(2, sd2, [tu21.ID, tu22.ID, tu23.ID, tu24.ID], ['p1', 'p3'], [t2, t3])
+
+g = Game(['p1', 'p2', 'p3'], [dial1.ID, dial2.ID])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
