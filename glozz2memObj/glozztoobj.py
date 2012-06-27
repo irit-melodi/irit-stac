@@ -5,15 +5,14 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 
 -- a game is an instance of a "Game" object, with the following attributes:
 	-- 'Players': list % of strings
-	-- 'Dialogues': list % of Dialogue.IDs
--- a "Game" object instance contains several "Dialogue" object instances
+	-- 'Dialogues': list % of "Dialogue" instances
 -- a "Dialogue" object instance has the following attributes:
 	-- 'ID': number
 	-- 'Span': "Span" instance
 		* a "Span" object has the following attributes:
 			-- 'Start_pos': number
 			-- 'End_pos': number
-	-- 'Turns': list % of Turn.IDs
+	-- 'Turns': list % of "Turn" instances
 	-- 'Players': list % of strings
 	-- 'Trades': list of "Trade" instances
 		* a "Trade" object has the following attributes:
@@ -35,7 +34,7 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 -- a "Turn" object instance has the following attributes:
 	-- 'ID': number
 	-- 'Span': "Span" instance
-	-- 'Segments': list % of Segment.IDs
+	-- 'Segments': list % of instances of objects inheriting the "Segment" class
 	-- 'Emitter': string
 	-- 'State': "State" instance
 		* a "State" object has the following attributes:
@@ -55,20 +54,32 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 	-- 'ID': number % inherited from the "Segment" class
 	-- 'Receiver': string
 	-- 'Surface_act_type': string
-	-- 'Resources': list % of Resource.IDs; can be []
-	-- 'Preferences': list % of Preference.IDs; can be []
+	-- 'Resources': list % of "VerbalizedResource" instances; can be []
+	-- 'Preferences': list % of "VerbalizedPreference" instances; can be []
 	-- 'Span': "Span" instance % inherited from the "Segment" class
--- such an instance instance contains zero, one or several "Resource" object instances
-	-- an "VerbalizedResource" object which inherits the "Resource" class and has the following attributes:
+-- such an instance instance contains zero, one or several "VerbalizedResource" object instances
+	-- a "VerbalizedResource" object which inherits the "Resource" class and has the following attributes:
 		-- 'ID': number % inherited from the "Resource" class
 		-- 'Span': "Span" instance 
 		-- 'Status': string
 		-- 'Kind': string % inherited from the "Resource" class
 		-- 'Quantity': string % inherited from the "Resource" class
+	**PLUS, perhaps** "Several_resources" objects, which have the following attributes:
+	-- 'Resources': tuple % of two "VerbalizedResource" instances
+	-- 'Operator': string % in the set: {'AND'; 'OR'}
+	-- 'ID': number
 -- such an instance instance contains zero, one or several "Preference" object instances
 	-- a "Preference" object has the following attributes:
-		-- 'ID': number
-		-- 'Span': "Span" instance
+		-- 'ID': number % inherited from the "Segment" class
+		-- 'Span': "Span" instance % inherited from the "Segment" class
+To add: 
+*DISCOURSE!!*
+
+Each "Game" instance has a global SDRS which, most of the time, is the union of the Dialogue-level SDRSes, except when "Dialogue" SDRSes are linked.
+
+Each "Dialogue" instance has its own vanilla SDRS, which consists of:
+	-- "Relation" objects
+
 '''
 class Game(object):
 	def __init__(self, players, dialogues):
@@ -272,7 +283,7 @@ class Exchange(object):
 		if not isinstance(tres, VerbalizedResource):
 			raise TypeError("Exchange.To_resource:: Error: must be a VerbalizedResource instance!")
 		self.__To_Resource = tres
-	@From_resource.deleter
+	@To_resource.deleter
 	def To_resource(self):
 		self.__To_resource = None
 
@@ -411,7 +422,7 @@ class Offer(Segment):
 		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		self.Resources = copy.deepcopy(Resouces)
+		self.Resources = copy.deepcopy(Resources)
 		self.Preferences = copy.deepcopy(Preferences)
 		del copy
 
@@ -431,8 +442,8 @@ class Accept(Segment):
 		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		copy.deepcopy(self.Resources, Resouces)
-		copy.deepcopy(self.Preferences, Preferences)
+		self.Resources = copy.deepcopy(Resources)
+		self.Preferences = copy.deepcopy(Preferences)
 		del copy
 
 class Refusal(Segment):
@@ -451,8 +462,8 @@ class Strategic_comment(Segment):
 		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		copy.deepcopy(self.Resources, Resouces)
-		copy.deepcopy(self.Preferences, Preferences)
+		self.Resources = copy.deepcopy(Resources)
+		self.Preferences = copy.deepcopy(Preferences)
 		del copy
 
 class Other(Segment):
@@ -461,8 +472,8 @@ class Other(Segment):
 		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		copy.deepcopy(self.Resources, Resouces)
-		copy.deepcopy(self.Preferences, Preferences)
+		self.Resources = copy.deepcopy(Resources)
+		self.Preferences = copy.deepcopy(Preferences)
 		del copy
 	
 class VerbalizedResource(Resource):
@@ -482,9 +493,31 @@ class VerbalizedResource(Resource):
 	def Span(self):
 		raise TypeError("VerbalizedResource.Span: Error: cannot delete property!")
 
+class Several_resources(object):
+	def __init__(self, id, Resources, operator):
+		self.__ID = id
+		import copy
+		self.__Resources = copy.deepcopy(Resources)
+		del copy
+		self.Operator = operator
+	@property
+	def ID(self):
+		return self.__ID
+	@property
+	def Resources(self):
+		return self.__Resources
+	@Resources.setter
+	def Resources(self, ResToAdd):
+		if len(self.__Resources) >= 2:
+			raise TypeError("Several_resources:Resources:: Error: cannot have more than two resources inside!")
+	@Resources.deleter
+	def Resources(self):
+		self.__Resources = (None, None)
+		
+
 class VerbalizedPreference(Segment):
 	def __init__(self, id, span):
-		Segment.__init__(id, span)
+		Segment.__init__(self, id, span)
 
 class Span(object):
 	def __init__(self, spos, epos):
@@ -504,13 +537,14 @@ class Span(object):
 import sys, codecs
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
-sd1 = Span(1, 400)
-sd2 = Span(401, 750)
+sd1 = Span(1, 117)
+sd2 = Span(118, 201)
 
-sr1 = Span(423, 452)
-sr2 = Span(582, 595)
+sr1 = Span(140, 144)
+sr2 = Span(187, 191)
 
 vr1 = VerbalizedResource(1006, sr1, 'Givable', 'clay', '3')
+
 vr2 = VerbalizedResource(1007, sr2, 'Receivable', 'wood', '?')
 
 d11 = Die_roll('p1', [2, 4])
@@ -539,19 +573,129 @@ t3 = Trade([g31], [d31], None)
 
 # To complete the initialization of the Turn objects (hence, Segment and State objects).
 
-tu11 = Turn(11, st11, )
-tu12 = Turn(12, st12, )
-tu21 = Turn(21, st21, )
-tu22 = Turn(22, st22, )
-tu23 = Turn(23, st23, )
-tu24 = Turn(24, st24, )
+ss111 = Span(5, 56)
+ss112 = Span(57, 78)
+ss113 = Span(78, 82)
+ss121 = Span(96, 108)
+ss122 = Span(109, 117)
+ss211 = Span(124, 132)
+ss221 = Span(139, 145)
+ss222 = Span(146, 161)
+ss231 = Span(168, 174)
+ss241 = Span(183, 191)
+ss242 = Span(192, 201)
 
-dial1 = Dialogue(1, sd1, [tu11.ID, tu12.ID], ['p1', 'p2'], [t1])
+st11 = Span(1, 82)
+st12 = Span(83, 117)
 
-dial2 = Dialogue(2, sd2, [tu21.ID, tu22.ID, tu23.ID, tu24.ID], ['p1', 'p3'], [t2, t3])
+st21 = Span(118, 132)
+st22 = Span(133, 161)
+st23 = Span(162, 174)
+st24 = Span(175, 201)
 
-g = Game(['p1', 'p2', 'p3'], [dial1.ID, dial2.ID])
+vr1111 = vr2
+vr1112 = vr1
 
+sevr111 = Several_resources(99111, [vr1111, vr1112], 'OR')
+
+se111 = Offer(9111, ss111, 'p2', 'Question', [sevr111], [])
+se112 = Other(9112, ss112, 'p2', 'Assertion', [], [])
+se113 = Other(9113, ss113, 'p2', 'Assertion', [], [])
+
+se121 = Accept(9121, ss121, 'p1', 'Assertion', [], [])
+se122 = Other(9122, ss122, 'p1', 'Assertion', [], [])
+
+vr2111 = vr1
+vr2311 = vr2
+
+sr3 = Span(168, 174)
+
+vr2312 = VerbalizedResource(12312, sr3, 'Possessed', 'wheat', '?')
+
+sp1 = Span(142, 145)
+
+pr2211 = VerbalizedPreference(22211, sp1)
+
+se211 = Strategic_comment(9211, ss211, 'p3', 'Assertion', [vr2111], [])
+se221 = Other(9221, ss221, 'p1', 'Assertion', [], [pr2211])
+se222 = Other(9222, ss222, 'p1', 'Assertion', [], [])
+se231 = Offer(9231, ss231, 'p3', 'Question', [vr2311, vr2312], [])
+se241 = Accept(9241, ss241, 'p1', 'Assertion', [], [])
+se242 = Other(9242, ss242, 'p1', 'Assertion', [], [])
+
+rs111 = Resource(1011, 'clay', '0')
+rs112 = Resource(1012, 'ore', '1')
+rs113 = Resource(1013, 'sheep', '2')
+rs114 = Resource(1014, 'wheat', '0')
+rs115 = Resource(1015, 'wood', '0')
+
+rs121 = Resource(1021, 'clay', '3')
+rs122 = Resource(1022, 'ore', '0')
+rs123 = Resource(1023, 'sheep', '0')
+rs124 = Resource(1024, 'wheat', '1')
+rs125 = Resource(1025, 'wood', '0')
+
+rs211 = Resource(2011, 'clay', '0')
+rs212 = Resource(2012, 'ore', '3')
+rs213 = Resource(2013, 'sheep', '1')
+rs214 = Resource(2014, 'wheat', '2')
+rs215 = Resource(2015, 'wood', '0')
+
+rs221 = Resource(2021, 'clay', '0')
+rs222 = Resource(2022, 'ore', '3')
+rs223 = Resource(2023, 'sheep', '2')
+rs224 = Resource(2024, 'wheat', '4')
+rs225 = Resource(2025, 'wood', '1')
+
+rs231 = Resource(2031, 'clay', '2')
+rs232 = Resource(2032, 'ore', '1')
+rs233 = Resource(2033, 'sheep', '0')
+rs234 = Resource(2034, 'wheat', '0')
+rs235 = Resource(2035, 'wood', '2')
+
+rs241 = Resource(2031, 'clay', '2')
+rs242 = Resource(2032, 'ore', '1')
+rs243 = Resource(2033, 'sheep', '0')
+rs244 = Resource(2034, 'wheat', '0')
+rs245 = Resource(2035, 'wood', '2')
+
+dev111 = Development(3111, 'roads', '1')
+dev121 = Development(3121, 'settlements', '2')
+dev211 = Development(3211, 'roads', '2')
+dev212 = Development(3212, 'cities', '1')
+dev221 = Development(3221, 'cities', '1')
+dev222 = Development(3222, 'settlements', '2')
+dev231 = Development(3231, 'roads', '2')
+dev232 = Development(3232, 'cities', '1')
+dev241 = Development(3241, 'settlements', '3')
+dev242 = Development(3242, 'cities', '1')
+
+stat11 = State([rs111, rs112, rs113, rs114, rs115], [dev111])
+stat12 = State([rs121, rs122, rs123, rs124, rs125], [dev121])
+stat21 = State([rs211, rs212, rs213, rs214, rs215], [dev211, dev212])
+stat22 = State([rs221, rs222, rs223, rs224, rs225], [dev221, dev222])
+stat23 = State([rs231, rs232, rs233, rs234, rs235], [dev231, dev232])
+stat24 = State([rs241, rs242, rs243, rs244, rs245], [dev241, dev242])
+
+tu11 = Turn(11, st11, [se111, se112, se113], 'p1', stat11, '')
+tu12 = Turn(12, st12, [se121, se122], 'p2', stat12, '')
+
+tu21 = Turn(21, st21, [se211], 'p1', stat21, '')
+tu22 = Turn(22, st22, [se221, se222], 'p3', stat22, '')
+tu23 = Turn(23, st23, [se231], 'p1', stat23, '')
+tu24 = Turn(24, st24, [se241, se242], 'p3', stat24, '')
+
+
+
+dial1 = Dialogue(1, sd1, [tu11, tu12], ['p1', 'p2'], [t1])
+
+dial2 = Dialogue(2, sd2, [tu21, tu22, tu23, tu24], ['p1', 'p3'], [t2, t3])
+
+g = Game(['p1', 'p2', 'p3'], [dial1, dial2])
+
+
+
+print g.Dialogues[1].Turns[2].State.Developments[0].Amount
 
 
 
