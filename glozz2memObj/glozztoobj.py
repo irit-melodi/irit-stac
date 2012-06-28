@@ -4,6 +4,7 @@
 Now, we want to parse the GLOZZ annotation into an internal object representation, with the following features:
 
 -- a game is an instance of a "Game" object, with the following attributes:
+	-- 'Annotator': string % annotator id; thus, we distinguish one annotation from another
 	-- 'Players': list % of strings
 	-- 'Dialogues': list % of "Dialogue" instances
 -- a "Dialogue" object instance has the following attributes:
@@ -30,11 +31,14 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 					-- 'To_player': string
 					-- 'From_resource': "Resource" instance
 					-- 'To_resource': "Resource" instance
+	-- 'Anaphors': list % of "Relation" objects, whose 'Label' attribute must be set to 'Anaphora' and whose arguments are "VerbalizedResource" instances, situated in the instances which inherit the "Segment" class 
 -- a "Dialogue" object instance contains several "Turn" object instances
 -- a "Turn" object instance has the following attributes:
 	-- 'ID': number
 	-- 'Span': "Span" instance
 	-- 'Segments': list % of instances of objects inheriting the "Segment" class
+	-- 'Timestamp': timestamp of the turn % hh:mm:ss:mss
+	-- 'Shallow_ID': number % ID as given by the Soclogs
 	-- 'Emitter': string
 	-- 'State': "State" instance
 		* a "State" object has the following attributes:
@@ -72,15 +76,105 @@ Now, we want to parse the GLOZZ annotation into an internal object representatio
 	-- a "Preference" object has the following attributes:
 		-- 'ID': number % inherited from the "Segment" class
 		-- 'Span': "Span" instance % inherited from the "Segment" class
-To add: 
-*DISCOURSE!!*
+DISCOURSE:
 
 Each "Game" instance has a global SDRS which, most of the time, is the union of the Dialogue-level SDRSes, except when "Dialogue" SDRSes are linked.
 
-Each "Dialogue" instance has its own vanilla SDRS, which consists of:
-	-- "Relation" objects
+Each "Dialogue" instance has its own vanilla SDRS, which consists of a "Discourse_structure" object instance; each such instance has the following attributes:
+	-- 'ID': number % a.k.a. label of the SDRS
+	-- 'Discourse_units': list % of instances inheriting the "Discourse_unit" object; such an instance can be either "Complex_segment" or "Segment"; a "Discouse_unit" object has the following attribute:
+		-- 'ID': number
+		* "Segment" objects have already been described % 
+		* a "Complex_segment" object has the following attributes: % it is actually structurally identical to a 'Discourse_structure' object, except that the cohesion constraint is enforced, ie each DU is connected to at least another one and so there is no solitary DU
+			-- 'Discourse_units': list % of "Segment" or "Complex_segment" instances
+			-- 'Discourse_relations': list % of "Relation" instances, between EDUs and / or CDUs, but *NOT* inside CDUs
+	-- 'Discourse_relations': list % of "Relation" instances, between EDUs and / or CDUs, but *NOT* inside CDUs
+		* a "Discourse_relation" object has the following attributes:
+			-- 'Label': string % relation type, according to SDRT
+			-- 'Left_argument': number % left-argument EDU or CDU 'ID'
+			-- 'Right_argument': number % right-argument EDU or CDU 'ID'
 
 '''
+##### CDU-level stuff
+
+class Discourse_unit(object):
+	def __init__(self, id):
+		self.__ID = id
+	@property
+	def ID(self):
+		return self.__ID
+
+class Discourse_structure(Discourse_unit):
+	def __init__(self, id, DUs, DRs):
+		Discourse_unit.__init__(self, id)
+		import copy
+		self.__Discourse_units = copy.deepcopy(DUs)
+		self.__Discourse_relations = copy.deepcopy(DRs)
+		del copy
+	@property
+	def Discourse_units(self):
+		DU_IDs = []
+		for DU in self.__Discourse_units:
+			DU_IDs.append(DU.ID)
+		return DU_IDs
+	@Discourse_units.deleter
+	def Discourse_units(self):
+		self.__Discourse_units = []
+	@property
+	def Full_Discourse_units(self):
+		return self.__Discourse_units
+	@property
+	def Discourse_relations(self):
+		DRs = []
+		for DR in self.__Discourse_relations:
+			DRs.append((DR.Label, DR.Left_argument, DR.Right_argument))
+		return DRs
+	@property
+	def Full_Discourse_relations(self):
+		return self.__Discourse_relations
+
+class Complex_segment(Discourse_structure):
+	def __init__(self, id, DUs, DRs):
+		# add contiguity checking:
+		rel_args = []
+		__dump = [rel_args.append(rel.Left_argument) for rel in DRs if rel.Left_argument not in rel_args]
+		__dump = [rel_args.append(rel.Right_argument) for rel in DRs if rel.Right_argument not in rel_args]
+		for du in DUs:
+			if du.ID not in rel_args:
+				print "Warning: Complex segment %(CDU)s has islands: sub-unit %(DU)s disconnected!!" % {'CDU': id, 'DU': du.ID}
+		del rel_args
+		Discourse_structure.__init__(self, id, DUs, DRs)
+
+class Relation(object):
+	def __init__(self, label, larg, rarg):
+		self.__Label = label
+		self.__Left_argument = larg
+		self.__Right_argument = rarg
+	@property
+	def Label(self):
+		return self.__Label
+	@Label.setter
+	def Label(self, newlab):
+		self.__Label = newlab
+	@Label.deleter
+	def Label(self):
+		self.__Label = ''
+	@property
+	def Left_argument(self):
+		return self.__Left_argument.ID
+	@property
+	def Right_argument(self):
+		return self.__Right_argument.ID
+	@property
+	def Full_Left_argument(self):
+		return self.__Left_argument
+	@property
+	def Full_Right_argument(self):
+		return self.__Right_argument
+
+
+
+##### EDU-level stuff
 class Game(object):
 	def __init__(self, players, dialogues):
 		import copy
@@ -115,12 +209,16 @@ class Game(object):
 		raise TypeError("Game.Dialogues:: Error: cannot delete property!")
 
 class Dialogue(object):
-	def __init__(self, id, span, turns, players, Trades):
+	def __init__(self, id, span, turns, players, Trades, Anaphors):
 		self.__ID = id
 		self.__Span = span
 		import copy
 		self.__Turns = copy.deepcopy(turns)
-		self.__Players = copy.deepcopy(players) 
+		self.__Players = copy.deepcopy(players)
+		for anaphora in Anaphors:
+			if type(anaphora).__name__ == 'Relation' and anaphora.Label != "Anaphora":
+				raise ValueError("Dialogue.Anaphors:: Error: must be an \"Anaphora\" relation!")
+		self.__Anaphors = copy.deepcopy(Anaphors)
 		del copy
 		self.Trades = Trades
 	@property
@@ -163,6 +261,19 @@ class Dialogue(object):
 	@Players.deleter
 	def Players(self):
 		raise TypeError("Dialogue.Players:: Error: cannot delete property!")
+	@property
+	def Anaphors(self):
+		return self.__Anaphors
+	@Anaphors.setter
+	def Anaphors(self, anaphors):
+		if not isinstance(anaphors, list):
+			raise TypeError("Dialogue.Anaphors:: Error: must be a list!")
+		for anaphora in anaphors:
+			if type(anaphora).__name__ == 'Relation' and anaphora.Label != "Anaphora":
+				raise ValueError("Dialogue.Anaphors:: Error: must be an \"Anaphora\" relation!")
+		import copy
+		self.__Anaphors = copy.deepcopy(anaphors)
+		del copy
 
 # Add getters and setters for the attributes with are (lists of) other class instances!
 
@@ -288,13 +399,15 @@ class Exchange(object):
 		self.__To_resource = None
 
 class Turn(object):
-	def __init__(self, id, span, Segments, emitter, state, comments):
+	def __init__(self, id, span, Segments, emitter, timestamp, shallow_id, state, comments):
 		self.__ID = id
 		self.__Span = span
 		import copy
 		self.__Segments = copy.deepcopy(Segments)
 		del copy
 		self.Emitter = emitter
+		self.Timestamp = timestamp
+		self.Shallow_ID = shallow_id
 		self.__State = state
 		self.Comments = comments
 	@property
@@ -394,16 +507,10 @@ class Development(Item):
 		Item.__init__(self, id, kind)
 		self.Amount = amount
 
-class Segment(object):
+class Segment(Discourse_unit):
 	def __init__(self, id, span):
-		self.__ID = id
+		Discourse_unit.__init__(self, id)
 		self.__Span = span
-	@property
-	def ID(self):
-		return self.__ID
-	@ID.deleter
-	def ID(self):
-		raise TypeError("Segment.ID:: Error: cannot delete property!")
 	@property
 	def Span(self):
 		return self.__Span
@@ -537,6 +644,7 @@ class Span(object):
 import sys, codecs
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
+# Edu part:
 sd1 = Span(1, 117)
 sd2 = Span(118, 201)
 
@@ -677,36 +785,52 @@ stat22 = State([rs221, rs222, rs223, rs224, rs225], [dev221, dev222])
 stat23 = State([rs231, rs232, rs233, rs234, rs235], [dev231, dev232])
 stat24 = State([rs241, rs242, rs243, rs244, rs245], [dev241, dev242])
 
-tu11 = Turn(11, st11, [se111, se112, se113], 'p1', stat11, '')
-tu12 = Turn(12, st12, [se121, se122], 'p2', stat12, '')
+tu11 = Turn(11, st11, [se111, se112, se113], 'p1', '00:00:00:000', 1, stat11, '')
+tu12 = Turn(12, st12, [se121, se122], 'p2', '00:00:00:001', 2, stat12, '')
 
-tu21 = Turn(21, st21, [se211], 'p1', stat21, '')
-tu22 = Turn(22, st22, [se221, se222], 'p3', stat22, '')
-tu23 = Turn(23, st23, [se231], 'p1', stat23, '')
-tu24 = Turn(24, st24, [se241, se242], 'p3', stat24, '')
+tu21 = Turn(21, st21, [se211], 'p1', '00:00:00:002', 3, stat21, '')
+tu22 = Turn(22, st22, [se221, se222], 'p3', '00:00:00:003', 4, stat22, '')
+tu23 = Turn(23, st23, [se231], 'p1', '00:00:00:004', 5, stat23, '')
+tu24 = Turn(24, st24, [se241, se242], 'p3', '00:00:00:005', 6, stat24, '')
 
 
+ar2 = Relation('Anaphora', vr2111, vr2312)
 
-dial1 = Dialogue(1, sd1, [tu11, tu12], ['p1', 'p2'], [t1])
+dial1 = Dialogue(1, sd1, [tu11, tu12], ['p1', 'p2'], [t1], [])
 
-dial2 = Dialogue(2, sd2, [tu21, tu22, tu23, tu24], ['p1', 'p3'], [t2, t3])
+dial2 = Dialogue(2, sd2, [tu21, tu22, tu23, tu24], ['p1', 'p3'], [t2, t3], [ar2])
 
 g = Game(['p1', 'p2', 'p3'], [dial1, dial2])
 
+# Discourse part:
 
+rr111 = Relation('Comment', se112, se113)
+rr222 = Relation('Narration', se221, se222)
+
+rr22421 = Relation('Continuation', se241, se242)
+rr22422 = Relation('Background', se242, se241)
+
+cse1 = Complex_segment(771, [se112, se113], [rr111])
+cse21 = Complex_segment(7721, [se221, se222], [rr222])
+cse23 = Complex_segment(7723, [se241, se242], [rr22421, rr22422])
+
+rr2222 = Relation('Acknowledgement', se231, cse23)
+
+cse22 = Complex_segment(7722, [se231, cse23], [rr2222])
+
+rr11 = Relation('Elaboration', se111, cse1)
+rr12 = Relation('Result', cse1, se121)
+rr13 = Relation('Continuation', se121, se122)
+rr14 = Relation('Explanation', se111, se122)
+
+rr21 = Relation('Q-Elab', se211, cse21)
+rr22 = Relation('Clarification_question', cse21, cse22)
+rr23 = Relation('QAP', se211, cse22)
+
+ds1 = Discourse_structure(8881, [se111, cse1, se121, se122], [rr11, rr12, rr13, rr14])
+
+ds2 = Discourse_structure(8882, [se211, cse21, cse22], [rr21, rr22, rr23])
 
 print g.Dialogues[1].Turns[2].State.Developments[0].Amount
-
-
-
-
-
-
-
-
-
-
-
-
-
+print ds2.Full_Discourse_relations[1].Full_Left_argument.Full_Discourse_units[1].Surface_act_type
 
