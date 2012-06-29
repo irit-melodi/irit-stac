@@ -176,11 +176,18 @@ class Relation(object):
 
 ##### EDU-level stuff
 class Game(object):
-	def __init__(self, players, dialogues):
+	def __init__(self, annotator, players, dialogues):
+		self.__Annotator = annotator
 		import copy
 		self.__Players = copy.deepcopy(players)
 		self.__Dialogues = copy.deepcopy(dialogues)
 		del copy
+	@property
+	def Annotator(self):
+		return self.__Annotator
+	@Annotator.setter
+	def Annotator(self, newAnnot):
+		self.__Annotator = newAnnot
 	@property
 	def Players(self):
 		return self.__Players
@@ -642,7 +649,100 @@ class Span(object):
 # We should be doing it bottom up, from the most detailed classes to the most "enclosing" ones!
 
 import sys, codecs
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring
+
+u_annot_file = "./pilot03_1_stac_u_06062012.aa"
+d_annot_file = "./pilot03_1_stac_d_06062012.aa"
+
+u_annot = ElementTree().parse(u_annot_file)
+d_annot = ElementTree().parse(d_annot_file)
+
+# EDU-level parsing:
+author_printed = False
+for i in range(0,len(u_annot)):
+	# Selecting Glozz "unit"s:
+	if u_annot[i].tag == 'unit':
+		# Selecting "unit" metadata: author,...
+		if u_annot[i][0].tag == 'metadata':
+			if u_annot[i][0][0].tag == 'author' and author_printed == False:
+				# For setting the Annotator attribute of Game objects
+				print "Game annotation author : " + u_annot[i][0][0].text
+				author_printed = True
+		# Selecting "unit" characterisation
+		if u_annot[i][1].tag == 'characterisation':
+			# Getting "unit" types (Resources, Offers, Turns etc)
+			# if u_annot[i].getchildren()[1].getchildren()[0].text == 'Turn' | 'Offer' | etc...
+			if u_annot[i][1][0].text == 'Dialogue':
+				print "Dialogue ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				# Test for features:
+				if len(u_annot[i][1][1]) >= 1:
+					for j in range(0, len(u_annot[i][1][1])):
+						# Further parsing needed in order to get the players, the resources, their amounts, the dice!!
+						if u_annot[i][1][1][j].attrib['name'] == 'Gets':
+							print "Dialogue Gets : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Dice_rolling':
+							print "Dialogue Dice_rolling : " + str(u_annot[i][1][1][j].text) 
+						elif u_annot[i][1][1][j].attrib['name'] == 'Trades':
+							print "Dialogue Trades : " + str(u_annot[i][1][1][j].text) 
+			if u_annot[i][1][0].text == 'Turn':
+				print "Turn ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				# Test for features:
+				if len(u_annot[i][1][1]) >= 1:
+					for j in range(0, len(u_annot[i][1][1])):
+						if u_annot[i][1][1][j].attrib['name'] == 'Identifier':
+							print "Turn Identifier : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Timestamp':
+							print "Turn Timestamp : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Emitter':
+							print "Turn Emitter : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Resources':
+							print "Turn Resources : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Developments':
+							print "Turn Developments : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Comments' and str(u_annot[i][1][1][j].text) != 'Please write in remarks...':
+							print "Turn Comments : " + str(u_annot[i][1][1][j].text)
+			if u_annot[i][1][0].text not in ['Turn', 'Dialogue', 'Resource']:
+				print "EDU type : " + u_annot[i][1][0].text
+				print "EDU ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				# Test for features:
+				if len(u_annot[i][1][1]) >= 1:
+					for j in range(0, len(u_annot[i][1][1])):
+						if u_annot[i][1][1][j].attrib['name'] == 'Surface_act':
+							print u_annot[i][1][0].text + " EDU Surface_act : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Addressee':
+							print u_annot[i][1][0].text + " EDU Addressee : " + str(u_annot[i][1][1][j].text)
+			if u_annot[i][1][0].text == 'Resource':
+				print "Resource ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				# Test for features:
+				if len(u_annot[i][1][1]) >= 1:
+					for j in range(0, len(u_annot[i][1][1])):
+						if u_annot[i][1][1][j].attrib['name'] == 'Status':
+							print "Resource Status : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Kind':
+							print "Resource Kind : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Quantity':
+							print "Resource Quantity : " + str(u_annot[i][1][1][j].text)
+						elif u_annot[i][1][1][j].attrib['name'] == 'Correctness':
+							print "Resource Correctness : " + str(u_annot[i][1][1][j].text)
+			if u_annot[i][1][0].text == 'Preference':
+				print "Preference ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+	if u_annot[i].tag == 'schema':
+		if u_annot[i][1].tag == 'characterisation':
+			if u_annot[i][1][0].text == 'Several_resources':
+				print "Several_resources ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				# Test for features:
+				if len(u_annot[i][1][1]) >= 1:
+					for j in range(0, len(u_annot[i][1][1])):
+						if u_annot[i][1][1][j].attrib['name'] == 'Operator':
+							print "Several_resources Operator : " + str(u_annot[i][1][1][j].text)
+		if u_annot[i][2].tag == 'positioning':
+			# Retrieve the embedded Resources:
+			print "Several_resources constituents :"
+			print "\t Resource ID : " + u_annot[i][2][0].attrib['id'].split('_')[1]
+			print "\t Resource ID : " + u_annot[i][2][1].attrib['id'].split('_')[1]
+				
+
+
 
 # Edu part:
 sd1 = Span(1, 117)
@@ -800,7 +900,7 @@ dial1 = Dialogue(1, sd1, [tu11, tu12], ['p1', 'p2'], [t1], [])
 
 dial2 = Dialogue(2, sd2, [tu21, tu22, tu23, tu24], ['p1', 'p3'], [t2, t3], [ar2])
 
-g = Game(['p1', 'p2', 'p3'], [dial1, dial2])
+g = Game('stac', ['p1', 'p2', 'p3'], [dial1, dial2])
 
 # Discourse part:
 
@@ -833,4 +933,6 @@ ds2 = Discourse_structure(8882, [se211, cse21, cse22], [rr21, rr22, rr23])
 
 print g.Dialogues[1].Turns[2].State.Developments[0].Amount
 print ds2.Full_Discourse_relations[1].Full_Left_argument.Full_Discourse_units[1].Surface_act_type
+
+
 
