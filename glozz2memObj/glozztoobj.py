@@ -216,7 +216,7 @@ class Game(object):
 		raise TypeError("Game.Dialogues:: Error: cannot delete property!")
 
 class Dialogue(object):
-	def __init__(self, id, span, turns, players, Trades, Anaphors):
+	def __init__(self, id, span, Trades, turns=[], players=[], Anaphors=[]):
 		self.__ID = id
 		self.__Span = span
 		import copy
@@ -257,7 +257,7 @@ class Dialogue(object):
 		raise TypeError("Dialogue.Turns:: Error: cannot delete property!")
 	@property
 	def Players(self):
-		return self.__Players
+		return list(set(self.__Players))
 	@Players.setter
 	def Players(self, liste):
 		if not isinstance(liste, list):
@@ -281,6 +281,14 @@ class Dialogue(object):
 		import copy
 		self.__Anaphors = copy.deepcopy(anaphors)
 		del copy
+	def addTurn(self, newTurn):
+		if not isinstance(newTurn, Turn):
+			raise TypeError("Dialogue::addTurn: Error: must be of Turn type!")
+		self.__Turns.append(newTurn)
+	def addPlayer(self, newPlayer):
+		if not isinstance(newPlayer, str):
+			raise TypeError("Dialogue::addPlayer: Error: must be a string!")
+		self.__Players.append(newPlayer)
 
 # Add getters and setters for the attributes with are (lists of) other class instances!
 
@@ -293,7 +301,7 @@ class Trade(object):
 		self.Exchange = Exchange
 
 class Get(object):
-	def __init__(self, player, Resources):
+	def __init__(self, player, Resources=[None]):
 		self.__Player = player
 		import copy
 		self.__Resources = copy.deepcopy(Resources)
@@ -387,8 +395,8 @@ class Exchange(object):
 		return self.__From_resource
 	@From_resource.setter
 	def From_resource(self, fres):
-		if not isinstance(fres, VerbalizedResource):
-			raise TypeError("Exchange.From_resource:: Error: must be a VerbalizedResource instance!")
+		if not isinstance(fres, Resource):
+			raise TypeError("Exchange.From_resource:: Error: must be a Resource instance!")
 		self.__From_Resource = fres
 	@From_resource.deleter
 	def From_resource(self):
@@ -398,15 +406,15 @@ class Exchange(object):
 		return self.__To_resource
 	@To_resource.setter
 	def To_resource(self, tres):
-		if not isinstance(tres, VerbalizedResource):
-			raise TypeError("Exchange.To_resource:: Error: must be a VerbalizedResource instance!")
+		if not isinstance(tres, Resource):
+			raise TypeError("Exchange.To_resource:: Error: must be a Resource instance!")
 		self.__To_Resource = tres
 	@To_resource.deleter
 	def To_resource(self):
 		self.__To_resource = None
 
 class Turn(object):
-	def __init__(self, id, span, Segments, emitter, timestamp, shallow_id, state, comments):
+	def __init__(self, id, span, emitter, timestamp, shallow_id, state, comments, Segments=[]):
 		self.__ID = id
 		self.__Span = span
 		import copy
@@ -461,6 +469,10 @@ class Turn(object):
 	@property
 	def Resources(self): # wrapper of the State object; shortcut to the Resources
 		return self.__State.Resources
+	def addSegment(self, newSeg):
+		if not isinstance(newSeg, Segment):
+			raise TypeError("Turn::addSegment: Error: must be of (derived) Segment type!")
+		self.__Segments.append(newSeg)
 
 class State(object):
 	def __init__(self, Resources, Developments):
@@ -531,64 +543,88 @@ class Segment(Discourse_unit):
 		raise TypeError("Segment.Span:: Error: cannot delete property!")
 
 class Offer(Segment):
-	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
-		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
+		self.Receivers = copy.deepcopy(Receivers)
 		self.Resources = copy.deepcopy(Resources)
 		self.Preferences = copy.deepcopy(Preferences)
 		del copy
+	def addResource(self, newRes):
+		self.Resources.append(newRes)
+	def addPreference(self, newPref):
+		self.Preferences.append(newPref)
 
 class Counteroffer(Segment):
-	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
-		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		copy.deepcopy(self.Resources, Resouces)
-		copy.deepcopy(self.Preferences, Preferences)
+		self.Receivers = copy.deepcopy(Receivers)
+		self.Resources = copy.deepcopy(Resources)
+		self.Preferences = copy.deepcopy(Preferences)
 		del copy
+	def addResource(self, newRes):
+		self.Resources.append(newRes)
+	def addPreference(self, newPref):
+		self.Preferences.append(newPref)
 
 class Accept(Segment):
-	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
-		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
+		self.Receivers = copy.deepcopy(Receivers)
 		self.Resources = copy.deepcopy(Resources)
 		self.Preferences = copy.deepcopy(Preferences)
 		del copy
+	def addResource(self, newRes):
+		self.Resources.append(newRes)
+	def addPreference(self, newPref):
+		self.Preferences.append(newPref)
 
 class Refusal(Segment):
-	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
-		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
-		copy.deepcopy(self.Resources, Resouces)
-		copy.deepcopy(self.Preferences, Preferences)
+		self.Receivers = copy.deepcopy(Receivers)
+		self.Resources = copy.deepcopy(Resources)
+		self.Preferences = copy.deepcopy(Preferences)
 		del copy
+	def addResource(self, newRes):
+		self.Resources.append(newRes)
+	def addPreference(self, newPref):
+		self.Preferences.append(newPref)
 
 class Strategic_comment(Segment):
-	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
-		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
+		self.Receivers = copy.deepcopy(Receivers)
 		self.Resources = copy.deepcopy(Resources)
 		self.Preferences = copy.deepcopy(Preferences)
 		del copy
+	def addResource(self, newRes):
+		self.Resources.append(newRes)
+	def addPreference(self, newPref):
+		self.Preferences.append(newPref)
 
 class Other(Segment):
-	def __init__(self, id, span, receiver, surface_act_type, Resources, Preferences):
+	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
-		self.Receiver = receiver
 		self.Surface_act_type = surface_act_type
 		import copy
+		self.Receivers = copy.deepcopy(Receivers)
 		self.Resources = copy.deepcopy(Resources)
 		self.Preferences = copy.deepcopy(Preferences)
 		del copy
+	def addResource(self, newRes):
+		self.Resources.append(newRes)
+	def addPreference(self, newPref):
+		self.Preferences.append(newPref)
 	
 class VerbalizedResource(Resource):
 	def __init__(self, id, span, status, kind, quantity):
@@ -627,6 +663,12 @@ class Several_resources(object):
 	@Resources.deleter
 	def Resources(self):
 		self.__Resources = (None, None)
+	@property
+	def Span(self):
+		Start_pos = min(int(self.__Resources[0].Span.Start_pos), int(self.__Resources[1].Span.Start_pos))
+		End_pos = max(int(self.__Resources[0].Span.End_pos), int(self.__Resources[1].Span.End_pos))
+		_span = Span(Start_pos, End_pos)
+		return _span
 		
 
 class VerbalizedPreference(Segment):
@@ -657,7 +699,15 @@ d_annot_file = "./pilot03_1_stac_d_06062012.aa"
 u_annot = ElementTree().parse(u_annot_file)
 d_annot = ElementTree().parse(d_annot_file)
 
+# EDU-level Glozz parser and internal object initializer:
+dialogues = []
+turns = []
+segments = []
+resources = []
+preferences = []
+players = []
 # EDU-level parsing:
+# Add "Span" for each unit:
 author_printed = False
 for i in range(0,len(u_annot)):
 	# Selecting Glozz "unit"s:
@@ -666,83 +716,188 @@ for i in range(0,len(u_annot)):
 		if u_annot[i][0].tag == 'metadata':
 			if u_annot[i][0][0].tag == 'author' and author_printed == False:
 				# For setting the Annotator attribute of Game objects
-				print "Game annotation author : " + u_annot[i][0][0].text
+				annotation_author = u_annot[i][0][0].text
 				author_printed = True
 		# Selecting "unit" characterisation
 		if u_annot[i][1].tag == 'characterisation':
 			# Getting "unit" types (Resources, Offers, Turns etc)
 			# if u_annot[i].getchildren()[1].getchildren()[0].text == 'Turn' | 'Offer' | etc...
 			if u_annot[i][1][0].text == 'Dialogue':
-				print "Dialogue ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				temp_gets = []
+				temp_dice_rolls = []
+				temp_exchange = None
+				temp_id = u_annot[i].attrib['id'].split('_')[1]
 				# Test for features:
 				if len(u_annot[i][1][1]) >= 1:
 					for j in range(0, len(u_annot[i][1][1])):
-						# Further parsing needed in order to get the players, the resources, their amounts, the dice!!
 						if u_annot[i][1][1][j].attrib['name'] == 'Gets':
-							print "Dialogue Gets : " + str(u_annot[i][1][1][j].text)
+							for oneget in u_annot[i][1][1][j].text.split('.')[:-1]:
+								temp_who = oneget.split(' gets ')[0].strip(' ')
+								if 'nothing' in oneget.split(' gets ')[1]:
+									temp_gets.append(Get(temp_who))
+								else:
+									temp_what = oneget.split(' gets ')[1].split(' ')[1]
+									temp_qty = oneget.split(' gets ')[1].split(' ')[0]
+									temp_res = Resource(None, temp_what, temp_qty)
+									temp_gets.append(Get(temp_who, temp_res))
 						elif u_annot[i][1][1][j].attrib['name'] == 'Dice_rolling':
-							print "Dialogue Dice_rolling : " + str(u_annot[i][1][1][j].text) 
+							for oneroll in u_annot[i][1][1][j].text.split('.')[:-1]:
+								temp_who = str(oneroll.split(' rolled a ')[0].strip(' '))
+								temp_what = [str(oneroll.split(' rolled a ')[1].split(' and a '))[0], str(oneroll.split(' rolled a ')[1].split(' and a '))[1]]
+								temp_dice_rolls.append(Die_roll(temp_who, temp_what))
 						elif u_annot[i][1][1][j].attrib['name'] == 'Trades':
-							print "Dialogue Trades : " + str(u_annot[i][1][1][j].text) 
+							if u_annot[i][1][1][j].text != None:
+								for onetrade in u_annot[i][1][1][j].text.split('.')[:-1]:
+									temp_who = str(onetrade.split(' traded ')[0])
+									temp_from_whom = str(onetrade.split(' from ')[1].strip('.'))
+									temp_what = str(onetrade.split(' traded ')[1].split(' for ')[0].split(' ')[1])
+									temp_what_qty = onetrade.split(' traded ')[1].split(' for ')[0].split(' ')[0]
+									temp_to_res = Resource(None, temp_what, temp_what_qty)
+									temp_what_for = str(onetrade.split(' traded ')[1].split(' for ')[1].split(' ')[1])
+									temp_what_for_qty = onetrade.split(' traded ')[1].split(' for ')[1].split(' ')[0]
+									temp_from_res = Resource(None, temp_what_for, temp_what_for_qty)
+									temp_exchange = Exchange(temp_from_whom, temp_who, temp_from_res, temp_to_res)
+				temp_trade = Trade(temp_gets, temp_dice_rolls, temp_exchange)
+				temp_start = int(u_annot[i][2][0][0].attrib['index'])
+				temp_end = int(u_annot[i][2][1][0].attrib['index'])
+				temp_span = Span(temp_start, temp_end)
+				dialogues.append(Dialogue(temp_id, temp_span, temp_trade))
 			if u_annot[i][1][0].text == 'Turn':
-				print "Turn ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				temp_id = u_annot[i].attrib['id'].split('_')[1]
 				# Test for features:
+				temp_res = []
+				temp_devs = []
 				if len(u_annot[i][1][1]) >= 1:
 					for j in range(0, len(u_annot[i][1][1])):
 						if u_annot[i][1][1][j].attrib['name'] == 'Identifier':
-							print "Turn Identifier : " + str(u_annot[i][1][1][j].text)
+							temp_shid = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Timestamp':
-							print "Turn Timestamp : " + str(u_annot[i][1][1][j].text)
+							temp_timestamp = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Emitter':
-							print "Turn Emitter : " + str(u_annot[i][1][1][j].text)
+							temp_emitter = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Resources':
-							print "Turn Resources : " + str(u_annot[i][1][1][j].text)
+							# Add parsing for resources
+							for res in str(u_annot[i][1][1][j].text).split('; '):
+								temp_res.append(Resource(None, res.split('=')[0], res.split('=')[1]))
 						elif u_annot[i][1][1][j].attrib['name'] == 'Developments':
-							print "Turn Developments : " + str(u_annot[i][1][1][j].text)
-						elif u_annot[i][1][1][j].attrib['name'] == 'Comments' and str(u_annot[i][1][1][j].text) != 'Please write in remarks...':
-							print "Turn Comments : " + str(u_annot[i][1][1][j].text)
-			if u_annot[i][1][0].text not in ['Turn', 'Dialogue', 'Resource']:
-				print "EDU type : " + u_annot[i][1][0].text
-				print "EDU ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+							if u_annot[i][1][1][j].text != None:
+								for dev in str(u_annot[i][1][1][j].text).split(';  '):
+									temp_devs.append(Development(None, dev.split('=')[0], dev.split('=')[1]))
+						elif u_annot[i][1][1][j].attrib['name'] == 'Comments':
+							temp_comments = str(u_annot[i][1][1][j].text)
+				temp_state = State(temp_res, temp_devs)
+				temp_start = int(u_annot[i][2][0][0].attrib['index'])
+				temp_end = int(u_annot[i][2][1][0].attrib['index'])
+				temp_span = Span(temp_start, temp_end)
+				players.append(temp_emitter)
+				turns.append(Turn(temp_id, temp_span, temp_emitter, temp_timestamp, temp_shid, temp_state, temp_comments))
+			if u_annot[i][1][0].text not in ['Turn', 'Dialogue', 'Resource', 'Preference', 'paragraph']:
+				temp_edu_type = str(u_annot[i][1][0].text)
+				temp_id = u_annot[i].attrib['id'].split('_')[1]
 				# Test for features:
 				if len(u_annot[i][1][1]) >= 1:
 					for j in range(0, len(u_annot[i][1][1])):
 						if u_annot[i][1][1][j].attrib['name'] == 'Surface_act':
-							print u_annot[i][1][0].text + " EDU Surface_act : " + str(u_annot[i][1][1][j].text)
+							temp_sa_type = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Addressee':
-							print u_annot[i][1][0].text + " EDU Addressee : " + str(u_annot[i][1][1][j].text)
+							temp_recv = str(u_annot[i][1][1][j].text).split(', ')
+				temp_start = int(u_annot[i][2][0][0].attrib['index'])
+				temp_end = int(u_annot[i][2][1][0].attrib['index'])
+				temp_span = Span(temp_start, temp_end)
+				segments.append(eval(temp_edu_type)(temp_id, temp_span, temp_recv, temp_sa_type))
 			if u_annot[i][1][0].text == 'Resource':
-				print "Resource ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				temp_id = u_annot[i].attrib['id'].split('_')[1]
 				# Test for features:
 				if len(u_annot[i][1][1]) >= 1:
 					for j in range(0, len(u_annot[i][1][1])):
 						if u_annot[i][1][1][j].attrib['name'] == 'Status':
-							print "Resource Status : " + str(u_annot[i][1][1][j].text)
+							temp_status = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Kind':
-							print "Resource Kind : " + str(u_annot[i][1][1][j].text)
+							temp_kind = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Quantity':
-							print "Resource Quantity : " + str(u_annot[i][1][1][j].text)
+							temp_qty = str(u_annot[i][1][1][j].text)
 						elif u_annot[i][1][1][j].attrib['name'] == 'Correctness':
-							print "Resource Correctness : " + str(u_annot[i][1][1][j].text)
+							temp_correctness = str(u_annot[i][1][1][j].text)
+				temp_start = u_annot[i][2][0][0].attrib['index']
+				temp_end = u_annot[i][2][1][0].attrib['index']
+				temp_span = Span(temp_start, temp_end)
+				resources.append(VerbalizedResource(temp_id, temp_span, temp_status, temp_kind, temp_qty))
 			if u_annot[i][1][0].text == 'Preference':
-				print "Preference ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				temp_id = u_annot[i].attrib['id'].split('_')[1]
+				temp_start = u_annot[i][2][0][0].attrib['index']
+				temp_end = u_annot[i][2][1][0].attrib['index']
+				temp_span = Span(temp_start, temp_end)
+				preferences.append(VerbalizedPreference(temp_id, temp_span))
 	if u_annot[i].tag == 'schema':
 		if u_annot[i][1].tag == 'characterisation':
 			if u_annot[i][1][0].text == 'Several_resources':
-				print "Several_resources ID : " + str(u_annot[i].attrib['id'].split('_')[1])
+				temp_id = u_annot[i].attrib['id'].split('_')[1]
+				temp_oneres_id = u_annot[i][2][0].attrib['id'].split('_')[1]
+				temp_otherres_id = u_annot[i][2][1].attrib['id'].split('_')[1]
+				temp_oneres = None
+				temp_otherres = None
+				for res in resources:
+					if temp_oneres_id == res.ID:
+						temp_oneres = res
+					if temp_otherres_id == res.ID:
+						temp_otherres = res
+					if temp_oneres != None and temp_otherres != None:
+						break
 				# Test for features:
 				if len(u_annot[i][1][1]) >= 1:
 					for j in range(0, len(u_annot[i][1][1])):
 						if u_annot[i][1][1][j].attrib['name'] == 'Operator':
-							print "Several_resources Operator : " + str(u_annot[i][1][1][j].text)
-		if u_annot[i][2].tag == 'positioning':
-			# Retrieve the embedded Resources:
-			print "Several_resources constituents :"
-			print "\t Resource ID : " + u_annot[i][2][0].attrib['id'].split('_')[1]
-			print "\t Resource ID : " + u_annot[i][2][1].attrib['id'].split('_')[1]
+							temp_op = str(u_annot[i][1][1][j].text)
+		resources.append(Several_resources(temp_id, [temp_oneres, temp_otherres], temp_op))
 				
+# Now, we must figure out:
+# which Turn instances belong to which Dialogue instances,
+# which *derived* Segment instances belong to which Turn instances,
+# which VerbalizedResource instances belong to which derived Segment instances,
+# which VerbalizedPreference instances belong to which derived Segment instances,
+# which players take part in which Dialogue instances,
+# and initialize the remaining parameters of Segment, Turn and Dialogue instances accordingly.
+# For these mappings, we basically reason on the Spans.
+# First, we map VerbalizedResource and VerbalizedPreference instances to derived Segment instances. -- OK
+# Then, we map Several_resources instances to derived Segment instances. -- OK
+# For this, we reason on the constituent VerbalizedResource instances: they both must belong to the same derived Segment instance.
+# Then, we map derived Segment instances to Turn instances. -- OK
+# Then, we map Turn instances to Dialogue instances. -- OK
+# Finally, based on this, we collect the Emitter attributes of the Turn instances and we thus construct the list of players for each Dialogue instance. -- OK
 
+for seg in segments:
+	for res in resources:
+		if (isinstance(res, VerbalizedResource) or isinstance(res, Several_resources)) and (int(res.Span.Start_pos) >= int(seg.Span.Start_pos) and int(res.Span.End_pos) <= int(seg.Span.End_pos)):
+			seg.addResource(res)
+	for pref in preferences:
+		if isinstance(pref, VerbalizedPreference) and (int(pref.Span.Start_pos) >= int(seg.Span.Start_pos) and int(pref.Span.End_pos) <= int(seg.Span.End_pos)):
+			seg.addPreference(pref)
+for turn in turns:
+	for seg in segments:
+		if int(turn.Span.Start_pos) <= int(seg.Span.Start_pos) and int(turn.Span.End_pos) >= int(seg.Span.End_pos):
+			turn.addSegment(seg)
+for dialog in dialogues:
+	for turn in turns:
+		if int(turn.Span.Start_pos) >= int(dialog.Span.Start_pos) and int(turn.Span.End_pos) <= int(dialog.Span.End_pos):
+			dialog.addTurn(turn)
+			dialog.addPlayer(turn.Emitter)
 
+# Now we can finally create the Game object:
+
+game = Game(annotation_author, list(set(players)), dialogues)
+
+# Next, we'll create the Discourse_structure object instances, one per Dialogue instance
+# Discourse-level Glozz parser:
+
+del players, dialogues, turns, segments, resources, preferences
+
+print game.Annotator
+print len(game.Dialogues)
+print game.Dialogues[2].Players
+for turn in game.Dialogues[2].Turns:
+	if turn.Shallow_ID == '49':
+		print turn.Segments[0].Preferences[0].Span
+print game.Dialogues[2].Turns[3].Shallow_ID
 
 # Edu part:
 sd1 = Span(1, 117)
@@ -885,20 +1040,20 @@ stat22 = State([rs221, rs222, rs223, rs224, rs225], [dev221, dev222])
 stat23 = State([rs231, rs232, rs233, rs234, rs235], [dev231, dev232])
 stat24 = State([rs241, rs242, rs243, rs244, rs245], [dev241, dev242])
 
-tu11 = Turn(11, st11, [se111, se112, se113], 'p1', '00:00:00:000', 1, stat11, '')
-tu12 = Turn(12, st12, [se121, se122], 'p2', '00:00:00:001', 2, stat12, '')
+tu11 = Turn(11, st11, 'p1', '00:00:00:000', 1, stat11, '', [se111, se112, se113])
+tu12 = Turn(12, st12, 'p2', '00:00:00:001', 2, stat12, '', [se121, se122])
 
-tu21 = Turn(21, st21, [se211], 'p1', '00:00:00:002', 3, stat21, '')
-tu22 = Turn(22, st22, [se221, se222], 'p3', '00:00:00:003', 4, stat22, '')
-tu23 = Turn(23, st23, [se231], 'p1', '00:00:00:004', 5, stat23, '')
-tu24 = Turn(24, st24, [se241, se242], 'p3', '00:00:00:005', 6, stat24, '')
+tu21 = Turn(21, st21, 'p1', '00:00:00:002', 3, stat21, '', [se211])
+tu22 = Turn(22, st22, 'p3', '00:00:00:003', 4, stat22, '', [se221, se222])
+tu23 = Turn(23, st23, 'p1', '00:00:00:004', 5, stat23, '', [se231])
+tu24 = Turn(24, st24, 'p3', '00:00:00:005', 6, stat24, '', [se241, se242])
 
 
 ar2 = Relation('Anaphora', vr2111, vr2312)
 
-dial1 = Dialogue(1, sd1, [tu11, tu12], ['p1', 'p2'], [t1], [])
+dial1 = Dialogue(1, sd1, [t1], [tu11, tu12], ['p1', 'p2'], [])
 
-dial2 = Dialogue(2, sd2, [tu21, tu22, tu23, tu24], ['p1', 'p3'], [t2, t3], [ar2])
+dial2 = Dialogue(2, sd2, [t2, t3], [tu21, tu22, tu23, tu24], ['p1', 'p3'], [ar2])
 
 g = Game('stac', ['p1', 'p2', 'p3'], [dial1, dial2])
 
