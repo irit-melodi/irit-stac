@@ -104,6 +104,22 @@ class Discourse_unit(object):
 	def ID(self):
 		return self.__ID
 
+class Segment(Discourse_unit):
+	def __init__(self, id, span):
+		Discourse_unit.__init__(self, id)
+		self.__Span = span
+	@property
+	def Span(self):
+		return self.__Span
+	@Span.setter
+	def Span(self, span):
+		if not isinstance(span, Span):
+			raise TypeError("Segment.Span:: Error: must be a Span instance!")
+		self.__Span = span
+	@Span.deleter
+	def Span(self):
+		raise TypeError("Segment.Span:: Error: cannot delete property!")
+
 class Discourse_structure(Discourse_unit):
 	def __init__(self, id, DUs, DRs):
 		Discourse_unit.__init__(self, id)
@@ -124,6 +140,12 @@ class Discourse_structure(Discourse_unit):
 	def Full_Discourse_units(self):
 		return self.__Discourse_units
 	@property
+	def Discourse_relation_IDs(self):
+		DR_ids = []
+		for DR in self.__Discourse_relations:
+			DR_ids.append(DR.ID)
+		return DR_ids
+	@property
 	def Discourse_relations(self):
 		DRs = []
 		for DR in self.__Discourse_relations:
@@ -132,6 +154,10 @@ class Discourse_structure(Discourse_unit):
 	@property
 	def Full_Discourse_relations(self):
 		return self.__Discourse_relations
+	@property
+	def Span(self):
+		left_start = min(int(du.Span.Start_pos) for du in self.__Discourse_units)
+		right_start = max(int(du.Span.End_pos) for du in self.__Discourse_units)
 
 class Complex_segment(Discourse_structure):
 	def __init__(self, id, DUs, DRs):
@@ -146,10 +172,16 @@ class Complex_segment(Discourse_structure):
 		Discourse_structure.__init__(self, id, DUs, DRs)
 
 class Relation(object):
-	def __init__(self, label, larg, rarg):
+	def __init__(self, id, label, larg, rarg, arg_scope, comments):
+		self.__ID = id
 		self.__Label = label
 		self.__Left_argument = larg
 		self.__Right_argument = rarg
+		self.Arg_scope = arg_scope
+		self.Comments = comments
+	@property
+	def ID(self):
+		return self.__ID
 	@property
 	def Label(self):
 		return self.__Label
@@ -526,22 +558,6 @@ class Development(Item):
 		Item.__init__(self, id, kind)
 		self.Amount = amount
 
-class Segment(Discourse_unit):
-	def __init__(self, id, span):
-		Discourse_unit.__init__(self, id)
-		self.__Span = span
-	@property
-	def Span(self):
-		return self.__Span
-	@Span.setter
-	def Span(self, span):
-		if not isinstance(span, Span):
-			raise TypeError("Segment.Span:: Error: must be a Span instance!")
-		self.__Span = span
-	@Span.deleter
-	def Span(self):
-		raise TypeError("Segment.Span:: Error: cannot delete property!")
-
 class Offer(Segment):
 	def __init__(self, id, span, Receivers, surface_act_type, Resources=[], Preferences=[]):
 		Segment.__init__(self, id, span)
@@ -886,9 +902,6 @@ for dialog in dialogues:
 
 game = Game(annotation_author, list(set(players)), dialogues)
 
-# Next, we'll create the Discourse_structure object instances, one per Dialogue instance
-# Discourse-level Glozz parser:
-
 del players, dialogues, turns, segments, resources, preferences
 
 print game.Annotator
@@ -899,195 +912,127 @@ for turn in game.Dialogues[2].Turns:
 		print turn.Segments[0].Preferences[0].Span
 print game.Dialogues[2].Turns[3].Shallow_ID
 
-# Edu part:
-sd1 = Span(1, 117)
-sd2 = Span(118, 201)
+# Next, we'll create the Discourse_structure object instances, one per Dialogue instance
+# Discourse-level Glozz parser:
 
-sr1 = Span(140, 144)
-sr2 = Span(187, 191)
-
-vr1 = VerbalizedResource(1006, sr1, 'Givable', 'clay', '3')
-
-vr2 = VerbalizedResource(1007, sr2, 'Receivable', 'wood', '?')
-
-d11 = Die_roll('p1', [2, 4])
-d12 = Die_roll('p2', [1, 6])
-
-d21 = Die_roll('p1', [1, 3])
-d31 = Die_roll('p3', [2, 6])
-
-ex2 = Exchange('p1', 'p3', vr1, vr2)
-
-r111 = Resource(1001, 'clay', '2')
-r112 = Resource(1002, 'sheep', '1')
-r121 = Resource(1003, 'wheat', '4')
-r211 = Resource(1004, 'clay', '3')
-r311 = Resource(1005, 'wood', '1')
-
-g11 = Get('p1', [r111, r112])
-g12 = Get('p2', [r121])
-
-g21 = Get('p1', [r211])
-g31 = Get('p3', [r311])
-
-t1 = Trade([g11, g12], [d11, d12], None)
-t2 = Trade([g21], [d21], ex2)
-t3 = Trade([g31], [d31], None)
-
-# To complete the initialization of the Turn objects (hence, Segment and State objects).
-
-ss111 = Span(5, 56)
-ss112 = Span(57, 78)
-ss113 = Span(78, 82)
-ss121 = Span(96, 108)
-ss122 = Span(109, 117)
-ss211 = Span(124, 132)
-ss221 = Span(139, 145)
-ss222 = Span(146, 161)
-ss231 = Span(168, 174)
-ss241 = Span(183, 191)
-ss242 = Span(192, 201)
-
-st11 = Span(1, 82)
-st12 = Span(83, 117)
-
-st21 = Span(118, 132)
-st22 = Span(133, 161)
-st23 = Span(162, 174)
-st24 = Span(175, 201)
-
-vr1111 = vr2
-vr1112 = vr1
-
-sevr111 = Several_resources(99111, [vr1111, vr1112], 'OR')
-
-se111 = Offer(9111, ss111, 'p2', 'Question', [sevr111], [])
-se112 = Other(9112, ss112, 'p2', 'Assertion', [], [])
-se113 = Other(9113, ss113, 'p2', 'Assertion', [], [])
-
-se121 = Accept(9121, ss121, 'p1', 'Assertion', [], [])
-se122 = Other(9122, ss122, 'p1', 'Assertion', [], [])
-
-vr2111 = vr1
-vr2311 = vr2
-
-sr3 = Span(168, 174)
-
-vr2312 = VerbalizedResource(12312, sr3, 'Possessed', 'wheat', '?')
-
-sp1 = Span(142, 145)
-
-pr2211 = VerbalizedPreference(22211, sp1)
-
-se211 = Strategic_comment(9211, ss211, 'p3', 'Assertion', [vr2111], [])
-se221 = Other(9221, ss221, 'p1', 'Assertion', [], [pr2211])
-se222 = Other(9222, ss222, 'p1', 'Assertion', [], [])
-se231 = Offer(9231, ss231, 'p3', 'Question', [vr2311, vr2312], [])
-se241 = Accept(9241, ss241, 'p1', 'Assertion', [], [])
-se242 = Other(9242, ss242, 'p1', 'Assertion', [], [])
-
-rs111 = Resource(1011, 'clay', '0')
-rs112 = Resource(1012, 'ore', '1')
-rs113 = Resource(1013, 'sheep', '2')
-rs114 = Resource(1014, 'wheat', '0')
-rs115 = Resource(1015, 'wood', '0')
-
-rs121 = Resource(1021, 'clay', '3')
-rs122 = Resource(1022, 'ore', '0')
-rs123 = Resource(1023, 'sheep', '0')
-rs124 = Resource(1024, 'wheat', '1')
-rs125 = Resource(1025, 'wood', '0')
-
-rs211 = Resource(2011, 'clay', '0')
-rs212 = Resource(2012, 'ore', '3')
-rs213 = Resource(2013, 'sheep', '1')
-rs214 = Resource(2014, 'wheat', '2')
-rs215 = Resource(2015, 'wood', '0')
-
-rs221 = Resource(2021, 'clay', '0')
-rs222 = Resource(2022, 'ore', '3')
-rs223 = Resource(2023, 'sheep', '2')
-rs224 = Resource(2024, 'wheat', '4')
-rs225 = Resource(2025, 'wood', '1')
-
-rs231 = Resource(2031, 'clay', '2')
-rs232 = Resource(2032, 'ore', '1')
-rs233 = Resource(2033, 'sheep', '0')
-rs234 = Resource(2034, 'wheat', '0')
-rs235 = Resource(2035, 'wood', '2')
-
-rs241 = Resource(2031, 'clay', '2')
-rs242 = Resource(2032, 'ore', '1')
-rs243 = Resource(2033, 'sheep', '0')
-rs244 = Resource(2034, 'wheat', '0')
-rs245 = Resource(2035, 'wood', '2')
-
-dev111 = Development(3111, 'roads', '1')
-dev121 = Development(3121, 'settlements', '2')
-dev211 = Development(3211, 'roads', '2')
-dev212 = Development(3212, 'cities', '1')
-dev221 = Development(3221, 'cities', '1')
-dev222 = Development(3222, 'settlements', '2')
-dev231 = Development(3231, 'roads', '2')
-dev232 = Development(3232, 'cities', '1')
-dev241 = Development(3241, 'settlements', '3')
-dev242 = Development(3242, 'cities', '1')
-
-stat11 = State([rs111, rs112, rs113, rs114, rs115], [dev111])
-stat12 = State([rs121, rs122, rs123, rs124, rs125], [dev121])
-stat21 = State([rs211, rs212, rs213, rs214, rs215], [dev211, dev212])
-stat22 = State([rs221, rs222, rs223, rs224, rs225], [dev221, dev222])
-stat23 = State([rs231, rs232, rs233, rs234, rs235], [dev231, dev232])
-stat24 = State([rs241, rs242, rs243, rs244, rs245], [dev241, dev242])
-
-tu11 = Turn(11, st11, 'p1', '00:00:00:000', 1, stat11, '', [se111, se112, se113])
-tu12 = Turn(12, st12, 'p2', '00:00:00:001', 2, stat12, '', [se121, se122])
-
-tu21 = Turn(21, st21, 'p1', '00:00:00:002', 3, stat21, '', [se211])
-tu22 = Turn(22, st22, 'p3', '00:00:00:003', 4, stat22, '', [se221, se222])
-tu23 = Turn(23, st23, 'p1', '00:00:00:004', 5, stat23, '', [se231])
-tu24 = Turn(24, st24, 'p3', '00:00:00:005', 6, stat24, '', [se241, se242])
+# List of actual EDUs:
+EDUs = []
+# List of CDU and relation *ID*s! These lists will allow us to reconstruct, starting from the IDs, the actual Relation and Complex_discourse_unit object instances
+# List of tuples (id, [sub-units], [relations])
+CDUs = []
+# List of tuples (id, type, left_arg, right_arg, arg_scope, comments)
+relations = []
 
 
-ar2 = Relation('Anaphora', vr2111, vr2312)
+author_printed = False
+for i in range(0, len(d_annot)):
+	# Selecting Glozz "unit"s:
+	if d_annot[i].tag == 'unit':
+		# Selecting "unit" metadata: author,...
+		if d_annot[i][0].tag == 'metadata':
+			if d_annot[i][0][0].tag == 'author' and author_printed == False:
+				# For setting the Annotator attribute of Game objects
+				annotation_author = d_annot[i][0][0].text
+				author_printed = True
+		# Selecting "unit" characterisation
+		if d_annot[i][1].tag == 'characterisation':
+			if d_annot[i][1][0].text == 'Segment':
+				temp_id = d_annot[i].attrib['id'].split('_')[1]
+				temp_start = int(u_annot[i][2][0][0].attrib['index'])
+				temp_end = int(u_annot[i][2][1][0].attrib['index'])
+				temp_span = Span(temp_start, temp_end)
+				EDUs.append(Segment(temp_id, temp_span))
+	if d_annot[i].tag == 'relation':
+		temp_id = d_annot[i].attrib['id'].split('_')[1]
+		if d_annot[i][1].tag == 'characterisation':
+			if d_annot[i][1][0].tag == 'type':
+				temp_rel_type = d_annot[i][1][0].text
+			if d_annot[i][1][1].tag == 'featureSet':
+				if d_annot[i][1][1][1].attrib['name'] == 'Argument_scope':
+					temp_argscope = d_annot[i][1][1][1].text
+				if d_annot[i][1][1][0].attrib['name'] == 'Comments':
+					if d_annot[i][1][1][0].text != 'Please write in remarks...':
+						temp_comments = d_annot[i][1][1][0].text
+					else:
+						temp_comments = ''
+		if d_annot[i][2].tag == 'positioning':
+			if d_annot[i][2][0].tag == 'term':
+				temp_larg_id = d_annot[i][2][0].attrib['id'].split('_')[1]
+			if d_annot[i][2][1].tag == 'term':
+				temp_rarg_id = d_annot[i][2][1].attrib['id'].split('_')[1]
+		relations.append((temp_id, temp_rel_type, temp_larg_id, temp_rarg_id, temp_argscope, temp_comments))
+	if d_annot[i].tag == 'schema':
+		if d_annot[i][1].tag == 'characterisation':
+			if d_annot[i][1][0].tag == 'type' and d_annot[i][1][0].text == 'Complex_discourse_unit':
+				temp_id = d_annot[i].attrib['id'].split('_')[1]
+				if d_annot[i][2].tag == 'positioning':
+					temp_du_ids = []
+					for du in d_annot[i][2]:
+						if du.tag == 'embedded-unit' or du.tag == 'embedded-schema':
+							temp_du_ids.append(du.attrib['id'].split('_')[1])
+		CDUs.append((temp_id, temp_du_ids))
+								
 
-dial1 = Dialogue(1, sd1, [t1], [tu11, tu12], ['p1', 'p2'], [])
+real_CDUs = []
+# We first initialize CDUs.
+for cdu in CDUs:
+	temp_id = cdu[0]
+	temp_dus = []
+	temp_rels = []
+	for one_id in cdu[1]:
+		for one_edu in EDUs:
+			if one_id == one_edu.ID:
+				temp_dus.append(one_edu)
+				break
+		# Recursion: nested CDUs: only works if non-nested CDUs are found before nested ones in the list, that is, if first non-nested CDUs are created in Glozz, and then nested CDUs are created. Which makes sense from an ergonomic standpoint.
+		for one_cdu in real_CDUs:
+			if one_id == one_cdu.ID:
+				temp_dus.append(one_cdu)
+	for one_rel in relations:
+		if one_rel[2] in cdu[1] and one_rel[3] in cdu[1]:
+			temp_larg = None
+			temp_rarg = None
+			for one_du in EDUs + real_CDUs:
+				if one_rel[2] == one_du.ID:
+					temp_larg = one_du
+				if one_rel[3] == one_du.ID:
+					temp_rarg = one_du
+				if None not in [temp_larg, temp_rarg]:
+					temp_rels.append(Relation(one_rel[0], one_rel[1], temp_larg, temp_rarg, one_rel[4], one_rel[5]))
+					break
+	real_CDUs.append(Complex_segment(temp_id, temp_dus, temp_rels))	
 
-dial2 = Dialogue(2, sd2, [t2, t3], [tu21, tu22, tu23, tu24], ['p1', 'p3'], [ar2])
+for realcdu in real_CDUs:
+	if type(realcdu.Full_Discourse_units[-1]).__name__ == 'Complex_segment':
+		print realcdu.Full_Discourse_relations[0].Label
 
-g = Game('stac', ['p1', 'p2', 'p3'], [dial1, dial2])
+# Then, we initialize relations, only the shallowest ones (because those inside CDUs are already there!)
+bad_relations = []
+for rel in relations:
+	for cdu in real_CDUs:
+		if rel[0] in cdu.Discourse_relation_IDs:
+			bad_relations.append(rel)
 
-# Discourse part:
+real_relations = []
+for rel in list(set(relations) - set(bad_relations)):
+	temp_id = rel[0]
+	temp_label = rel[1]
+	temp_argscope = rel[4]
+	temp_comment = rel[5]
+	temp_larg = None
+	temp_rarg = None
+	for one_du in EDUs + real_CDUs:
+		if rel[2] == one_du.ID:
+			temp_larg = one_du
+		elif rel[3] == one_du.ID:
+			temp_rarg = one_du
+		if None not in [temp_larg, temp_rarg]:
+			real_relations.append(Relation(temp_id, temp_label, temp_larg, temp_rarg, temp_argscope, temp_comments))
+			break
 
-rr111 = Relation('Comment', se112, se113)
-rr222 = Relation('Narration', se221, se222)
-
-rr22421 = Relation('Continuation', se241, se242)
-rr22422 = Relation('Background', se242, se241)
-
-cse1 = Complex_segment(771, [se112, se113], [rr111])
-cse21 = Complex_segment(7721, [se221, se222], [rr222])
-cse23 = Complex_segment(7723, [se241, se242], [rr22421, rr22422])
-
-rr2222 = Relation('Acknowledgement', se231, cse23)
-
-cse22 = Complex_segment(7722, [se231, cse23], [rr2222])
-
-rr11 = Relation('Elaboration', se111, cse1)
-rr12 = Relation('Result', cse1, se121)
-rr13 = Relation('Continuation', se121, se122)
-rr14 = Relation('Explanation', se111, se122)
-
-rr21 = Relation('Q-Elab', se211, cse21)
-rr22 = Relation('Clarification_question', cse21, cse22)
-rr23 = Relation('QAP', se211, cse22)
-
-ds1 = Discourse_structure(8881, [se111, cse1, se121, se122], [rr11, rr12, rr13, rr14])
-
-ds2 = Discourse_structure(8882, [se211, cse21, cse22], [rr21, rr22, rr23])
-
-print g.Dialogues[1].Turns[2].State.Developments[0].Amount
-print ds2.Full_Discourse_relations[1].Full_Left_argument.Full_Discourse_units[1].Surface_act_type
+# We now need to initialize the discourse structures, one for each dialogue
+# To create as many pairs of (DUs, DRs) tuples as Dialogue units ; each pair will only contain the DUs within a dialogue unit.
+# To this end, we will reason on the spans!!
 
 
 
