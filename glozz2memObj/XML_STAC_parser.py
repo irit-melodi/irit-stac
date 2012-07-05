@@ -1,10 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# We should be doing it bottom up, from the most detailed classes to the most "enclosing" ones!
 
 from xml.etree.ElementTree import ElementTree
 from annotation_objects import *
-
 
 class XML_STAC_parser(object):
 	# EDU-level Glozz parser and internal object initializer:
@@ -116,6 +114,9 @@ class XML_STAC_parser(object):
 						temp_start = int(annot[i][2][0][0].attrib['index'])
 						temp_end = int(annot[i][2][1][0].attrib['index'])
 						temp_span = Span(temp_start, temp_end)
+						if temp_edu_type == 'Segment':
+							temp_edu_type = 'Other'
+							print "Warning: EDU left as Segment instead of a dialogue act type!!"
 						segments.append(eval(temp_edu_type)(temp_id, temp_span, temp_recv, temp_sa_type, text_file))
 					if annot[i][1][0].text == 'Resource':
 						temp_id = annot[i].attrib['id'].split('_')[1]
@@ -230,5 +231,5 @@ class XML_STAC_parser(object):
 								if du.tag == 'embedded-unit' or du.tag == 'embedded-schema':
 									temp_du_ids.append(du.attrib['id'].split('_')[1])
 				CDUs.append((temp_id, temp_du_ids))
-		return EDUs, CDUs, relations
+		return dialogues, EDUs, CDUs, relations
 

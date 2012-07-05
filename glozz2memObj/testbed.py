@@ -1,21 +1,41 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# We should be doing it bottom up, from the most detailed classes to the most "enclosing" ones!
 
-from object_crawler import *
+import sys
+from corpus_reader import *
+from unit_iterator import *
 
-u_annot_file = "./pilot03_1_stac_u_06062012.aa"
-d_annot_file = "./pilot03_1_stac_d_06062012.aa"
-text_file = "./pilot03_1.ac"
+# initializes a corpus reader.
+# We need to input the working directory and the annotation type: u or d.
 
-objcrawl = Object_crawler(u_annot_file, d_annot_file, text_file)
+corpus = Corpus_reader(sys.argv[1], sys.argv[2])
 
-game =  objcrawl.get_edus()
+# calls the reader iterator, to get a generator which allows us to get game annotations (if sys.argv[2] == 'u') or discourse annotations (if sys.argv[2] == 'd') one by one.
 
-discourse_structures = objcrawl.get_discourse()
+r = corpus.reader()
 
-print game.Dialogues[2].Turns[2].Segments[1].Text
+# iterates on the generator, to get a document-level annotation one by one.
+r.next()
 
-print discourse_structures[2].Full_Discourse_units[-1].Text
+g = r.next()
 
+# we play with each document-level annotation, depending on its type.
+
+#print g.Dialogues[1].Turns[4].Segments[1].Text
+
+print g[1].Full_Discourse_units[-1]
+
+
+## Work in progress: iterator for getting all the EDUs in a given corpus !! Doesn't work smoothly for CDUs, since the user needs to check on the unit's type and, if it's a CDU, to further iterate on its sub-units!!
+
+# calls the unit iterator, which provides an object on which several getters can be applied: unit-level, relation-level, schema-level etc.
+seg_it = Unit_iterator(corpus)
+
+# call the getter, for EDUs only!! Works well for getting EDUs out of the EDU-level annotation. But for the discourse-level annotation, we only get the shallowest discourse units, be them EDUs or CDUs. So, for the time being, the user needs to check the unit types.
+
+segments = seg_it.unit_getter('edu')
+
+# play with the generator which contains the discourse units; instead of printing, we can also very well inspect its inner object structure.
+for s in segments:
+	print s
 

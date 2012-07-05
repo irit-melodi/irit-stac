@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# We should be doing it bottom up, from the most detailed classes to the most "enclosing" ones!
 
 from annotation_objects import *
 
 class ObjectGenerator(object):
-	def __init__(self, (annot_author, dialogues, players, turns, segments, resources, preferences), (discourse_segments, complex_segments, relations)):
+	def __init__(self, (annot_author, dialogues, players, turns, segments, resources, preferences), (ddialogues, discourse_segments, complex_segments, relations)):
 		self.__Annotation_author = annot_author
 		self.__Dialogues = dialogues
+		self.__DDialogues = ddialogues
 		self.__Players = players
 		self.__Turns = turns
 		self.__Complex_segments = complex_segments
@@ -106,7 +106,7 @@ class ObjectGenerator(object):
 		# To create as many pairs of (DUs, DRs) tuples as Dialogue units ; each pair will only contain the DUs within a dialogue unit.
 		# To this end, we will reason on the spans!!
 		discourse_structures = []
-		for dial in self.__Dialogues:
+		for dial in self.__DDialogues:
 			curr_DUs = []
 			curr_DRs = []
 			curr_ID = dial.ID
