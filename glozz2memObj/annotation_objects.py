@@ -66,7 +66,7 @@ class Segment(Discourse_unit):
 		_text = _textfile.read()
 		_textfile.close()
 		del codecs
-		return _text[self.__Span.Start_pos:self.__Span.End_pos]
+		return _text[int(self.__Span.Start_pos):int(self.__Span.End_pos)]
 
 class Discourse_structure(Discourse_unit):
 	'''
@@ -76,17 +76,21 @@ class Discourse_structure(Discourse_unit):
 	Also contains a set of relation instances, between discourse units.
 	Inherits the Discourse_unit object.
 	'''
-	def __init__(self, id, DUs, DRs):
+	def __init__(self, id, annot_author, DUs, DRs):
 		'''
 		Sets the list of discourse units and of discourse relations between these.
 		@param __Discourse_units: set of Segment and / or Discourse_structure instances.
 		@param __Discourse_relations: set of Relation instances.
 		'''
+		self.__Annotation_author = annot_author
 		Discourse_unit.__init__(self, id)
 		import copy
 		self.__Discourse_units = copy.deepcopy(DUs)
 		self.__Discourse_relations = copy.deepcopy(DRs)
 		del copy
+	@property
+	def Annotator(self):
+		return self.__Annotation_author
 	@property
 	def Discourse_units(self):
 		'''
@@ -145,6 +149,7 @@ class Complex_segment(Discourse_structure):
 	Hence, it inherits the Discourse_structure object.
 	It provides an extra-check of the CDU cohesion constraint.
 	It also provides the concatenated texts of the constituent discourse units.
+	However, it doesn't preserve the author of this annotation, because the author is for an entire Discourse_structure.
 	'''
 	def __init__(self, id, DUs, DRs):
 		'''
@@ -161,7 +166,7 @@ class Complex_segment(Discourse_structure):
 			if du.ID not in rel_args:
 				print "Warning: Complex segment %(CDU)s has islands: sub-unit %(DU)s disconnected!!" % {'CDU': id, 'DU': du.ID}
 		del rel_args
-		Discourse_structure.__init__(self, id, DUs, DRs)
+		Discourse_structure.__init__(self, id, None, DUs, DRs)
 	@property
 	def Text(self):
 		_span_text = { }
@@ -713,7 +718,7 @@ class VerbalizedResource(Resource):
 		_text = _textfile.read()
 		_textfile.close()
 		del codecs
-		return _text[self.__Span.Start_pos:self.__Span.End_pos]
+		return _text[int(self.__Span.Start_pos):int(self.__Span.End_pos)]
 
 class Several_resources(object):
 	def __init__(self, id, Resources, operator):
@@ -741,6 +746,22 @@ class Several_resources(object):
 		End_pos = max(int(self.__Resources[0].Span.End_pos), int(self.__Resources[1].Span.End_pos))
 		_span = Span(Start_pos, End_pos)
 		return _span
+	@property
+	def Text(self):
+		_span_text = { }
+		_text = ''
+		for _res in self.__Resources:
+			if isinstance(_res, VerbalizedResource):
+				_span_text[int(_res.Span.End_pos)] = _res.Text
+			if isinstance(_res, Several_resources):
+				for _sres in _res.Resources:
+					_span_text[int(_sres.Span.End_pos)] = _sres.Text + ' ' + _res.Operator + ' '
+		_span_text_items = _span_text.items()
+		_span_text_items.sort(key = lambda _span_text:_span_text[0])
+		for _item in _span_text_items:
+			_text += _item[1] + ' ' + self.Operator + ' '
+		
+		return _text.strip(' ' + self.Operator)
 		
 
 class VerbalizedPreference(Segment):

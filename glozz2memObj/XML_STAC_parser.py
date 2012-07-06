@@ -26,13 +26,16 @@ class XML_STAC_parser(object):
 				if annot[i][0].tag == 'metadata':
 					if annot[i][0][0].tag == 'author' and author_printed == False:
 						# For setting the Annotator attribute of Game objects
-						annotation_author = annot[i][0][0].text
+						annotation_author = annot[i][0][0].text.strip('\n')
+						if '_u_' in annot_file:
+							if annot_file.split('_u_')[0].split('_')[-1] != annotation_author:
+								annotation_author = annot_file.split('_u_')[0].split('_')[-1]
 						author_printed = True
 				# Selecting "unit" characterisation
 				if annot[i][1].tag == 'characterisation':
 					# Getting "unit" types (Resources, Offers, Turns etc)
 					# if annot[i].getchildren()[1].getchildren()[0].text == 'Turn' | 'Offer' | etc...
-					if annot[i][1][0].text == 'Dialogue':
+					if annot[i][1][0].text.strip('\n') == 'Dialogue':
 						temp_gets = []
 						temp_dice_rolls = []
 						temp_exchange = None
@@ -41,7 +44,7 @@ class XML_STAC_parser(object):
 						if len(annot[i][1][1]) >= 1:
 							for j in range(0, len(annot[i][1][1])):
 								if annot[i][1][1][j].attrib['name'] == 'Gets':
-									for oneget in annot[i][1][1][j].text.split('.')[:-1]:
+									for oneget in annot[i][1][1][j].text.strip('\n').split('.')[:-1]:
 										temp_who = oneget.split(' gets ')[0].strip(' ')
 										if 'nothing' in oneget.split(' gets ')[1]:
 											temp_gets.append(Get(temp_who))
@@ -51,13 +54,13 @@ class XML_STAC_parser(object):
 											temp_res = Resource(None, temp_what, temp_qty)
 											temp_gets.append(Get(temp_who, temp_res))
 								elif annot[i][1][1][j].attrib['name'] == 'Dice_rolling':
-									for oneroll in annot[i][1][1][j].text.split('.')[:-1]:
+									for oneroll in annot[i][1][1][j].text.strip('\n').split('.')[:-1]:
 										temp_who = str(oneroll.split(' rolled a ')[0].strip(' '))
 										temp_what = [str(oneroll.split(' rolled a ')[1].split(' and a '))[0], str(oneroll.split(' rolled a ')[1].split(' and a '))[1]]
 										temp_dice_rolls.append(Die_roll(temp_who, temp_what))
 								elif annot[i][1][1][j].attrib['name'] == 'Trades':
 									if annot[i][1][1][j].text != None:
-										for onetrade in annot[i][1][1][j].text.split('.')[:-1]:
+										for onetrade in annot[i][1][1][j].text.strip('\n').split('.')[:-1]:
 											temp_who = str(onetrade.split(' traded ')[0])
 											temp_from_whom = str(onetrade.split(' from ')[1].strip('.'))
 											temp_what = str(onetrade.split(' traded ')[1].split(' for ')[0].split(' ')[1])
@@ -72,7 +75,7 @@ class XML_STAC_parser(object):
 						temp_end = int(annot[i][2][1][0].attrib['index'])
 						temp_span = Span(temp_start, temp_end)
 						dialogues.append(Dialogue(temp_id, temp_span, temp_trade))
-					if annot[i][1][0].text == 'Turn':
+					if annot[i][1][0].text.strip('\n') == 'Turn':
 						temp_id = annot[i].attrib['id'].split('_')[1]
 						# Test for features:
 						temp_res = []
@@ -80,62 +83,65 @@ class XML_STAC_parser(object):
 						if len(annot[i][1][1]) >= 1:
 							for j in range(0, len(annot[i][1][1])):
 								if annot[i][1][1][j].attrib['name'] == 'Identifier':
-									temp_shid = str(annot[i][1][1][j].text)
+									temp_shid = str(annot[i][1][1][j].text.strip('\n'))
 								elif annot[i][1][1][j].attrib['name'] == 'Timestamp':
-									temp_timestamp = str(annot[i][1][1][j].text)
+									temp_timestamp = str(annot[i][1][1][j].text.strip('\n'))
 								elif annot[i][1][1][j].attrib['name'] == 'Emitter':
-									temp_emitter = str(annot[i][1][1][j].text)
+									temp_emitter = str(annot[i][1][1][j].text.strip('\n'))
 								elif annot[i][1][1][j].attrib['name'] == 'Resources':
 									# Add parsing for resources
-									for res in str(annot[i][1][1][j].text).split('; '):
+									for res in str(annot[i][1][1][j].text).strip('\n').split('; '):
 										temp_res.append(Resource(None, res.split('=')[0], res.split('=')[1]))
 								elif annot[i][1][1][j].attrib['name'] == 'Developments':
 									if annot[i][1][1][j].text != None:
-										for dev in str(annot[i][1][1][j].text).split(';  '):
+										for dev in str(annot[i][1][1][j].text).strip('\n').split(';  '):
 											temp_devs.append(Development(None, dev.split('=')[0], dev.split('=')[1]))
 								elif annot[i][1][1][j].attrib['name'] == 'Comments':
-									temp_comments = str(annot[i][1][1][j].text)
+									temp_comments = str(annot[i][1][1][j].text).strip('\n')
 						temp_state = State(temp_res, temp_devs)
 						temp_start = int(annot[i][2][0][0].attrib['index'])
 						temp_end = int(annot[i][2][1][0].attrib['index'])
 						temp_span = Span(temp_start, temp_end)
 						players.append(temp_emitter)
 						turns.append(Turn(temp_id, temp_span, temp_emitter, temp_timestamp, temp_shid, temp_state, temp_comments))
-					if annot[i][1][0].text not in ['Turn', 'Dialogue', 'Resource', 'Preference', 'paragraph']:
-						temp_edu_type = str(annot[i][1][0].text)
+					if annot[i][1][0].text.strip('\n') not in ['Turn', 'Dialogue', 'Resource', 'Preference', 'paragraph']:
+						temp_edu_type = str(annot[i][1][0].text).strip('\n')
 						temp_id = annot[i].attrib['id'].split('_')[1]
 						# Test for features:
 						if len(annot[i][1][1]) >= 1:
 							for j in range(0, len(annot[i][1][1])):
 								if annot[i][1][1][j].attrib['name'] == 'Surface_act':
-									temp_sa_type = str(annot[i][1][1][j].text)
+									temp_sa_type = str(annot[i][1][1][j].text).strip('\n')
 								elif annot[i][1][1][j].attrib['name'] == 'Addressee':
-									temp_recv = str(annot[i][1][1][j].text).split(', ')
+									temp_recv = str(annot[i][1][1][j].text).strip('\n').split(', ')
 						temp_start = int(annot[i][2][0][0].attrib['index'])
 						temp_end = int(annot[i][2][1][0].attrib['index'])
 						temp_span = Span(temp_start, temp_end)
-						if temp_edu_type == 'Segment':
-							temp_edu_type = 'Other'
-							print "Warning: EDU left as Segment instead of a dialogue act type!!"
-						segments.append(eval(temp_edu_type)(temp_id, temp_span, temp_recv, temp_sa_type, text_file))
-					if annot[i][1][0].text == 'Resource':
+						if len(annot[i][1][1]) == 0 and temp_edu_type == 'Segment':
+							segments.append(Segment(temp_id, temp_span, text_file))
+						if len(annot[i][1][1]) >= 1:
+							if temp_edu_type == 'Segment' :
+								temp_edu_type = 'Other'
+								print "Warning: EDU left as Segment instead of a dialogue act type!!"
+							segments.append(eval(temp_edu_type)(temp_id, temp_span, temp_recv, temp_sa_type, text_file))
+					if annot[i][1][0].text.strip('\n') == 'Resource':
 						temp_id = annot[i].attrib['id'].split('_')[1]
 						# Test for features:
 						if len(annot[i][1][1]) >= 1:
 							for j in range(0, len(annot[i][1][1])):
 								if annot[i][1][1][j].attrib['name'] == 'Status':
-									temp_status = str(annot[i][1][1][j].text)
+									temp_status = str(annot[i][1][1][j].text).strip('\n')
 								elif annot[i][1][1][j].attrib['name'] == 'Kind':
-									temp_kind = str(annot[i][1][1][j].text)
+									temp_kind = str(annot[i][1][1][j].text).strip('\n')
 								elif annot[i][1][1][j].attrib['name'] == 'Quantity':
-									temp_qty = str(annot[i][1][1][j].text)
+									temp_qty = str(annot[i][1][1][j].text).strip('\n')
 								elif annot[i][1][1][j].attrib['name'] == 'Correctness':
-									temp_correctness = str(annot[i][1][1][j].text)
+									temp_correctness = str(annot[i][1][1][j].text).strip('\n')
 						temp_start = annot[i][2][0][0].attrib['index']
 						temp_end = annot[i][2][1][0].attrib['index']
 						temp_span = Span(temp_start, temp_end)
 						resources.append(VerbalizedResource(temp_id, temp_span, temp_status, temp_kind, temp_qty, text_file))
-					if annot[i][1][0].text == 'Preference':
+					if annot[i][1][0].text.strip('\n') == 'Preference':
 						temp_id = annot[i].attrib['id'].split('_')[1]
 						temp_start = annot[i][2][0][0].attrib['index']
 						temp_end = annot[i][2][1][0].attrib['index']
@@ -143,7 +149,7 @@ class XML_STAC_parser(object):
 						preferences.append(VerbalizedPreference(temp_id, temp_span, text_file))
 			if annot[i].tag == 'schema':
 				if annot[i][1].tag == 'characterisation':
-					if annot[i][1][0].text == 'Several_resources':
+					if annot[i][1][0].text.strip('\n') == 'Several_resources':
 						temp_id = annot[i].attrib['id'].split('_')[1]
 						temp_oneres_id = annot[i][2][0].attrib['id'].split('_')[1]
 						temp_otherres_id = annot[i][2][1].attrib['id'].split('_')[1]
@@ -160,7 +166,7 @@ class XML_STAC_parser(object):
 						if len(annot[i][1][1]) >= 1:
 							for j in range(0, len(annot[i][1][1])):
 								if annot[i][1][1][j].attrib['name'] == 'Operator':
-									temp_op = str(annot[i][1][1][j].text)
+									temp_op = str(annot[i][1][1][j].text).strip('\n')
 				resources.append(Several_resources(temp_id, [temp_oneres, temp_otherres], temp_op))
 		return annotation_author, dialogues, players, turns, segments, resources, preferences
 	@staticmethod
@@ -185,6 +191,9 @@ class XML_STAC_parser(object):
 					if annot[i][0][0].tag == 'author' and author_printed == False:
 						# For setting the Annotator attribute of Game objects
 						annotation_author = annot[i][0][0].text
+						if '_d_' in annot_file:
+							if annot_file.split('_d_')[0].split('_')[-1] != annotation_author:
+								annotation_author = annot_file.split('_d_')[0].split('_')[-1]
 						author_printed = True
 				# Selecting "unit" characterisation
 				if annot[i][1].tag == 'characterisation':
@@ -231,5 +240,5 @@ class XML_STAC_parser(object):
 								if du.tag == 'embedded-unit' or du.tag == 'embedded-schema':
 									temp_du_ids.append(du.attrib['id'].split('_')[1])
 				CDUs.append((temp_id, temp_du_ids))
-		return dialogues, EDUs, CDUs, relations
+		return annotation_author, dialogues, EDUs, CDUs, relations
 

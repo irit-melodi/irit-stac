@@ -4,8 +4,9 @@
 from annotation_objects import *
 
 class ObjectGenerator(object):
-	def __init__(self, (annot_author, dialogues, players, turns, segments, resources, preferences), (ddialogues, discourse_segments, complex_segments, relations)):
+	def __init__(self, (annot_author, dialogues, players, turns, segments, resources, preferences), (dannot_author, ddialogues, discourse_segments, complex_segments, relations)):
 		self.__Annotation_author = annot_author
+		self.__DAnnotation_author = dannot_author
 		self.__Dialogues = dialogues
 		self.__DDialogues = ddialogues
 		self.__Players = players
@@ -116,6 +117,6 @@ class ObjectGenerator(object):
 			for rel in real_relations:
 				if rel.Full_Left_argument in curr_DUs and rel.Full_Right_argument in curr_DUs:
 					curr_DRs.append(rel)
-			discourse_structures.append(Discourse_structure(curr_ID, curr_DUs, curr_DRs))
+			discourse_structures.append(Discourse_structure(curr_ID, self.__DAnnotation_author, curr_DUs, curr_DRs))
 		return discourse_structures
 

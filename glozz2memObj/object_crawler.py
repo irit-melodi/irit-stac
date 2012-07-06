@@ -14,7 +14,7 @@ class Object_crawler(object):
 		if d_annot_file != None:
 			_Discourse_parse = XML_STAC_parser().parse_discourse_Glozz_XML(d_annot_file, text_file)
 		else:
-			_Discourse_parse = ([], [], [], [])
+			_Discourse_parse = (None, [], [], [], [])
 		self.__Object_generator = ObjectGenerator(_Edu_parse, _Discourse_parse)
 	def get_edus(self):
 		return self.__Object_generator.generate_edu_Game()
