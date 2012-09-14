@@ -1,0 +1,35 @@
+ID	Timestamp	Emitter	Resources	Buildups	Text	Annotation	Comment
+343	15:01:29:983	Server	 		Cat built a road.	 	 
+344	15:01:42:342	Cat	clay=0; ore=0; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	would anyone like wheat?	 	 
+345	15:01:47:663	Thomas	clay=4; ore=4; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	yes please	 	 
+346	15:01:51:453	Cat	clay=0; ore=0; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	I need clay or ore	 	 
+347	15:01:52:073	Thomas	clay=4; ore=4; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	I can give an ore	 	 
+348	15:01:56:981	Thomas	clay=4; ore=4; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	or a clay	 	 
+349	15:01:59:067	Cat	clay=0; ore=0; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	or a sheep!	 	 
+350	15:02:06:451	Thomas	clay=4; ore=4; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	impossible...	 	 
+351	15:02:09:028	Cat	clay=0; ore=0; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	let's do the clay	 	 
+352	15:02:11:747	Thomas	clay=4; ore=4; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	k	 	 
+353	15:02:37:245	Server	 		Cat made an offer to trade 1 wheat for 1 clay.	 	 
+354	15:02:42:786	Server	 		Cat traded 1 wheat for 1 clay from Thomas.	 	 
+355	15:02:52:604	Cat	clay=1; ore=0; sheep=0; wheat=2; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	would you like one more what for an ore?	 	 
+356	15:03:03:332	Thomas	clay=3; ore=4; sheep=0; wheat=2; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	one more wheat?	 	 
+357	15:03:09:775	Cat	clay=1; ore=0; sheep=0; wheat=2; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	one wheat	 	 
+358	15:03:11:611	Thomas	clay=3; ore=4; sheep=0; wheat=2; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	kk	 	 
+359	15:03:22:955	Server	 		Cat made an offer to trade 1 wheat for 1 ore.	 	 
+360	15:03:29:133	Server	 		Cat traded 1 wheat for 1 ore from Thomas.	 	 
+361	15:03:45:779	Server	 		Thomas rolled a 1 and a 5.	 	 
+362	15:03:45:780	Server	 		Thomas gets 2 ore. Cat gets 2 ore.	 	 
+363	15:04:32:840	Server	 		Thomas traded 4 ore for 1 sheep from the bank.	 	 
+364	15:04:37:401	Server	 		Thomas built a settlement.	 	 
+365	15:04:55:470	Server	 		william rolled a 4 and a 6.	 	 
+366	15:04:55:472	Server	 		Thomas gets 1 sheep. william gets 4 sheep.	 	 
+367	15:05:08:703	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	anyone can give me a sheep?	 	 
+368	15:05:11:967	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	for ore	 	 
+369	15:05:14:739	william	clay=1; ore=1; sheep=4; wheat=4; wood=0; unknown=0; knights=1; dev-cards=1	roads=[100,171; 171,101; 101,188; 188,172]; cities=[116,171; 171,118; 118,205]	if you give me wood	 	 
+370	15:05:23:483	Thomas	clay=2; ore=1; sheep=1; wheat=2; wood=0; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	not me	 	 
+371	15:05:23:494	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152; 152,168]; cities=[137,71]	for two ore?	 	 
+372	15:05:32:105	william	clay=1; ore=1; sheep=4; wheat=4; wood=0; unknown=0; knights=1; dev-cards=1	roads=[100,171; 171,101; 101,188; 188,172]; cities=[116,171; 171,118; 118,205]	k	 	 
+373	15:05:38:667	Server	 		william made an offer to trade 1 sheep for 2 ore.	 	 
+374	15:05:41:245	Server	 		william traded 1 sheep for 2 ore from Cat.	 	 
+375	15:06:13:185	Server	 		Cat rolled a 5 and a 3.	 	 
+376	15:06:13:187	Server	 		Thomas gets 2 ore, 1 wheat. william gets 2 ore, 2 wheat.	 	 

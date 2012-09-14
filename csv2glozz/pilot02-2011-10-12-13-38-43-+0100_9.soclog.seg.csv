@@ -1,0 +1,32 @@
+ID	Timestamp	Emitter	Resources	Buildups	Text	Annotation	Comment
+285	14:55:42:173	Thomas	clay=0; ore=10; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]	for anything	 	 
+286	14:55:46:421	william	clay=1; ore=2; sheep=0; wheat=5; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118]	wheat?	 	 
+287	14:55:54:269	Thomas	clay=0; ore=10; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]	3 ore for a wheat?	 	 
+288	14:55:59:077	Cat	clay=0; ore=2; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152]	ok	 	 
+289	14:56:03:053	william	clay=1; ore=2; sheep=0; wheat=5; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118]	^^	 	 
+290	14:56:13:572	Server	 		Thomas made an offer to trade 3 ore for 1 wheat.	 	 
+291	14:56:23:234	Cat	clay=0; ore=2; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152]	sorry, & misunderstood	 	 
+292	14:56:28:742	Thomas	clay=0; ore=10; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]	ok	 	 
+293	14:56:30:159	william	clay=1; ore=2; sheep=0; wheat=5; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118]	i will do it	 	 
+294	14:56:40:046	Server	 		Thomas made an offer to trade 3 ore for 1 wheat.	 	 
+295	14:56:43:383	Server	 		Thomas traded 3 ore for 1 wheat from william.	 	 
+296	14:56:48:997	Thomas	clay=0; ore=7; sheep=0; wheat=2; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]	thaks	 	 
+297	14:57:00:292	Server	 		Thomas built a city.	 	 
+298	14:57:18:613	william	clay=1; ore=5; sheep=0; wheat=4; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118]	*ADDTIME*	 	 
+299	14:57:19:179	Server	 		william rolled a 3 and a 1.	 	 
+300	14:57:19:181	Server	 		Thomas gets 2 clay. william gets 2 wheat. Cat gets 2 wheat.	 	 
+301	14:57:30:018	Thomas	clay=2; ore=4; sheep=0; wheat=0; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	k	 	 
+302	14:57:39:568	Server	 		william built a city.	 	 
+303	14:57:53:136	Server	 		Cat rolled a 1 and a 5.	 	 
+304	14:57:53:138	Server	 		Thomas gets 2 ore. Cat gets 1 ore.	 	 
+305	14:57:54:878	Cat	clay=0; ore=3; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152]	i need clay	 	 
+306	14:57:59:766	Cat	clay=0; ore=3; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152]	I can give wheat	 	 
+307	14:58:03:925	william	clay=1; ore=2; sheep=0; wheat=4; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118; 118,205]	na	 	 
+308	14:58:05:375	Thomas	clay=2; ore=6; sheep=0; wheat=0; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	sorry nope	 	 
+309	14:58:14:676	Cat	clay=0; ore=3; sheep=0; wheat=3; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70; 70,152]	can someone give me a sheep?	 	 
+310	14:58:20:108	william	clay=1; ore=2; sheep=0; wheat=4; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118; 118,205]	nope	 	 
+311	14:58:23:623	Thomas	clay=2; ore=6; sheep=0; wheat=0; wood=1; unknown=0; knights=0; dev-cards=0	roads=[68,104; 104,105; 105,122]; cities=[84,105]	n	 	 
+312	14:58:28:685	Server	 		Cat built a city.	 	 
+313	14:58:30:884	william	clay=1; ore=2; sheep=0; wheat=4; wood=0; unknown=0; knights=1; dev-cards=0	roads=[100,171; 171,101; 101,188]; cities=[116,171; 171,118; 118,205]	there is just no market for sheep...	 	 
+314	14:58:38:773	Server	 		Thomas rolled a 2 and a 3.	 	 
+315	14:58:38:775	Server	 		william gets 2 clay.	 	 

@@ -1,0 +1,43 @@
+ID	Timestamp	Emitter	Resources	Buildups	Text	Annotation	Comment
+60	14:22:01:262	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	so I'd like to build a road...	 	 
+61	14:22:27:136	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	where do i press?	 	 
+62	14:22:33:060	william	clay=0; ore=0; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=1	roads=[100,171]; settlements=[116,171]	to build?	 	 
+63	14:22:38:459	william	clay=0; ore=0; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=1	roads=[100,171]; settlements=[116,171]	"at the bottom next to ""road"" etc."	 	 
+64	14:22:39:892	Thomas	clay=0; ore=3; sheep=0; wheat=1; wood=3; unknown=0; knights=0; dev-cards=0	roads=[68,104]; settlements=[84,105]	if you have 1 wood, 1 clay, & it is at the bottom of the screen		
+65	14:23:06:971	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	okay, I see...	 	 
+66	14:23:16:974	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	anyone wants an ore?	 	 
+67	14:23:21:106	Thomas	clay=0; ore=3; sheep=0; wheat=1; wood=3; unknown=0; knights=0; dev-cards=0	roads=[68,104]; settlements=[84,105]	nope	 	 
+68	14:23:21:722	william	clay=0; ore=0; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=1	roads=[100,171]; settlements=[116,171]	no	 	 
+69	14:23:24:537	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	for a wood	 	 
+70	14:23:43:218	william	clay=0; ore=0; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=1	roads=[100,171]; settlements=[116,171]	you need 10 victory points to win. & a settlement gives you 1 VP, & a city gives you 2 VP	 	 
+71	14:23:47:383	Server	 		Thomas rolled a 1 and a 2.	 	 
+72	14:23:47:386	Server	 		Thomas gets 1 wood. william gets 1 wood.	 	 
+73	14:23:56:321	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	okay, thanks		
+74	14:24:12:923	Server	 		william rolled a 5 and a 1.	 	 
+75	14:24:12:925	Server	 		Thomas gets 1 ore. Cat gets 1 ore.	 	 
+76	14:24:30:466	william	clay=0; ore=0; sheep=0; wheat=1; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	does someone have clay?	 	 
+77	14:24:41:490	Thomas	clay=0; ore=4; sheep=0; wheat=1; wood=3; unknown=0; knights=0; dev-cards=0	roads=[68,104]; settlements=[84,105]	none	 	 
+78	14:24:46:739	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	yes	 	 
+79	14:24:50:232	Server	 		Cat rolled a 2 and a 6.	 	 
+80	14:24:50:235	Server	 		Thomas gets 1 ore. william gets 1 ore, 1 wheat.	 	 
+81	14:25:10:058	william	clay=0; ore=1; sheep=0; wheat=2; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	what do you want for it?	 	 
+82	14:25:17:324	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	hmm, not sure...	 	 
+83	14:25:26:922	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	I'd like wood, & but I need clay too	 	 
+84	14:25:32:642	william	clay=0; ore=1; sheep=0; wheat=2; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	i can give you wood!	 	 
+85	14:25:39:166	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	I can echange ore for wood though	 	 
+86	14:25:50:314	william	clay=0; ore=1; sheep=0; wheat=2; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	give or want ore?	 	 
+87	14:25:58:702	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	give ore, receive wood	 	 
+88	14:26:03:584	william	clay=0; ore=1; sheep=0; wheat=2; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	i'm in	 	 
+89	14:26:07:447	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	great	 	 
+90	14:26:23:427	Server	 		Cat made an offer to trade 1 ore for 1 wood.	 	 
+91	14:26:47:328	william	clay=0; ore=1; sheep=0; wheat=2; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	oh, sorry. & i thought you were talking about yourself when you said give ore	 	 
+92	14:27:07:277	Cat	clay=1; ore=3; sheep=0; wheat=1; wood=0; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	I mean I can offer ore	 	 
+93	14:27:08:097	william	clay=0; ore=1; sheep=0; wheat=2; wood=3; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	? i  am confused	 	 
+94	14:27:11:781	Server	 		Cat traded 1 ore for 1 wood from william.	 	 
+95	14:27:18:729	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	if you can give me wood	 	 
+96	14:27:21:857	william	clay=0; ore=2; sheep=0; wheat=2; wood=2; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	ok. & i just got the speech bubble message wrong...	 	 
+97	14:27:25:616	william	clay=0; ore=2; sheep=0; wheat=2; wood=2; unknown=0; knights=1; dev-cards=0	roads=[100,171]; settlements=[116,171]	done	 	 
+98	14:27:37:573	Cat	clay=1; ore=2; sheep=0; wheat=1; wood=1; unknown=0; knights=0; dev-cards=0	roads=[136,70]; settlements=[137,71]	thanks	 	 
+99	14:28:19:376	Server	 		Cat built a road.	 	 
+100	14:28:29:076	Server	 		Thomas rolled a 6 and a 6.	 	 
+101	14:28:29:079	Server	 		Cat gets 1 wood.	 	 

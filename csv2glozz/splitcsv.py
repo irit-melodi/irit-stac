@@ -4,9 +4,10 @@
 '''
 Now, what we should do: take the .seg.csv files (that is, csv files with segmentation information) and split them in several parts, so that:
 -- each part completely encloses dialogues
--- the parts are evenly split
+-- the parts are as evenly split as possible
 -- the parts are small (i.e. they open nicely in Glozz)
 Hence : around 10 parts should be OK. Each part contains at least one complete dialogue. Each part may contain several dialogues, esp. when the dialogues are small (like, 1-5 turns).
+**Extra-rule: Don't split if a player rolls a 7!**
 '''
 import csv, sys, codecs
 
@@ -32,7 +33,7 @@ size_limit = nb_turns / 10
 nb_dialogues = 1 # There always is at least one dialogue in a conversation. Moreover, the last dialogue is not ennded with a dice rolling.
 nb_turns = 0
 curr_csv = 1
-discard_first_line = False
+discard_lines = []
 file_opened = False
 for csvrow in lcsvreader[1:]:
 	[curr_turn_id, curr_turn_timestamp, curr_turn_emitter, curr_turn_res, curr_turn_builds, curr_turn_text, curr_turn_annot, curr_turn_comment] = csvrow
@@ -40,7 +41,8 @@ for csvrow in lcsvreader[1:]:
 		outcsvfile = open(sys.argv[1].split(".")[0]+"_"+str(curr_csv)+".soclog.seg.csv", "a")
 		file_opened = True
 		outcsv=csv.writer(outcsvfile, delimiter="\t", dialect='excel')
-		if discard_first_line == True and nb_turns == 0:
+		if discard_lines != []:# and nb_turns == 0:
+			discard_lines.pop()
 			pass
 		else:
 			outcsv.writerow(csvrow)
@@ -56,15 +58,30 @@ for csvrow in lcsvreader[1:]:
 			outcsvfile = open(sys.argv[1].split(".")[0]+"_"+str(curr_csv)+".soclog.seg.csv", "a")
 		outcsv=csv.writer(outcsvfile, delimiter="\t", dialect='excel')
 		outcsv.writerow(csvrow)
-		for i in range(1,4):
-			if lcsvreader[lcsvreader.index(csvrow)+i][2] == 'Server':
+		##
+		i = 1
+		while lcsvreader[lcsvreader.index(csvrow)+i][2] == 'Server' :
+			outcsv.writerow(lcsvreader[lcsvreader.index(csvrow)+i])
+			discard_lines.append(True)
+			i += 1
+		##
+		#for i in range(1,4):
+		#	if lcsvreader[lcsvreader.index(csvrow)+i][2] == 'Server':
+		#		outcsv.writerow(lcsvreader[lcsvreader.index(csvrow)+i])
+		#		discard_first_line = True
+		#	else:
+		#		break
+		if sum(map(int, curr_turn_text.strip('.').split('rolled a')[1].split('and a'))) == 7:
+			i = 1
+			while lcsvreader[lcsvreader.index(csvrow)+i][2] != 'Server' :
 				outcsv.writerow(lcsvreader[lcsvreader.index(csvrow)+i])
-				discard_first_line = True
-			else:
-				break
-		curr_csv += 1
-		nb_turns = 0
-	else:
+				discard_lines.append(True)
+				i += 1
+		else:
+			outcsvfile.close()
+			curr_csv += 1
+			nb_turns = 0
+	else: 
 		#not_first_dialogue = True
 		#old_csvrow = csvrow
 		outcsvfile.close()
