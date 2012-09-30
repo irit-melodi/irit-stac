@@ -1,6 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+The purpose of this small program is to:
+	- iterate on a set of cleaned-up soclog files;
+	- call the program which extracts the CSV files from these cleaned-up soclogs,
+	- print out the file names of the documents, along with their number of turns and of 'linguistic' turns, i.e.,
+	with the Server's turns excluded.
 
+Usage:
+>>> ./batch_extract_annot.py
+
+@note: The program assumes a Linux environment and that all the files start with 'pilot' and end with '.txt'.
+Any change of this state of affairs should be done on line 19.
+"""
 import commands, itertools, collections
 import extract_annot
 

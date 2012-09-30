@@ -2,12 +2,27 @@
 # -*- coding: utf-8 -*-
 
 '''
-Now, what we should do: take the .seg.csv files (that is, csv files with segmentation information) and split them in several parts, so that:
--- each part completely encloses dialogues
--- the parts are as evenly split as possible
--- the parts are small (i.e. they open nicely in Glozz)
-Hence : around 10 parts should be OK. Each part contains at least one complete dialogue. Each part may contain several dialogues, esp. when the dialogues are small (like, 1-5 turns).
-**Extra-rule: Don't split if a player rolls a 7!**
+The program takes as input a CSV file with segmentation information 
+(i.e. "&" after each segment but the last in each turn) and splits it in several parts, so that:
+	- each part completely encloses dialogues,
+	- the parts are as evenly split as possible
+	- the parts are small (i.e. they open nicely in Glozz)
+	- if a player rolls a 7, no splitting is performed.
+
+Hence, each game is split in around 10 parts, but in practice, given the rules above, this comes down to 11 to 12 parts. 
+
+Each part contains at least one complete dialogue. 
+Each part may contain several dialogues, esp. when the dialogues are small (like, 1-5 turns).
+
+The program outputs several CSV files, obtained according to the rules above. 
+The names of these files are formed by appending '_'<slice number> to the initial CSV file basename, and then appending the extension of the initial CSV file.
+
+Example: for csvfile.soclog.seg.csv as input file name, 
+	csvfile_1.soclog.seg.csv to csvfile_12.soclog.seg.csv are obtained.
+
+Usage:
+>>> ./splitcsv.py <input CSV file name>
+
 '''
 import csv, sys, codecs
 

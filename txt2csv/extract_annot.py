@@ -7,24 +7,25 @@ import re,math,itertools
 from nltk.tokenize import PunktWordTokenizer as tk
 from nltk.stem.wordnet import WordNetLemmatizer as lemm
 
-"""parse turns extracted from a soclog file for settlers' pilot study to extract a Glozz annotation template
-"""
-# The purpose of this program is to parse a soclog.txt (cleaned up by Philippe) and to generate:
-# -- a clean text + a pre-annotation in Glozz ;
-# For each line, we want to create a "turn" object, to which we associate several information items:
-# -- ID : an integer
-# -- timestamp: a string resulting from concatenating a set of integers of the form: d*d and d*dd, where 'd' is a digit from 0 to 9 and 'd*' is a digit from 1 to 9, with ':', to yield d*d:d*d:d*d:d*dd
-# -- emitter: a string holding the identifier of the speaker of the turn
-# -- state: a structure holding two sub-structures:
-#	-- resources: a set of feature:value pairs
-#	-- buildup: a set of feature:coordinates pairs, where 'coordinates' is a pair of values
-# -- text: the text of the turn
-# These are made available in Glozz as *pre-annotations*. Also, after '&' are introduced after each segment in the text of the turn, they are extracted and segments marked as Glozz pre-annotations.
-# -- a CSV file with several fields: ID, timestamp, emitter, state: resources and buildup (2 separate columns), text, annotation. After a series of annotations, the 'annotation' column will be split in several sub-columns:
-# -- target
-# -- surface-level DA (dialogue act)
-# -- task-specific DA; for the offer
+'''
+The purpose of this program is to parse a soclog.txt (cleaned up by Philippe) and to generate a CSV file.
+For each line, we want to create a C{Turn} object, to which we associate several information items:
+	- ID : an integer
+	- timestamp: a string resulting from concatenating a set of integers of the form: d*d and d*dd, where 'd' is a digit from 0 to 9 and 'd*' is a digit from 1 to 9, with ':', to yield d*d:d*d:d*d:d*dd
+	- emitter: a string holding the identifier of the speaker of the turn
+	- state: a structure holding two sub-structures:
+	- resources: a set of feature:value pairs
+	- buildup: a set of feature:coordinates pairs, where 'coordinates' is a pair of values
+ -- text: the text of the turn
+A CSV file with several fields is generated: ID, timestamp, emitter, state: resources and buildups (2 separate columns), text, annotation. After a series of annotations, the 'annotation' column will be split in several sub-columns:
+	- target
+	- surface-level DA (dialogue act)
+	- task-specific DA
 
+Usage:
+>>> import extract_annot
+>>> extract_annot.wikitext2csv(<cleaned-up Soclog filename>)
+'''
 # We first create the dialogue object, with, for each line: metadata (ID, emitter, state -- resources and buildup), text.
 
 class Dialogue:
@@ -54,6 +55,10 @@ class Turn:
 		self.__quantities = []
 		self.annotations = [line.split("|")[6]]
 	def parse(self, text):
+		"""
+		Only useful for parsing the Server's turns. Unused in practice.
+		The method takes a text as input and initializes the private game-related attributes.
+		"""
 		tokens = []
 		dumps = [tokens.append(tk().tokenize(text.split(".")[:-1][i].strip(" "))) for i in range(0,len(text.split(".")[:-1]))]
 		#tokens = list(itertools.chain(*tokens))
@@ -116,6 +121,9 @@ class Turn:
 						self.annotations.append(", ".join([self.__players[-1], self.__actions[-1], self.__items[-1], self.__quantities[-1]]))
 
 class State:
+	"""
+	Holds the resources and the buildups (called "Developments" in the Guapi).
+	"""
 	def __init__(self, state_chunk): #state_chunk is actually line.split("|")[4]
 		item_list = state_chunk.split(",")
 		res_list = []
@@ -130,6 +138,15 @@ class State:
 		self.buildups = build_list[:]
 
 def wikitext2csv(filename):
+	"""
+	Does the actual conversion from cleaned-up Soclogs to CSV files.
+	Also returns a list with two elements:
+		- the total number of turns.
+		- the total number of linguistic turns, i.e. turns excluding those of the Server.
+	@param filename: name of the cleaned-up Soclog file.
+	@type filename: string.
+	@rtype: list of integers: [total number of turns, total number of linguistic turns].
+	"""
 	print "Processing soclog: "+filename
 	dialogue_file = codecs.open(filename, "r", "utf-8")
 	lines = dialogue_file.readlines()

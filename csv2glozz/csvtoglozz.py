@@ -2,21 +2,30 @@
 # -*- coding: utf-8 -*-
 
 '''
-Now, what we should do: take the .seg.csv files (that is, csv files with segmentation information), process the '&'s and output an .ac file with text only and an .aa file with Glozz pre-annotations corresponding to the 'Dialogue' objects. Thus,
--- the .ac file will contain the text attributes of the dialogue turns (without the '&', one turn on a line).
--- the .aa file will contain:
-	-- a pre-annotation in terms of:
-		-- turn information:
-			-- borders (implicit)
-			-- Identifier:<ID>
-			-- Timestamp:<nn:nn:nnn>
-			-- Emitter
-			-- Resources:[res_1:<qty_1>, ..., res_n:<qty_n>]
-			-- Buildups:[roads:[(x_1,y_1), ..., (x_m,y_m)]]
-		-- segment (UDE) information:
-			-- borders (implicit)
-			-- Shallow dialogue act:Question | Request | Assertion
-			-- Task dialogue act:Offer | Counteroffer | Has-resources | Acceptance | Refusal | Strategic-comment | Other
+The program takes (optionally segmented) CSV files as inputs, processes the segment information (the "&"s) if applicable, and outputs an (.ac, .aa) pair of Glozz files.
+
+The output files contain:
+	- the .ac file will contain the text attributes of the dialogue turns (without the '&', one turn on a line).
+	- the .aa file will contain:
+		- a pre-annotation in terms of:
+			- turn information:
+				- borders (implicit)
+				- Identifier
+				- Timestamp
+				- Emitter
+				- Resources
+				- Developments
+			- segment (UDE) information:
+				- borders (implicit)
+				- Shallow dialogue act: Question | Request | Assertion
+				- Task dialogue act: Offer | Counteroffer | Accept | Refusal | Strategic_comment | Other
+
+Usage:
+>>> ./csvtoglozz.py -f <CSV file name>
+
+@note: The output file names are formed by appending the .ac and .aa extensions to the input CSV file basename.
+Example: for an input filename like document1.soclog.seg.csv, the pair  (document1.ac, document1.aa) is generated.
+@note: The program supports filenames with empty spaces in them.
 '''
 import csv, sys, codecs
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
