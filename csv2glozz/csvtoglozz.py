@@ -8,6 +8,11 @@ The output files contain:
 	- the .ac file will contain the text attributes of the dialogue turns (without the '&', one turn on a line).
 	- the .aa file will contain:
 		- a pre-annotation in terms of:
+			- dialogue information:
+				- cut at dice rollings;
+				- trades,
+				- dice rollings,
+				- resource gettings.
 			- turn information:
 				- borders (implicit)
 				- Identifier
