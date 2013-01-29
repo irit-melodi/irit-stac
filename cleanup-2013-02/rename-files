@@ -3,7 +3,7 @@
 # Simplify annotation filenames, by stripping away redundant
 # information that is encoded in the filenames themselves.
 #
-# The goal (as proposed by Phillipe Mueller) is to bring
+# The goal (as proposed by Phillipe Muller) is to bring
 # some stability to the filenames, that the same file
 # having been through different stages of processing or having
 # been treated by different people should keep its identity.
@@ -13,11 +13,6 @@
 #
 # This is really meant as a one-shot tool, and is really here
 # for archeological purposes only.
-#
-# Usage
-#
-# cd $DIR_TO_CLEAN
-# PATH_TO_STAC/code/cleanup-2013-02/rename-files
 
 import os
 import re
