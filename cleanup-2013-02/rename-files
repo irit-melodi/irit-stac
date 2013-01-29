@@ -33,9 +33,9 @@ else:
 
 def clean_name(root, f):
     (bname,ext)=os.path.splitext(f)
-    pad_pnum   = re.compile('(pilot\d\d_)(\d)_')
+    pad_pnum   = re.compile('(pilot\d\d_)(\d)(_|$)')
     strip_junk = re.compile('(pilot\d\d_\d*)_.*')
-    nice_bname = strip_junk.sub('\g<1>', pad_pnum.sub('\g<1>0\g<2>_', bname))
+    nice_bname = strip_junk.sub('\g<1>', pad_pnum.sub('\g<1>0\g<2>\g<3>', bname))
     return os.path.join(root, nice_bname + ext)
 
 for root, _, files in os.walk(dir):
