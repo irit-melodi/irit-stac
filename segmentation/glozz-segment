@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Eric Kow
+# License: BSD3
+
+"""
+Crude EDU segmenter from unannotated stage glozz files
+
+Quick start
+-----------
+
+"""
+
+from   itertools import chain
+from   os.path import basename, splitext
+import copy
+import csv
+import re
+import os
+import os.path
+import sys
+
+
+from nltk.tokenize import sent_tokenize
+
+from educe import stac
+import segmentation
+import stac_csv
+
+def join_segments(xs):
+    return "& ".join(xs)
+
+def turn_segments(u):
+    """
+    Given a unit annotation (presumably a turn), segment its corresponding
+    text and output a list of segments.
+    """
+    # hmm, interesting that the turn number is considered part of the text
+    # for the annotations
+    dirty_text = entry.text_for(u)
+    drop_turn_id = re.compile(r'^\d* : (.*)')
+    match = drop_turn_id.match(dirty_text)
+    if match:
+        text = match.group(1)
+    else:
+        text = dirty_text
+    return segmentation.segment(text)
+
+import argparse
+
+arg_parser = argparse.ArgumentParser(description='Segment into EDUs.')
+arg_parser.add_argument('input' , metavar='DIR')
+arg_parser.add_argument('output', metavar='DIR')
+arg_parser.add_argument('--csv',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        dest='csv',
+                        help='output csv file (replacing text with segmentations)')
+arg_parser.add_argument('--no-seg',
+                        action='store_const',
+                        const=False,
+                        default=True,
+                        dest='segment',
+                        help='do not do segmentation')
+arg_parser.add_argument('--verbose', '-v',
+                        action='count',
+                        default=1)
+arg_parser.add_argument('--quiet' ,  '-q',
+                        action='store_const',
+                        const=0,
+                        dest='verbose')
+args=arg_parser.parse_args()
+
+def is_interesting(f):
+   return f.stage == 'unannotated'
+
+# dictionaries from FileId to file paths
+reader       = stac.Reader(args.input)
+corpus_files = reader.filter(reader.files(), is_interesting)
+corpus       = reader.slurp(corpus_files, verbose=args.verbose)
+docs         = frozenset([k.doc for k in corpus])
+
+
+for d in docs:
+    output_dir = os.path.join(args.output, d)
+    try:
+        os.mkdir(output_dir)
+    except OSError:
+        pass # no problem
+    subcorpus  = reader.filter(corpus, lambda k:k.doc == d)
+    for k in subcorpus:
+        subdoc = k.subdoc
+        entry  = subcorpus[k]
+        bname  = basename(corpus_files[k][0])
+        output_filename = os.path.join(output_dir, splitext(bname)[0])
+        if args.csv:
+            output_filename = output_filename + ".csv"
+
+        turns = [ u for u in entry.units if u.type == 'Turn' ]
+        segs  = { u : join_segments(turn_segments(u)) for u in turns }
+        with open(output_filename, 'w') as ofile:
+            if args.csv:
+                writer = stac_csv.mk_writer(ofile)
+                def mk_row(u):
+                    def get_feature(f,f2):
+                        v_ = u.features[f2]
+                        if v_ is None:
+                            v = ""
+                        else:
+                            v = v_.strip()
+                        return (f,v)
+                    copied = [ get_feature(f,f) for f in [ 'Timestamp', 'Emitter', 'Resources' ] ]
+                    pairs  = copied + [ get_feature('ID','Identifier')
+                                      , get_feature('Buildups','Developments')]
+                    return dict(pairs)
+                writer.writeheader()
+                for t in turns:
+                    writer.writerow(mk_row(t))
+            else:
+                segments = [ segs[t] for t in turns ]
+                print >> ofile, "\n".join(segments)

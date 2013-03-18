@@ -36,6 +36,7 @@ Details
 from   glob      import glob
 from   itertools import chain
 
+import fnmatch
 import itertools
 import os
 import sys
@@ -44,9 +45,6 @@ from nltk.metrics.agreement import AnnotationTask
 from nltk.metrics           import ConfusionMatrix
 
 from educe import stac
-from educe import glozz
-
-import educe.corpus
 
 import showscores
 
@@ -56,19 +54,20 @@ def concat(xs):
     """
     return list(chain.from_iterable(xs))
 
+def frozensingleton(x):
+    return frozenset([x])
+
 # ----------------------------------------------------------------------
 # corpus slicing
 # ----------------------------------------------------------------------
 
-def concat_relations(corpus, doc, annotator):
+def concat_relations(corpus, annotator):
     """
     Relations from all documents for a given annotator excluding those which are
     structural annotations only (eg. paragraph, turn, etc)
     """
-    pattern     = educe.corpus.file_pattern(doc=doc, annotator=annotator)
-    annotations = educe.corpus.subcorpus(pattern,corpus).values()
-    all_things  = concat([x.rels for x in annotations])
-    return [x for x in all_things if stac.is_real_annotation(x)]
+    annotations = [ v.rels for k,v in corpus.items() if k.annotator == annotator ]
+    return concat(annotations)
 
 # ----------------------------------------------------------------------
 # attachments
@@ -99,7 +98,7 @@ def merge_relation_labels(xs):
     """
     Union of relation labels for collection of relations
     """
-    return frozenset.union(*map(educe.stac.relation_labels, xs))
+    return frozenset.union(*map(stac.relation_labels, xs))
 
 def nltk_triple(a,span,rels):
     """
@@ -164,7 +163,8 @@ def align_annotations(rels, symmetry):
 # options
 # ----------------------------------------------------------------------
 
-merge_docs = ['pilot14', 'pilot20', 'pilot21']
+good_annotators = frozenset([ 'lpetersen', 'hjoseph' ])
+merge_docs = frozenset(['pilot14', 'pilot20', 'pilot21'])
 
 import argparse
 
@@ -205,15 +205,25 @@ args=arg_parser.parse_args()
 # the functions here depend on the global args variable
 # ----------------------------------------------------------------------
 
-def select_items(corpus, doc=None, annotators=None):
-    all_annotators = set([k.annotator for k in corpus.keys()])
-    if 'GOLD' in all_annotators and not args.gold_ok:
-        all_annotators.remove('GOLD')
-    if annotators is None:
-        anno_ok = lambda _: True
+def select_items(corpus, annotators=None):
+    if args.gold_ok:
+        ok_annotators_ = good_annotators | frozensingleton('GOLD')
     else:
-        anno_ok = lambda a: a in annotators
-    return { a:concat_relations(corpus, doc, a) for a in all_annotators if anno_ok(a) }
+        ok_annotators_ = good_annotators
+
+    if annotators is None:
+        ok_annotators = ok_annotators_
+    else:
+        ok_annotators = ok_annotators_ & frozenset(annotators)
+
+    def select_units(xs):
+        if args.resource:
+            return [ x for x in xs if stac.is_resource(x) ]
+        else:
+            return [ x for x in xs if stac.is_dialogue_act(x) ]
+
+    return { a:concat_relations(corpus, a) for a in ok_annotators }
+
 
 # we are building dictionaries from keys to annotation tasks
 # a key is a tuple of documen set and some annotators (eg. a pair)
@@ -234,16 +244,18 @@ def mk_triples(rels):
 # reading the corpus in and computing agreement
 # ----------------------------------------------------------------------
 
+def is_interesting(f):
+   return fnmatch.fnmatch(f.doc, args.glob) and f.stage == 'discourse'
+
 # dictionaries from FileId to file paths
-all_files=stac.corpus_files(args.corpus, args.glob)
-discourse_files=educe.corpus.subcorpus(educe.corpus.file_pattern(stage='discourse'),
-                                       all_files)
+reader       = stac.Reader(args.corpus)
+corpus_files = reader.filter(reader.files(), is_interesting)
 
 # actual contents of the files
 # reading this in can be slow :-/
 # is it the IO, do we need faster parsing?
 # is it worth pickling the corpus?
-corpus=glozz.slurp_corpus(discourse_files, verbose=args.verbose)
+corpus=reader.slurp(corpus_files, verbose=args.verbose)
 
 if args.verbose:
     sys.stderr.write("Computing agreement\n")
@@ -256,7 +268,7 @@ confusion={}
 for d in docs:
     # just the part of the corpus related to a specific document (all the
     # pilot21 annotations from all the annotators)
-    dcorpus = educe.corpus.subcorpus(educe.corpus.file_pattern(doc=d), corpus)
+    dcorpus   = reader.filter(corpus, lambda f:f.doc==d)
     all_items = select_items(dcorpus)
     # all here refers to all annotators that have touched this document
     all_annotators = all_items.keys()
@@ -287,10 +299,8 @@ for d in docs:
     big_tasks[key] = AnnotationTask(triples)
 
 # merged task: treat several documents as one set
-merged_tasks   = {}
-patterns       = [educe.corpus.file_pattern(doc=d) for d in merge_docs]
-merged_corpus  = dict(concat([educe.corpus.subcorpus(p, corpus).items() for p in patterns]))
-
+merged_tasks      = {}
+merged_corpus     = reader.filter(corpus, lambda f:f.doc in merge_docs)
 all_items         = select_items(merged_corpus)
 all_annotators    = all_items.keys()
 key               = mk_key(merge_docs, all_annotators)
@@ -302,11 +312,17 @@ merged_tasks[key] = AnnotationTask(triples)
 # ----------------------------------------------------------------------
 
 def show_f_scores(ts, show):
+    def none_or_float(x):
+        if x is None:
+            return str(x)
+        else:
+            return "%3.3f" % x
+
     def score(key):
         p_a1 = ts[key].precision() # r_a1 == p_a2
         p_a2 = ts[key].recall()    # r_a2 == p_a1
         f = ts[key].f_measure()
-        score = "%3.3f\t%3.3f\t(%3.3f)" % (p_a2, p_a1, f)
+        score = "%s\t%s\t(%s)" % tuple(map(none_or_float,[p_a2,p_a1,f]))
         return show(key, score)
     return "\n".join(map(score,sorted(ts.keys())))
 

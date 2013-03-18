@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+"""
+Read STAC CSV files, and output in a less idiosyncratic (?) CSV variant.
+
+We want to be able to compare (ie. with a graphical diff program) the output we
+generate with the pre-existing output without having to write a STAC-specific
+CSV generator.
+"""
+
+# Author: Eric Kow
+# License: BSD3
+
+import copy
+import csv
+import os
+import os.path
+import sys
+
+import stac_csv
+
+if len(sys.argv) == 3:
+    filename_in  = sys.argv[1]
+    filename_out = sys.argv[2]
+else:
+    print >> sys.stderr, "Usage: normalise-csv INPUT OUTPUT"
+    sys.exit(1)
+
+def normalise_file(filename_in, filename_out):
+    with open(filename_in, 'rb') as infile:
+        with open(filename_out, 'wb') as outfile:
+            reader = csv.reader(infile,  delimiter='\t')
+            writer = stac_csv.mk_plain_writer(outfile)
+            for row in reader:
+                writer.writerow(row)
+
+if os.path.isdir(filename_in):
+    try:
+        os.mkdir(filename_out)
+    except OSError:
+        print >> sys.stderr, "Directory %s already exists (fine by me)" % filename_out
+
+    for f in os.listdir(filename_in):
+        normalise_file(os.path.join(filename_in,f), os.path.join(filename_out,f))
+elif os.path.isfile(filename_in):
+    normalise_file(filename_in, filename_out)
+else:
+    raise Exception("Not a file or directory %s " % filename_in)
+    sys.exit(1)

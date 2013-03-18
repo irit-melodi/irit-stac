@@ -18,10 +18,10 @@ corpus-reorg branch:
     git svn fetch
 
     # create a local corpus-reorg branch tracking the SVN one
-    git branch svn/corpus-reorg corpus-reorg
+    git branch corpus-reorg2 svn/corpus-reorg2
 
     # switch to that branch
-    git checkout corpus-regorg
+    git checkout corpus-reorg2
 
 # Inventory
 
