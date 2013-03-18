@@ -1,0 +1,259 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Eric Kow
+# License: BSD3
+
+"""
+Print an interannotator agreement table:
+
+* items:  segments (as defined by STAC) from *all* documents
+* labels: their types (eg. Offer, Counteroffer, Refusal, Accept)
+* metric: Cohen 1960 kappa as implemented in NLTK.
+
+Quick start
+-----------
+
+    cd Stac
+    python code/agreement/unit-agreement data/pilot
+
+Or perhaps more conveniently
+
+    cd Stac/data
+    python ../code/agreement/unit-agreement pilot
+
+See the --help on
+
+* --glob to restrict to a set of documents (eg. 'pilot2*')
+* --verbose and --matrix for verbose and confusion matrix output
+
+Details
+-------
+We compute the following set of scores for each document:
+
+1. Pairwise agreement for each annotator that annotated the document
+
+2. A "multi kappa" for the document itself, which uses "averages over observed
+   and expected agreements for each coder pair." (Davis and Fleiss 1982).
+
+   NLTK also offers the ability to compute plain kappa for multiple coders by
+   taking an average over each coder pair.  We could switch to that or make it
+   parameterisable as needed.
+
+Notes:
+
+* missing segments are given a default label (currently '?')
+  (but the notion
+* we use a crude 1/0 metric for agreement, but it might be nice to
+  to do something which gives partial credit for the case when
+  multiple labels are assigned, eg. (Strategic_comment/Other)
+"""
+
+from   glob      import glob
+from   itertools import chain
+
+import itertools
+import os
+import sys
+
+from nltk.metrics.agreement import AnnotationTask
+from nltk.metrics           import ConfusionMatrix
+
+from educe import stac
+from educe import glozz
+import educe.corpus
+
+import showscores
+
+def concat(xs):
+    """
+    Flatten a list of lists into a list.
+    """
+    return list(chain.from_iterable(xs))
+
+# ----------------------------------------------------------------------
+# corpus slicing
+# ----------------------------------------------------------------------
+
+def concat_units(corpus, doc, annotator):
+    """
+    Units from all documents for a given annotator excluding those which are
+    structural annotations only (eg. paragraph, turn, etc)
+    """
+    pattern     = educe.corpus.file_pattern(doc=doc, annotator=annotator)
+    annotations = educe.corpus.subcorpus(pattern,corpus).values()
+    all_units   = concat([x.units for x in annotations])
+    return [x for x in all_units if stac.is_real_annotation(x)]
+
+# ----------------------------------------------------------------------
+# labeling task
+# ----------------------------------------------------------------------
+
+def pretty_label(x):
+    """
+    Friendlier representation of label set
+    (for use in confusion matrix output)
+    """
+    return "/".join(sorted(x))
+
+def align_annotations(anno_units):
+    """
+    Align annotations on the same set of documents from a set of annotators.
+    Given a dictionary from annotator name to collection of units, return a
+    a set of triples (annotator, key, item).
+
+    Return the same number of triples for all annotators; if an item is
+    missing for one annotator, we ignore it from all the other sets.
+    """
+    def mk_dict(xs):
+        return { x.position() : x for x in xs }
+
+    def mk_triple(dict, annotator, key):
+        unit = dicts[annotator].get(key, None)
+        return (annotator, key, unit)
+
+    dicts = { a : mk_dict(xs) for a,xs in anno_units.items() }
+    annotators = dicts.keys()
+    units      = dicts.values()
+    keys       = frozenset.intersection(*[ frozenset(d.keys()) for d in units ])
+    return concat([[mk_triple(dicts, a,k) for a in annotators] for k in keys])
+
+# ----------------------------------------------------------------------
+# options
+# ----------------------------------------------------------------------
+
+import argparse
+
+default_glob='pilot??'
+arg_parser = argparse.ArgumentParser(description='Compute inter-annotator agreement.')
+arg_parser.add_argument('corpus', metavar='DIR')
+arg_parser.add_argument('--gold-ok',
+                        default=False,
+                        action='store_const',
+                        const=True,
+                        help='do not omit the GOLD annotator')
+arg_parser.add_argument('--glob',
+                        default=default_glob,
+                        help='documents to pick out (default: \'%s\')' % default_glob)
+arg_parser.add_argument('--matrix', '-m',
+                        default=False,
+                        action='store_const',
+                        const=True,
+                        dest='matrix',
+                        help='print confusion matrices')
+arg_parser.add_argument('--verbose', '-v',
+                        action='count',
+                        default=1)
+arg_parser.add_argument('--quiet' ,  '-q',
+                        action='store_const',
+                        const=0,
+                        dest='verbose')
+args=arg_parser.parse_args()
+
+# ----------------------------------------------------------------------
+# reading the corpus in and computing agreement
+# ----------------------------------------------------------------------
+
+# dictionaries from FileId to file paths
+all_files=stac.corpus_files(args.corpus, args.glob)
+unit_files=educe.corpus.subcorpus(educe.corpus.file_pattern(stage='units'),
+                                  all_files)
+
+# actual contents of the files
+# reading this in can be slow :-/
+# is it the IO, do we need faster parsing?
+# is it worth pickling the corpus?
+corpus=glozz.slurp_corpus(unit_files, verbose=args.verbose)
+
+if args.verbose:
+    sys.stderr.write("Computing agreement\n")
+
+docs = frozenset([k.doc for k in corpus.keys()])
+big_tasks={}
+tasks={}
+confusion={}
+for d in docs:
+    # just the part of the corpus related to a specific document (all the
+    # pilot21 annotations from all the annotators)
+    dcorpus = educe.corpus.subcorpus(educe.corpus.file_pattern(doc=d), corpus)
+
+    # all here refers to all annotators that have touched this document
+    all_annotators = set([k.annotator for k in dcorpus.keys()])
+    if 'GOLD' in all_annotators and not args.gold_ok:
+        all_annotators.remove('GOLD')
+    all_items = { a:concat_units(corpus, d, a) for a in all_annotators }
+
+    # we are building dictionaries from keys to annotation tasks
+    # a key is a tuple of a document and some annotators (eg. a pair)
+    def mk_key(annotators):
+        return tuple([d] + list(annotators))
+
+    # the set of triples behind an NLTK annotation task
+    # we also use these to build a confusion matrix for pairwise comparisons
+    def mk_triples(annotators):
+        units = { a:all_items[a] for a in annotators }
+        if any(units.values()): # must have *some* annotations else div by 0
+            aligned    = align_annotations(units)
+            return [(c,i,educe.stac.dialogue_act(u)) for c,i,u in aligned]
+        else:
+            return []
+
+    # pair-wise tasks
+    for annotators in itertools.combinations(all_annotators, 2):
+        key        = mk_key(annotators)
+        triples    = mk_triples(annotators)
+        if len(triples) > 0:
+            tasks[key] = AnnotationTask(triples)
+            l1 = [ pretty_label(l) for c,i,l in triples if c == annotators[0] ]
+            l2 = [ pretty_label(l) for c,i,l in triples if c == annotators[1] ]
+            confusion[key] = ConfusionMatrix(l1,l2)
+
+    # all-annotator tasks
+    key            = mk_key(all_annotators)
+    triples        = mk_triples(all_annotators)
+    if len(triples) > 0:
+        big_tasks[key] = AnnotationTask(triples)
+
+# ----------------------------------------------------------------------
+# displaying results
+# ----------------------------------------------------------------------
+
+def show_kappa_scores(ts, show):
+    def score(key):
+        try:
+            # Davis and Fleiss 1982 - better (?) than kappa for > 2 annotators
+            kappa = ts[key].multi_kappa()
+        except:
+            kappa = None
+        return show(key, kappa)
+    return "\n".join(map(score,sorted(ts.keys())))
+
+def show_key(k):
+    return " ".join(list(k))
+
+if args.verbose > 1:
+    for k in sorted(tasks.keys()):
+        print showscores.banner(show_key(k))
+        print tasks[k]
+    print ""
+
+    for k in sorted(big_tasks.keys()):
+        print showscores.banner(show_key(k))
+        print big_tasks[k]
+    print ""
+
+if args.matrix:
+    print showscores.banner('confusion matrices')
+    print ""
+    for k in sorted(confusion.keys()):
+        print show_key(k)
+        print confusion[k]
+        print ""
+
+print showscores.banner('pair-wise scores')
+print show_kappa_scores(tasks, showscores.show_pair)
+print ""
+print showscores.banner('all-annotator scores')
+print show_kappa_scores(big_tasks, showscores.show_multi)
+
+# vim: syntax=python

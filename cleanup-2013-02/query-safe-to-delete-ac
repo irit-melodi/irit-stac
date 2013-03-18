@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Author: Eric Kow
+# License: Public domain
+
+# Duplication is the root of all evil
+# Is it safe to delete glozz_annotation/foo/.ac files?
+#
+# By rights these should be identical to the glozz_preannotation equivalents
+# and we should replace the actual files with symbolic links to eliminate the
+# divergence liability. Let's just make sure
+#
+# This is just a one-shot tool saved for archeological purposes, just wanted
+# to capture our thought process
+
+AC_FILES=$(find . -name '*.ac' | grep -v 'preannotation')
+
+for f in $AC_FILES; do
+   preannotation_d=$(dirname $(dirname $(dirname $(dirname $f))))/glozz_preannotation
+   diff $preannotation_d/$(basename $f) $f
+   if [ $? -ne 0 ]; then
+        echo "NOT SAFE!"
+        diff $preannotation_d/$(basename $f) $f
+        exit 1
+   fi
+done
+echo "SAFE!"
+
+# vim: syntax=sh:

@@ -1,0 +1,356 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Eric Kow
+# License: BSD3
+
+"""
+Print an interannotator agreement table:
+
+* items:  (EDU1, EDU2) spans that are held in common
+* labels: their types (eg. Elaboration, Explanation)
+* metric: Cohen 1960 kappa as implemented in NLTK.
+
+Quick start
+-----------
+
+    cd Stac
+    python code/agreement/rel-agreement data/pilot
+
+Or perhaps more conveniently
+
+    cd Stac/data
+    python ../code/agreement/rel-agreement pilot
+
+See the --help on
+
+* --glob to restrict to a set of documents (eg. 'pilot2*')
+* --verbose and --matrix for verbose and confusion matrix output
+
+Details
+-------
+* We also print an f-measure type score to show first how well the annotators
+  agree on what's attached with what
+"""
+
+from   glob      import glob
+from   itertools import chain
+
+import itertools
+import os
+import sys
+
+from nltk.metrics.agreement import AnnotationTask
+from nltk.metrics           import ConfusionMatrix
+
+from educe import stac
+from educe import glozz
+
+import educe.corpus
+
+import showscores
+
+def concat(xs):
+    """
+    Flatten a list of lists into a list.
+    """
+    return list(chain.from_iterable(xs))
+
+# ----------------------------------------------------------------------
+# corpus slicing
+# ----------------------------------------------------------------------
+
+def concat_relations(corpus, doc, annotator):
+    """
+    Relations from all documents for a given annotator excluding those which are
+    structural annotations only (eg. paragraph, turn, etc)
+    """
+    pattern     = educe.corpus.file_pattern(doc=doc, annotator=annotator)
+    annotations = educe.corpus.subcorpus(pattern,corpus).values()
+    all_things  = concat([x.rels for x in annotations])
+    return [x for x in all_things if stac.is_real_annotation(x)]
+
+# ----------------------------------------------------------------------
+# attachments
+# what edus do the relations link?
+# ----------------------------------------------------------------------
+
+def attachment(r, symmetry=False):
+    """
+    Simplify a relation into an (id,id) pair indicating the EDUs it links.
+    We call this an 'attachment'
+    """
+    t = [r.span.t1, r.span.t2]
+    if symmetry:
+        return tuple(sorted(t))
+    else:
+        return tuple(t)
+
+def attachment_set(rels, symmetry):
+    def fn(r):
+        return attachment(r,symmetry)
+    return frozenset(map(fn, rels))
+
+# ----------------------------------------------------------------------
+# relation labeling
+# ----------------------------------------------------------------------
+
+def merge_relation_labels(xs):
+    """
+    Union of relation labels for collection of relations
+    """
+    return frozenset.union(*map(educe.stac.relation_labels, xs))
+
+def nltk_triple(a,span,rels):
+    """
+    Convert high-level triple to NLTK triple
+    """
+    nltk_span="_".join(list(span))
+    nltk_label=merge_relation_labels(rels)
+    return (a,nltk_span,nltk_label)
+
+def pretty_label(x):
+    """
+    Friendlier representation of label set
+    (for use in confusion matrix output)
+    """
+    return "/".join(sorted(x))
+
+def tagged_relations(relations_, symmetry):
+    """
+    Return a dictionary from attachments (see above) to the list of relations
+    that cover that span.
+
+    The idea behind this is that the attachments can serve as a sort of
+    annotator-independent identifier for relations, in effect the 'items'
+    behind our annotation task.
+    """
+    def fn(r):
+        return attachment(r,symmetry)
+    relations = sorted(relations_, key=fn)
+    buckets   = itertools.groupby(relations, key=fn)
+    return { k:list(v) for k,v in buckets } # force iteration
+
+def align_annotations(rels, symmetry):
+    """
+    Align relation annotations on the same set of documents from a set
+    of annotators. We only pay attention to the relations that are in
+    common, ie. that have the same starting/ending EDU
+
+    Input: dictionary of annotator to collection of educe.glozz.Relation
+
+    Output: set of high-level triples; these are almost what we'd like to
+    give to NLTK were it not for little formatting details (to display
+    an NLTK AnnotationTask, we need string representations of everything)
+    """
+    annotators = rels.keys()
+    all_tagged = { a : tagged_relations(rels[a], symmetry) for a in annotators }
+
+    # what annotations do all the annotators have in common?
+    attachments = [ frozenset(d.keys()) for d in all_tagged.values() ]
+    common      = frozenset.intersection(*attachments)
+
+    # relations for just the common annotations
+    def common_only(d):
+        return { k:v for k,v in d.items() if k in common }
+    labels = { a : common_only(d) for a,d in all_tagged.items() }
+
+    def mk_triple(a, item):
+        return (a, item, labels[a][item])
+    ts = [[mk_triple(a,k) for a in annotators] for k in common]
+    return concat(ts)
+
+# ----------------------------------------------------------------------
+# options
+# ----------------------------------------------------------------------
+
+merge_docs = ['pilot14', 'pilot20', 'pilot21']
+
+import argparse
+
+default_glob='pilot??'
+arg_parser = argparse.ArgumentParser(description='Compute inter-annotator agreement.')
+arg_parser.add_argument('corpus', metavar='DIR')
+arg_parser.add_argument('--gold-ok',
+                        default=False,
+                        action='store_const',
+                        const=True,
+                        help='do not omit the GOLD annotator')
+arg_parser.add_argument('--glob',
+                        default=default_glob,
+                        help='documents to pick out (default: \'%s\')' % default_glob)
+arg_parser.add_argument('--matrix', '-m',
+                        default=False,
+                        action='store_const',
+                        const=True,
+                        dest='matrix',
+                        help='print confusion matrices')
+arg_parser.add_argument('--symmetry', '-s',
+                        default=False,
+                        action='store_const',
+                        const=True,
+                        dest='symmetry',
+                        help='ignore direction of relations')
+arg_parser.add_argument('--verbose', '-v',
+                        action='count',
+                        default=1)
+arg_parser.add_argument('--quiet' ,  '-q',
+                        action='store_const',
+                        const=0,
+                        dest='verbose')
+args=arg_parser.parse_args()
+
+# ----------------------------------------------------------------------
+# arg-sensitive helpers for corpus reading and agreement
+# the functions here depend on the global args variable
+# ----------------------------------------------------------------------
+
+def select_items(corpus, doc=None, annotators=None):
+    all_annotators = set([k.annotator for k in corpus.keys()])
+    if 'GOLD' in all_annotators and not args.gold_ok:
+        all_annotators.remove('GOLD')
+    if annotators is None:
+        anno_ok = lambda _: True
+    else:
+        anno_ok = lambda a: a in annotators
+    return { a:concat_relations(corpus, doc, a) for a in all_annotators if anno_ok(a) }
+
+# we are building dictionaries from keys to annotation tasks
+# a key is a tuple of documen set and some annotators (eg. a pair)
+def mk_key(docs, annotators):
+    return tuple(["/".join(docs)] + list(annotators))
+
+def mk_triples(rels):
+    """
+    Convert relations to a set of triples for NLTK's AnnotationTask
+    module.
+
+    Input: dictionary: annotator -> collection of educe.glozz.Relation
+    """
+    aligned = align_annotations(rels, args.symmetry)
+    return [nltk_triple(*t) for t in aligned]
+
+# ----------------------------------------------------------------------
+# reading the corpus in and computing agreement
+# ----------------------------------------------------------------------
+
+# dictionaries from FileId to file paths
+all_files=stac.corpus_files(args.corpus, args.glob)
+discourse_files=educe.corpus.subcorpus(educe.corpus.file_pattern(stage='discourse'),
+                                       all_files)
+
+# actual contents of the files
+# reading this in can be slow :-/
+# is it the IO, do we need faster parsing?
+# is it worth pickling the corpus?
+corpus=glozz.slurp_corpus(discourse_files, verbose=args.verbose)
+
+if args.verbose:
+    sys.stderr.write("Computing agreement\n")
+
+docs = frozenset([k.doc for k in corpus.keys()])
+big_tasks={}
+tasks={}
+attachment_pairs={}
+confusion={}
+for d in docs:
+    # just the part of the corpus related to a specific document (all the
+    # pilot21 annotations from all the annotators)
+    dcorpus = educe.corpus.subcorpus(educe.corpus.file_pattern(doc=d), corpus)
+    all_items = select_items(dcorpus)
+    # all here refers to all annotators that have touched this document
+    all_annotators = all_items.keys()
+
+    # pair-wise tasks
+    for annotators in itertools.combinations(all_annotators, 2):
+        some_items = select_items(dcorpus, annotators=annotators)
+        key        = mk_key([d],annotators)
+        triples    = mk_triples(some_items)
+        tasks[key] = AnnotationTask(triples)
+
+        # we can't get the attachments from the triples alone
+        # because those are limited to the ones we have in common
+        a1     = annotators[0]
+        a2     = annotators[1]
+        pairs1 = attachment_set(some_items[a1], args.symmetry)
+        pairs2 = attachment_set(some_items[a2], args.symmetry)
+        attachment_pairs[key] = showscores.Score(pairs1, pairs2)
+
+        if len(triples) > 0:
+            l1 = [ pretty_label(l) for c,i,l in triples if c == a1 ]
+            l2 = [ pretty_label(l) for c,i,l in triples if c == a2 ]
+            confusion[key] = ConfusionMatrix(l1,l2)
+
+    # all-annotator tasks
+    key      = mk_key([d],all_annotators)
+    triples  = mk_triples(all_items)
+    big_tasks[key] = AnnotationTask(triples)
+
+# merged task: treat several documents as one set
+merged_tasks   = {}
+patterns       = [educe.corpus.file_pattern(doc=d) for d in merge_docs]
+merged_corpus  = dict(concat([educe.corpus.subcorpus(p, corpus).items() for p in patterns]))
+
+all_items         = select_items(merged_corpus)
+all_annotators    = all_items.keys()
+key               = mk_key(merge_docs, all_annotators)
+triples           = mk_triples(all_items)
+merged_tasks[key] = AnnotationTask(triples)
+
+# ----------------------------------------------------------------------
+# displaying results
+# ----------------------------------------------------------------------
+
+def show_f_scores(ts, show):
+    def score(key):
+        p_a1 = ts[key].precision() # r_a1 == p_a2
+        p_a2 = ts[key].recall()    # r_a2 == p_a1
+        f = ts[key].f_measure()
+        score = "%3.3f\t%3.3f\t(%3.3f)" % (p_a2, p_a1, f)
+        return show(key, score)
+    return "\n".join(map(score,sorted(ts.keys())))
+
+def show_kappa_scores(ts, show):
+    def score(key):
+        try:
+            # Davis and Fleiss 1982 - better (?) than kappa for > 2 annotators
+            kappa = ts[key].multi_kappa()
+        except:
+            kappa = None
+        return show(key, kappa)
+    return "\n".join(map(score,sorted(ts.keys())))
+
+def show_key(k):
+    return " ".join(list(k))
+
+if args.verbose > 1:
+    for k in sorted(tasks.keys()):
+        print showscores.banner(show_key(k))
+        print tasks[k]
+    print ""
+
+    for k in sorted(big_tasks.keys()):
+        print showscores.banner(show_key(k))
+        print big_tasks[k]
+    print ""
+
+if args.matrix:
+    print showscores.banner('confusion matrices')
+    print ""
+    for k in sorted(confusion.keys()):
+        print show_key(k)
+        print confusion[k]
+        print ""
+
+print showscores.banner('pair-wise attachment scores (precision x 2, f)')
+print show_f_scores(attachment_pairs, showscores.show_pair)
+print ""
+print showscores.banner('pair-wise labeling scores (on common attachments only!)')
+print show_kappa_scores(tasks, showscores.show_pair)
+print ""
+print showscores.banner('all-annotator labeling scores (on common attachments only!)')
+print show_kappa_scores(big_tasks, showscores.show_multi)
+print showscores.banner('merged labeling scores (on common attachments only!)')
+print show_kappa_scores(merged_tasks, showscores.show_multi)
+
+# vim: syntax=python

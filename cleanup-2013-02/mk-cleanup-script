@@ -1,0 +1,345 @@
+#!/usr/bin/env python
+
+# Author: Eric Kow
+# License: Public domain (do whatever you want)
+
+# Simplify annotation filenames, by stripping away redundant
+# information that is encoded in the filenames themselves.
+#
+# - Meant to be run in the Stac top-level directory
+# - Stac dir needs be checked out with git-svn (git svn clone URL)
+#
+# The goal (as proposed by Philippe Muller) is to bring
+# some stability to the filenames, that the same file
+# having been through different stages of processing or having
+# been treated by different people should keep its identity.
+# This allows people to know they are looking at the same
+# file and also simplifies some tool usage, for example,
+# going a graphical diff across directories.
+#
+# This is really meant as a one-shot tool, and is really here
+# for archeological purposes only.
+
+import os
+import glob
+import re
+import sys
+
+GLOZZ_ANNO_EXTS = ['.ac', '.aa']
+# STAC-internal visualisers that transform glozz content into human-friendly format
+VISUALISER_EXTS = ['.rel', '.seg']
+GLOZZ_ANNO_STAGES = [ 'units', 'discourse' ]
+
+DELETE_QUIETLY     = [ 'data/pilot/pilot02/glozz_preannotation/pilot02-2011-10-12-13-38-43-+0100.aa'
+                    , 'data/pilot/pilot02/glozz_preannotation/pilot02-2011-10-12-13-38-43-+0100.ac'
+                     # TODO: wait till Farah does here thing
+                    , 'data/pilot/pilot01/glozz_annotations/lpetersen/units/pilot01_7_joseph_u_221012.aa'
+                    ]
+DELETE_WITH_ALERT = [ 'data/pilot/pilot01/glozz_annotations/ResultUnit' ]
+DELETABLES = DELETE_QUIETLY + DELETE_WITH_ALERT
+
+OLD_ANNO_DIR     = 'glozz_annotations'
+OLD_PRED_ARG_DIR = 'pred_arg_annotations'
+NEW_PRED_ARG_DIR = OLD_PRED_ARG_DIR
+
+OLD_BEFORE_ANNO_DIR = 'glozz_preannotation'
+NEW_BEFORE_ANNO_DIR = 'unannotated'
+
+OLD_SEG_DIR = 'segmented_csv'
+NEW_SEG_DIR = 'segmented'
+
+GLOZZ_DIR   = 'glozz_tool'
+
+ANNOTATOR_RENAMES = { 'petersen': 'lpetersen'
+                    , 'joseph'  : 'hjoseph'
+                    }
+
+# ----------------------------------------------------------------------
+# script writing
+# ----------------------------------------------------------------------
+
+def emit_cmd(c):
+    "Either run this in the shell or just print it out depending on our mode"
+    print(c)
+
+def emit_big_banner(xs):
+    emit_cmd("")
+    emit_cmd("# ======================================================================")
+    for x in xs:
+        emit_cmd ("# %s" % x)
+    emit_cmd("# ======================================================================")
+    emit_cmd("")
+
+def emit_banner(str):
+    emit_cmd("")
+    emit_cmd("# --------------------------------------------------")
+    emit_cmd("# %s" % str)
+    emit_cmd("# --------------------------------------------------")
+    emit_cmd("")
+
+def emit_delete(f):
+    emit_cmd("git rm -rf %s || :" % f)
+
+def emit_mkdir(d):
+    emit_cmd("mkdir -p %s" % d)
+
+def emit_symlink(src, tgt):
+    emit_cmd("if [ ! -z `ls %s | head -n 1` ]; then ln -s %s %s; fi" % (src, src, tgt))
+
+def emit_rename(old,new):
+    # it's somewhat bad that we're mixing things that happen on script time
+    # with things that happen in the generated script (eg. file may exist
+    # now that doesn't happen when the generated script is being run).
+    # we're sort of assuming here that it's ok, but it's really a no-no
+    cmd = "git mv %s %s" % (old, new)
+    is_empty_dir = os.path.isdir(old) and len(glob.glob("%s/*" % old)) == 0
+    is_same_name = old == new
+    if is_same_name:
+        emit_cmd("#%s" % cmd)
+    elif is_empty_dir:
+        emit_delete(old)
+        emit_mkdir(new)
+    else:
+        emit_cmd(cmd)
+
+# ----------------------------------------------------------------------
+# path manipulation
+# ----------------------------------------------------------------------
+
+def split_stac_ext(f):
+    """
+    split_stac_ext('pilot01_12.ac_petersen.seg') == ('pilot01_12','.ac_petersen','.seg')
+    split_stac_ext('pilot01_12.ac')              == ('pilot01_12',None,          '.ac')
+    """
+    (bname1,ext1)=os.path.splitext(f)
+    if ext1 in VISUALISER_EXTS:
+        # strip annotator name from segment filename
+        # "ac_joseph.seg" ==> "ac.seg"
+        (bname2,ext2)=os.path.splitext(bname1)
+        return (bname2, ext2, ext1)
+    else:
+        return (bname1, None, ext1)
+
+def clean_name(root, f):
+    (bname,sub_ext,ext)=split_stac_ext(f)
+    pad_pnum   = re.compile('(pilot\d\d_)(\d)(_|$)')
+    strip_junk = re.compile('(pilot\d\d_\d*)_.*')
+    nice_bname = strip_junk.sub('\g<1>', pad_pnum.sub('\g<1>0\g<2>\g<3>', bname))
+    if ext in VISUALISER_EXTS:
+        nice_ext = re.compile('_.*$').sub('', sub_ext) + ext
+    else:
+        nice_ext = ext
+    return os.path.join(root, nice_bname + nice_ext)
+
+def split_path_to_list(p):
+    phead, ptail = os.path.split(p)
+    if phead == "":
+        return []
+    elif ptail == ".":
+        return split_path_to_list(phead)
+    elif ptail == "":
+        return [phead]
+    else:
+        return split_path_to_list(phead) + [ptail]
+
+def starts_with_any_of(ds, p):
+    split = split_path_to_list(p)
+    if len(split) > 0:
+        return split[0] in ds
+    else:
+        return False
+
+def is_safe_dir(p):
+    return starts_with_any_of(['data', 'glozz_tool'], p)
+
+def get_ext(f):
+    "Just the file extension"
+    return os.path.splitext(f)[1]
+
+# ----------------------------------------------------------------------
+# main
+# ----------------------------------------------------------------------
+
+if len(sys.argv) == 1:
+    dir='.'
+else:
+    sys.stderr.write("Usage: %s\n" % sys.argv[0])
+    sys.stderr.write("You should be in the top level of the Stac directory first\n")
+    sys.exit(1)
+
+if not (os.path.exists('data') and os.path.exists(GLOZZ_DIR)):
+   sys.stderr.write("Hmm, no data dir or %s dir here. Are you in the Stac top level?\n" % GLOZZ_DIR)
+   sys.exit(1)
+
+filetree = [(r,d,xs) for (r,d,xs) in os.walk(dir) if is_safe_dir(r)]
+
+print "#!/bin/bash"
+print "set -ev"
+
+emit_big_banner(["junk files", "duplicates, autosav detritus, etc"])
+
+for f in DELETABLES:
+    if os.path.exists(f):
+        emit_delete(f)
+
+for root, dirs, files in filetree:
+    aam_dupe    = re.compile(r'pilot..-.*.aam')
+    is_auto_sav = lambda f : os.path.splitext(f)[1] == '.autosav'
+    is_aam_dupe = lambda f : re.match(aam_dupe, f)
+    for f in files:
+        if is_auto_sav(f) or is_aam_dupe(f):
+            emit_delete(os.path.join(root, f))
+
+emit_big_banner(["truncations", "want uniform names in annotation files"])
+
+# these have to come first because we're using Python to query the filesystem
+# whereas later on we'll be generating script commands that move things around
+# and it will get confusing if you mix up the Python/generated-script level
+for root, _, files in filetree:
+    rename_exts = GLOZZ_ANNO_EXTS + VISUALISER_EXTS
+
+    anno_files  = [f for f in files if get_ext(f) in rename_exts]
+    if len(anno_files) > 0:
+        print ""
+    for f in anno_files:
+        old_name = os.path.join(root, f)
+        new_name = clean_name(root, f)
+        if not old_name in DELETABLES:
+            emit_rename(old_name, new_name)
+
+emit_big_banner(["directory renames", "no tool names or formats"])
+
+for root, _, _ in filetree:
+    root_head, root_tail = os.path.split(root)
+    rename_to = lambda t : emit_rename(root, os.path.join(root_head, t))
+    if root_tail == OLD_BEFORE_ANNO_DIR:
+        rename_to(NEW_BEFORE_ANNO_DIR)
+    elif root_tail == OLD_SEG_DIR:
+        rename_to(NEW_SEG_DIR)
+
+emit_big_banner([ "glozz usage: put aam files in right place, link for easier use"
+                ])
+
+for root, dirs, _ in filetree:
+    if OLD_ANNO_DIR in dirs and OLD_SEG_DIR in dirs: # are we in a pilotXX dir?
+        aam_name     = os.path.basename(root) + ".aam"
+        old_aam_path = os.path.join(GLOZZ_DIR, aam_name)
+        new_aam_path = os.path.join(root,      aam_name)
+        emit_rename(old_aam_path, new_aam_path)
+
+emit_big_banner([ "hierarchy simplification: flatten, put processing stages first"
+                , "duplicate deletion: replace duplicate ac files with symlinks"
+                ])
+
+def tidy_glozz_files(new_name):
+    # git-rm has an obnoxious (*) feature of deleting empty dirs
+    # (*) from the point of view of trying to script git
+    emit_cmd("(git rm -f %s/*.ac || :); mkdir -p %s" % (new_name, new_name))
+    emit_cmd("pushd %s" % new_name)
+    emit_symlink("../../%s/*.ac" % NEW_BEFORE_ANNO_DIR, '.')
+    emit_symlink("../../*.aam", '.') # should be just one, actually
+    emit_cmd("popd")
+    emit_cmd("git add %s/*.{ac,aam}" % new_name)
+
+for root, _, files in filetree:
+    root_head, root_tail = os.path.split(root)
+    if root_tail == OLD_ANNO_DIR:
+        emit_banner(root)
+        for x in GLOZZ_ANNO_STAGES:
+            new_subdir = os.path.join(root_head, x)
+            emit_mkdir(new_subdir)
+    elif root_tail in GLOZZ_ANNO_STAGES and OLD_ANNO_DIR in split_path_to_list(root_head):
+        glozz_anno, annotator = os.path.split(root_head)
+        topdir     = os.path.dirname(glozz_anno)
+        anno_stage = root_tail
+        old_name = root
+        new_name = os.path.join(topdir, anno_stage, annotator)
+        emit_rename(old_name, new_name)
+        tidy_glozz_files(new_name)
+    elif root_tail in [ "Unit", "Units" ] and os.path.split(root_head)[1] == 'Gold':
+        new_stage     = "units" # capitalisation, plural
+        new_annotator = "GOLD"
+        topdir        = os.path.dirname(root_head)
+        old_name      = root
+        new_name      = os.path.join(topdir, new_stage, new_annotator)
+        emit_rename(old_name, new_name)
+        tidy_glozz_files(new_name)
+
+emit_big_banner([ "hierarchy simplification 2 (pred_arg_annotations)" ])
+
+for root, _, files in filetree:
+    root_head, root_tail = os.path.split(root)
+    if root_tail == OLD_PRED_ARG_DIR:
+        emit_banner(root)
+        for x in GLOZZ_ANNO_STAGES:
+            new_subdir = os.path.join(root_head, NEW_PRED_ARG_DIR, x)
+            emit_mkdir(new_subdir)
+    elif (root_tail in GLOZZ_ANNO_STAGES or root_tail == 'unit') and\
+         OLD_PRED_ARG_DIR in split_path_to_list(root_head):
+        pred_anno, old_annotator = os.path.split(root_head)
+        annotator                = ANNOTATOR_RENAMES.get(old_annotator, old_annotator)
+        topdir                   = os.path.dirname(pred_anno)
+        if root_tail == 'unit':
+            anno_stage = 'units'
+        else:
+            anno_stage = root_tail
+        old_name = root
+        new_name = os.path.join(topdir, NEW_PRED_ARG_DIR, anno_stage, annotator)
+        emit_rename(old_name, new_name)
+    elif root_tail.lower() in [ "unit_pred_arg" ] and\
+         os.path.split(root_head)[1] == 'Gold':
+        new_stage     = NEW_PRED_ARG_DIR
+        new_substage  = "units"
+        new_annotator = "GOLD"
+        topdir        = os.path.dirname(root_head)
+        old_name      = root
+        new_dir       = os.path.join(topdir, new_stage, new_substage)
+        new_name      = os.path.join(new_dir, new_annotator)
+        emit_mkdir(new_dir)
+        emit_rename(old_name, new_name)
+
+emit_big_banner(["new GOLD directories"])
+
+populate_gold_section="""
+shopt -s nullglob
+
+for sd in discourse units; do
+    for d in data/pilot/pilot*; do
+        anno_dir=$d/$sd/GOLD
+        if [ ! -d $anno_dir ]; then
+            echo $anno_dir
+            mkdir $anno_dir
+            pushd $anno_dir > /dev/null
+            echo " aa"
+            for aa in ../../unannotated/*.aa; do
+                cp $aa .
+            done
+            echo " ac"
+            for ac in ../../unannotated/*.ac; do
+                ln -s $ac .
+            done
+            echo " aam"
+            ln -s ../../*.aam .
+            echo " git"
+            git add *.aa *.ac *.aam
+            popd > /dev/null
+        fi
+    done
+done
+"""
+print(populate_gold_section)
+
+emit_big_banner(["cleanups"])
+
+script_dir=os.path.dirname(sys.argv[0])
+emit_cmd('# **************************************************')
+emit_cmd('# Hey! You should mention these in the commit log')
+for f in DELETE_WITH_ALERT:
+    emit_cmd('#   %s' % f)
+emit_cmd('#')
+emit_cmd('# Also when you commit, remember to switch back to')
+emit_cmd('# SVN and run %s/mk-tidyup-script' % script_dir)
+emit_cmd('# **************************************************')
+
+
+# vim: syntax=python:

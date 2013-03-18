@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# symlink-resistant script dir detection (hopefully)
+pushd $(dirname $0) > /dev/null
+SCRIPT_DIR=$PWD
+popd > /dev/null
+
+# This is to be run as the second part of the cleanup operation
+# Note, it has to be run in a pure SVN repository.
+# The issue here is that git does not version directories as such (sigh)
+# but SVN does. So we have to hunt down empty directories from the cleanup
+# and remove them
+#
+# In the usual spirit of cautiousness, we don't actually do these cleanups
+# but generate a script that we can review
+#
+# Note: this is a bit embarassing, but you're going to have to keep running
+# this script (and its generated code) until we hit a fixed point
+# We're pruning away at the directory stages from the leaves up.
+
+DEL_SCRIPT=$SCRIPT_DIR/delete-if-empty
+chmod u+x $DEL_SCRIPT
+find data -type d\
+    -not -path '*/.svn'\
+    -not -path '*/.svn/*'\
+    -exec "$DEL_SCRIPT" '{}' ';'
