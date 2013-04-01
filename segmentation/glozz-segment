@@ -33,24 +33,6 @@ import stac_csv
 def join_segments(xs):
     return "& ".join(xs)
 
-def turn_segments(u):
-    """
-    Given a unit annotation (presumably a turn), segment its corresponding
-    text and output a list of segments.
-    """
-    # hmm, interesting that the turn number is considered part of the text
-    # for the annotations
-    dirty_text = entry.text_for(u)
-    drop_turn_prefix = re.compile(r'^\d* : [^:]* : (.*)')
-    match = drop_turn_prefix.match(dirty_text)
-    if match:
-        text = match.group(1)
-        post_process = lambda xs: [ segmentation.shift_span(match.start(1), x) for x in xs ]
-    else:
-        text = dirty_text
-        post_process = lambda x: x
-    return post_process(segmentation.segment(text))
-
 import argparse
 
 arg_parser = argparse.ArgumentParser(description='Segment into EDUs.')
@@ -114,7 +96,8 @@ for d in docs:
 
         def get_segments(t):
             text     = entry.text_for(t)
-            segments = [ segmentation.span_text(text,sp) for sp in turn_segments(t) ]
+            spans    = segmentation.segment_turn(text)
+            segments = [ segmentation.span_text(text,sp) for sp in spans ]
             return join_segments(segments)
 
         if args.csv:
@@ -185,7 +168,8 @@ for d in docs:
                     unit_id = '_'.join([author,k.doc,k.subdoc,str(i)])
                     seg  = glozz.GlozzUnit(unit_id, span, "Segment", features, metadata)
                     return seg
-                spans = turn_segments(t)
+
+                spans = segmentation.segment_turn(entry.text_for(u))
                 for s in spans:
                     entry2.units.append(mk_segment(s, seg_counter))
                     seg_counter = seg_counter + 1

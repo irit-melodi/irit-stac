@@ -10,7 +10,7 @@ popd > /dev/null
 popd > /dev/null
 
 # set up the workbench if it doesn't already exist
-if [ ! -d unsegmented -o $1 == '--setup' ]; then
+if [ \( ! -d unsegmented \) -o \( "$1" == '--setup' \) ]; then
     mkdir -p orig/{csv,segmented}
     mkdir -p {unsegmented,manually-segmented}
     for i in $(find $ROOT_DIR/data/pilot -name '*.soclog.csv'); do

@@ -20,13 +20,12 @@ import csv
 import re
 import sys
 
-from nltk.tokenize import sent_tokenize
-
 import segmentation
 import stac_csv
 
 def segment_row(t):
-    return join_segments(segmentation.segment(t))
+    segments = [segmentation.span_text(t,sp) for sp in segmentation.segment(t)]
+    return join_segments(segments)
 
 def normalise_row(t):
     """

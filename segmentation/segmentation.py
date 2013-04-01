@@ -35,6 +35,24 @@ def span_text(text, sp):
     """
     return text[sp[0]:sp[1]]
 
+def segment_turn(orig_text):
+    """
+    Segment a piece of text corresponding to a STAC turn.
+    This is a segment wrapper that chops off the turn number and
+    emitter prefixes.
+    """
+    # hmm, interesting that the turn number is considered part of the text
+    # for the annotations
+    drop_turn_prefix = re.compile(r'^\d* : [^:]* : (.*)')
+    match = drop_turn_prefix.match(orig_text)
+    if match:
+        text = match.group(1)
+        post_process = lambda xs: [ shift_span(match.start(1), x) for x in xs ]
+    else:
+        text = orig_text
+        post_process = lambda x: x
+    return post_process(segment(text))
+
 def segment(t):
     """
     Given a piece of text, return a list of text spans corresponding
