@@ -13,6 +13,9 @@ import re
 import sys
 
 from nltk.tokenize import sent_tokenize
+import nltk.data
+
+tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
 def concat(xs):
     """
@@ -20,49 +23,54 @@ def concat(xs):
     """
     return list(chain.from_iterable(xs))
 
+def shift_span(start, sp):
+    """
+    Adjust a span's index to the right by adding the start value to it
+    """
+    return (sp[0] + start, sp[1] + start)
+
+def span_text(text, sp):
+    """
+    Return the substring corresponding to a span
+    """
+    return text[sp[0]:sp[1]]
+
 def segment(t):
     """
-    Given a piece of text, return a list of segments where each segment
-    is an infix of the text.
-
-    Note that this is currently a bit lossy wrt whitespace around the
-    segments, so we can't guarantee that
-
-         # no!
-         "".join(segment(x)) == x
-
-    But we can at least say
-
-         delete_whitespace("".join(segments)) == delete_whitespace(x)
-
-    Where delete_whitespace is a hypothetical function that does something
-    like `s/\s//g`
+    Given a piece of text, return a list of text spans corresponding
+    to segments of the text. The segments follow each other
+    consecutively but there may be gaps (no guarantee of adjacency)
     """
-    segments1 = sent_tokenize(t)
-    segments2 = concat(map(resegment, segments1))
-    segments3 = fuse_segments(segments2)
-    return segments3
+    spans1 = tokenizer.span_tokenize(t)
+    spans2 = concat([ resegment(t,s) for s in spans1 ])
+    spans3 = fuse_segments(t,spans2)
+    return spans3
 
-def resegment(t):
+def resegment(t,seg):
     """
     Apply hand-crafted segmentation rules. This is very crude: we hunt for
     entries that would correspond to the left and right hand sides of a split.
     For LHS splits, we also require a bit of separating punctuation between the
     two sides. We also allow an arbitrary number of LHS splits, whereas we only
     allow a single RHS split.
-
-    Possible invariant:
-
-        concat(resegment(t)) == resegment(t)
     """
+    seg_start = seg[0]
+    fragment  = span_text(t,seg)
+
     def sub_re(xs):
         return '(' + '|'.join(xs) + ')'
 
     def mk_group(name, *args):
         return '(?P<' + name + '>' + "".join(args) + ')'
 
+    def get_span(m,group):
+        return shift_span(seg_start,m.span(group))
+
     def from_match(m):
-        return (m.group('prefix').rstrip(), m.group('suffix').lstrip())
+        lhs_span = get_span(m,'prefix')
+        lhs_span = (lhs_span[0], lhs_span[1] - 1) # avoid overlap
+        rhs_span = get_span(m,'suffix')
+        return (lhs_span, rhs_span)
 
     # lhs things that trigger a split
     lhs_words = [ 'yeah', 'sure', 'ok', 'okay', 'no(pe)?'
@@ -74,7 +82,7 @@ def resegment(t):
     lhs       = mk_group('prefix', r'\s*', sub_re(lhs_words), sub_re(lhs_punct))\
               + mk_group('suffix', '.+$')
     lhs_re    = re.compile(lhs, flags=re.IGNORECASE)
-    match_lhs = lhs_re.match(t)
+    match_lhs = lhs_re.match(fragment)
 
     # rhs things that trigger a split
     rhs_words  = [ 'sorry'
@@ -85,28 +93,30 @@ def resegment(t):
     rhs       = mk_group('prefix', '.+\s')\
               + mk_group('suffix', sub_re(rhs_words), '.*$')
     rhs_re    = re.compile(rhs, flags=re.IGNORECASE)
-    match_rhs = rhs_re.match(t)
+    match_rhs = rhs_re.match(fragment)
 
     if match_lhs:
         (prefix, suffix)=from_match(match_lhs)
-        return [prefix] + resegment(suffix)
+        return [prefix] + resegment(t,suffix)
     elif match_rhs:
         (prefix, suffix)=from_match(match_rhs)
         return [prefix, suffix]
     else:
-        return [t]
+        return [seg]
 
-def fuse_segments(xs):
+def fuse_segments(t,xs):
     """
-    Given a list of segments, return a list of segments such that
-    some things which have been wrongly broken into segments are
-    fused back into one.
+    Given a list of adjacent segments, return a list of segments
+    such that some things which have been wrongly broken into segments
+    are fused back into one.
     """
 
     def bracket(s):
         return '(' + s + ')'
     def fuse(ys):
-        return " ".join(ys)
+        return (ys[0][0],ys[-1][1])
+    def txt(idx):
+        return span_text(t,xs[idx])
 
     empty          = r'((^$)|^[\?\.!]*$)'
     empty_re       = re.compile(empty)
@@ -133,17 +143,17 @@ def fuse_segments(xs):
     if len(xs) < 2:
         return xs
 
-    elif empty_re.match(xs[1]): # no space between fused segments
-        fused = "".join(xs[0:2])
-        return [fused] + fuse_segments(xs[2:])
-
-    elif fusible_left_re.match(xs[1]):
+    elif empty_re.match(txt(1)):
         fused = fuse(xs[0:2])
-        return [fused] + fuse_segments(xs[2:])
+        return [fused] + fuse_segments(t,xs[2:])
 
-    elif fusible_right_re.match(xs[0]):
+    elif fusible_left_re.match(txt(1)):
+        fused = fuse(xs[0:2])
+        return [fused] + fuse_segments(t,xs[2:])
+
+    elif fusible_right_re.match(txt(0)):
         head  = xs[0]
-        rest  = fuse_segments(xs[1:])
+        rest  = fuse_segments(t,xs[1:])
         if len(rest) > 0:
             fused = fuse([head,rest[0]])
             return [fused] + rest[1:]
@@ -152,4 +162,4 @@ def fuse_segments(xs):
 
     else: # default case, just keep walking
         head  = xs[0]
-        return [head] + fuse_segments(xs[1:])
+        return [head] + fuse_segments(t,xs[1:])

@@ -30,10 +30,6 @@ from educe import stac
 import segmentation
 import stac_csv
 
-# temporary
-import nltk.data
-tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-
 def join_segments(xs):
     return "& ".join(xs)
 
@@ -45,13 +41,15 @@ def turn_segments(u):
     # hmm, interesting that the turn number is considered part of the text
     # for the annotations
     dirty_text = entry.text_for(u)
-    drop_turn_id = re.compile(r'^\d* : (.*)')
-    match = drop_turn_id.match(dirty_text)
+    drop_turn_prefix = re.compile(r'^\d* : [^:]* : (.*)')
+    match = drop_turn_prefix.match(dirty_text)
     if match:
         text = match.group(1)
+        post_process = lambda xs: [ segmentation.shift_span(match.start(1), x) for x in xs ]
     else:
         text = dirty_text
-    return segmentation.segment(text)
+        post_process = lambda x: x
+    return post_process(segmentation.segment(text))
 
 import argparse
 
@@ -113,8 +111,11 @@ for d in docs:
             output_filename = output_filename + ".aa"
 
         turns = [ u for u in entry.units if u.type == 'Turn' ]
-        segs  = { u : join_segments(turn_segments(u)) for u in turns }
 
+        def get_segments(t):
+            text     = entry.text_for(t)
+            segments = [ segmentation.span_text(text,sp) for sp in turn_segments(t) ]
+            return join_segments(segments)
 
         if args.csv:
             with open(output_filename, 'w') as ofile:
@@ -129,7 +130,9 @@ for d in docs:
                         return (f,v)
                     copied = [ get_feature(f,f) for f in [ 'Timestamp', 'Emitter', 'Resources' ] ]
                     pairs  = copied + [ get_feature('ID','Identifier')
-                                      , get_feature('Buildups','Developments')]
+                                      , get_feature('Buildups','Developments')
+                                      , ('Text', get_segments(u))
+                                      ]
                     return dict(pairs)
                 writer.writeheader()
                 for t in turns:
@@ -165,9 +168,7 @@ for d in docs:
             seg_counter = 0
             for t in turns:
                 def mk_segment(s,i):
-                    start = t.span.char_start + s[0]
-                    end   = t.span.char_start + s[1]
-                    span = glozz.GlozzSpan(start, end)
+                    span = glozz.GlozzSpan(*segmentation.shift_span(t.span.char_start, s))
                     features = {}
                     author   = 'stac_segmenter'
                     # Glozz seems to use creation date internally to identify
@@ -184,14 +185,13 @@ for d in docs:
                     unit_id = '_'.join([author,k.doc,k.subdoc,str(i)])
                     seg  = glozz.GlozzUnit(unit_id, span, "Segment", features, metadata)
                     return seg
-                text  = entry.text_for(t)
-                spans = tokenizer.span_tokenize(text)
+                spans = turn_segments(t)
                 for s in spans:
                     entry2.units.append(mk_segment(s, seg_counter))
                     seg_counter = seg_counter + 1
 
             stac.write_annotation_file(output_filename, entry2)
         else:
-            segments = [ segs[t] for t in turns ]
+            segments = [ get_segments(t) for t in turns ]
             with open(output_filename, 'w') as ofile:
                 print >> ofile, "\n".join(segments)
