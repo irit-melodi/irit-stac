@@ -19,14 +19,20 @@ import csv
 import re
 import os
 import os.path
+import math
 import sys
 
 
 from nltk.tokenize import sent_tokenize
 
+from educe import glozz
 from educe import stac
 import segmentation
 import stac_csv
+
+# temporary
+import nltk.data
+tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
 def join_segments(xs):
     return "& ".join(xs)
@@ -58,6 +64,12 @@ arg_parser.add_argument('--csv',
                         default=False,
                         dest='csv',
                         help='output csv file (replacing text with segmentations)')
+arg_parser.add_argument('--glozz',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        dest='glozz',
+                        help='output glozz XML file')
 arg_parser.add_argument('--no-seg',
                         action='store_const',
                         const=False,
@@ -86,7 +98,7 @@ docs         = frozenset([k.doc for k in corpus])
 for d in docs:
     output_dir = os.path.join(args.output, d)
     try:
-        os.mkdir(output_dir)
+        os.makedirs(output_dir)
     except OSError:
         pass # no problem
     subcorpus  = reader.filter(corpus, lambda k:k.doc == d)
@@ -97,11 +109,15 @@ for d in docs:
         output_filename = os.path.join(output_dir, splitext(bname)[0])
         if args.csv:
             output_filename = output_filename + ".csv"
+        elif args.glozz:
+            output_filename = output_filename + ".aa"
 
         turns = [ u for u in entry.units if u.type == 'Turn' ]
         segs  = { u : join_segments(turn_segments(u)) for u in turns }
-        with open(output_filename, 'w') as ofile:
-            if args.csv:
+
+
+        if args.csv:
+            with open(output_filename, 'w') as ofile:
                 writer = stac_csv.mk_writer(ofile)
                 def mk_row(u):
                     def get_feature(f,f2):
@@ -118,6 +134,64 @@ for d in docs:
                 writer.writeheader()
                 for t in turns:
                     writer.writerow(mk_row(t))
-            else:
-                segments = [ segs[t] for t in turns ]
+
+        elif args.glozz:
+            entry2 = copy.copy(entry)
+            entry2.relations = []
+            entry2.units     = [ u for u in entry.units if u.type != 'Segment' ]
+
+            # It seems like Glozz uses the creation-date metadata field to
+            # identify units (symptom: units that have different ids, but
+            # some date don't appear in UI).
+            #
+            # Also, other tools in the pipeline seem to use the convention of
+            # negative numbers for fields where the notion of a creation date
+            # isn't very appropriate (automatically derived annotations)
+            #
+            # So we take the smallest negative date (largest absolute value)
+            # and subtract from there.
+            #
+            # For readability, we'll jump up a couple powers of 10
+            creation_dates    = [ int(u.metadata['creation-date']) for u in entry.units ]
+            smallest_neg_date = min(creation_dates)
+            if smallest_neg_date > 0:
+                smallest_neg_date = 0
+            # next two power of 10
+            id_base = 10 ** (int(math.log10(abs(smallest_neg_date))) + 2)
+
+            def mk_creation_date(i):
+                return str(0 - (id_base + i))
+
+            seg_counter = 0
+            for t in turns:
+                def mk_segment(s,i):
+                    start = t.span.char_start + s[0]
+                    end   = t.span.char_start + s[1]
+                    span = glozz.GlozzSpan(start, end)
+                    features = {}
+                    author   = 'stac_segmenter'
+                    # Glozz seems to use creation date internally to identify
+                    # units, something ms based here doesn't seem so good
+                    # because not unique (too fast); using a counter instead
+                    # although by rights we also need to filter out
+                    # existing creation dates
+                    creation_date = mk_creation_date(seg_counter)
+                    metadata = { 'author'        : author
+                               , 'creation-date' : creation_date
+                               , 'lastModifier'  : 'n/a'
+                               , 'lastModificationDate' : '0'
+                               }
+                    unit_id = '_'.join([author,k.doc,k.subdoc,str(i)])
+                    seg  = glozz.GlozzUnit(unit_id, span, "Segment", features, metadata)
+                    return seg
+                text  = entry.text_for(t)
+                spans = tokenizer.span_tokenize(text)
+                for s in spans:
+                    entry2.units.append(mk_segment(s, seg_counter))
+                    seg_counter = seg_counter + 1
+
+            stac.write_annotation_file(output_filename, entry2)
+        else:
+            segments = [ segs[t] for t in turns ]
+            with open(output_filename, 'w') as ofile:
                 print >> ofile, "\n".join(segments)
