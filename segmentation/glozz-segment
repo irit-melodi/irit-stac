@@ -19,7 +19,6 @@ import csv
 import re
 import os
 import os.path
-import math
 import sys
 
 
@@ -125,55 +124,19 @@ for d in docs:
             entry2 = copy.copy(entry)
             entry2.relations = []
             entry2.units     = [ u for u in entry.units if u.type != 'Segment' ]
+            partial_units    = []
 
-            # It seems like Glozz uses the creation-date metadata field to
-            # identify units (symptom: units that have different ids, but
-            # some date don't appear in UI).
-            #
-            # Also, other tools in the pipeline seem to use the convention of
-            # negative numbers for fields where the notion of a creation date
-            # isn't very appropriate (automatically derived annotations)
-            #
-            # So we take the smallest negative date (largest absolute value)
-            # and subtract from there.
-            #
-            # For readability, we'll jump up a couple powers of 10
-            creation_dates    = [ int(u.metadata['creation-date']) for u in entry.units ]
-            smallest_neg_date = min(creation_dates)
-            if smallest_neg_date > 0:
-                smallest_neg_date = 0
-            # next two power of 10
-            id_base = 10 ** (int(math.log10(abs(smallest_neg_date))) + 2)
-
-            def mk_creation_date(i):
-                return str(0 - (id_base + i))
-
-            seg_counter = 0
             for t in turns:
-                def mk_segment(s,i):
-                    span = glozz.GlozzSpan(*segmentation.shift_span(t.span.char_start, s))
+                def mk_segment(s):
+                    span     = glozz.GlozzSpan(*segmentation.shift_span(t.span.char_start, s))
                     features = {}
-                    author   = 'stac_segmenter'
-                    # Glozz seems to use creation date internally to identify
-                    # units, something ms based here doesn't seem so good
-                    # because not unique (too fast); using a counter instead
-                    # although by rights we also need to filter out
-                    # existing creation dates
-                    creation_date = mk_creation_date(seg_counter)
-                    metadata = { 'author'        : author
-                               , 'creation-date' : creation_date
-                               , 'lastModifier'  : 'n/a'
-                               , 'lastModificationDate' : '0'
-                               }
-                    unit_id = '_'.join([author,k.doc,k.subdoc,str(i)])
-                    seg  = glozz.GlozzUnit(unit_id, span, "Segment", features, metadata)
-                    return seg
-
-                spans = segmentation.segment_turn(entry.text_for(u))
+                    return stac.PartialUnit(span, "Segment", features)
+                spans = segmentation.segment_turn(entry.text_for(t))
                 for s in spans:
-                    entry2.units.append(mk_segment(s, seg_counter))
-                    seg_counter = seg_counter + 1
+                    partial_units.append(mk_segment(s))
 
+            new_units = stac.create_units(k, entry, 'stac_segmenter', partial_units)
+            entry2.units.extend(new_units)
             stac.write_annotation_file(output_filename, entry2)
         else:
             segments = [ get_segments(t) for t in turns ]
