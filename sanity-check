@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Eric Kow
+# License: BSD3
+
+"""
+Check the corpus for any consistency problems
+
+Quick start
+-----------
+
+    cd Stac
+    code/sanity-check data/pilot
+"""
+
+from collections import defaultdict
+from educe import stac
+
+import argparse
+import os
+import sys
+
+arg_parser = argparse.ArgumentParser(description='Check corpus for potential problems.')
+arg_parser.add_argument('corpus', metavar='DIR')
+arg_parser.add_argument('--verbose', '-v',
+                        action='count',
+                        default=0)
+args=arg_parser.parse_args()
+
+idir=args.corpus
+
+def is_interesting(k):
+    return k.stage in ['discourse', 'units', 'unannotated']
+
+reader     = stac.Reader(idir)
+anno_files = reader.filter(reader.files(), is_interesting)
+corpus     = reader.slurp(anno_files, verbose=True)
+
+all_annos = {}
+all_dupes = {}
+for doc_id in corpus:
+    annos_  = corpus[doc_id].units +\
+              corpus[doc_id].relations +\
+              corpus[doc_id].schemas
+    annos = defaultdict(list)
+    for x in annos_: annos[x.local_id()].append(x)
+
+    dupes  = { k:v for k,v in annos.items() if len(v) > 1 }
+    if len(dupes) > 0:
+        all_dupes[doc_id] = dupes
+
+if args.verbose and len(all_dupes) > 0:
+    print "WARNING: duplicate annotation ids found"
+    for k in sorted(all_dupes):
+        descr = str(k)
+        print descr
+        print '-' * len(descr)
+        print anno_files[k][0]
+        print ""
+        def show_anno(x):
+            return "[%s] %s %s (%s)" % (x.type, x.span, x.features, corpus[k].text_for(x))
+        for d in all_dupes[k]:
+            id_str     = str(d)
+            id_padding = ' ' * len(id_str)
+            variants   = map(show_anno,all_dupes[k][d])
+            print     " * %s: %s" % (id_str, variants[0])
+            for v in variants[1:]:
+                print "   %s  %s" % (id_padding, v)
+        print ""
+elif len(all_dupes) > 0:
+    print "WARNING: duplicate annoation ids found in the following files:"
+    for k in sorted(all_dupes):
+        print anno_files[k][0]
