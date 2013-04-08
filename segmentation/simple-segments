@@ -21,7 +21,7 @@ import re
 import sys
 
 import segmentation
-import stac_csv
+import educe.stac.csv as stac_csv
 
 def segment_row(t):
     segments = [segmentation.span_text(t,sp) for sp in segmentation.segment(t)]
@@ -34,16 +34,16 @@ def normalise_row(t):
     """
     return join_segments(split_segments(t))
 
+def get_text(row):
+    return row['Text']
+
 def replace_text(job, row):
-    row2     = copy.copy(row)
-    row2[-3] = job(row[-3])
+    row2         = copy.copy(row)
+    row2['Text'] = job(get_text(row))
     return row2
 
-def get_text(row):
-    return row[-3]
-
 def join_segments(xs):
-    return "& ".join(xs)
+    return "&".join(xs)
 
 def split_segments(t):
     return [ x.strip() for x in t.split('&') ]
@@ -74,12 +74,13 @@ else:
     job=normalise_row
 
 with open(filename_in, 'rb') as infile:
-    reader = csv.reader(infile,  delimiter='\t')
+    reader = stac_csv.mk_csv_reader(infile)
     rows   = list(reader)
 
 with open(args.output_file, 'wb') as outfile:
     if args.csv:
-        writer = csv.writer(outfile, dialect='stac')
+        writer = stac_csv.mk_csv_writer(outfile)
+        writer.writeheader()
         for row in rows:
             writer.writerow(replace_text(job,row))
     else:

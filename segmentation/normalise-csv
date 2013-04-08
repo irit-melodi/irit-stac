@@ -17,7 +17,7 @@ import os
 import os.path
 import sys
 
-import stac_csv
+import educe.stac.csv as stac_csv
 
 if len(sys.argv) == 3:
     filename_in  = sys.argv[1]

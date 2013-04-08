@@ -27,7 +27,7 @@ from nltk.tokenize import sent_tokenize
 from educe import glozz
 from educe import stac
 import segmentation
-import stac_csv
+import educe.stac.csv as stac_csv
 
 def join_segments(xs):
     return "& ".join(xs)
@@ -102,6 +102,7 @@ for d in docs:
         if args.csv:
             with open(output_filename, 'w') as ofile:
                 writer = stac_csv.mk_writer(ofile)
+                writer.writeheader()
                 def mk_row(u):
                     def get_feature(f,f2):
                         v_ = u.features[f2]
