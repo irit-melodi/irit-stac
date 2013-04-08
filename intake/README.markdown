@@ -23,17 +23,19 @@ See the scripts intake-1-batch.sh and intake-2.sh for details
 1. in that directory, pre-segment all soclog files
    (run intake-1-batch.sh)
 
+For each soclog file (we assume here you are working incrementally)
+
 2. manually correct segmentation results (OpenOffice, Excel, etc)
    (foo/segmented/foo.soclog.seg.csv)
 
-3. split and convert corrected segmentation results to glozz,
-   create .aam templates for these (intake-2.sh)
+3. split files (run intake-2.sh dir/segmented/file.soclog.seg.csv)
 
-## TODO
+4. manually correct splits
+   (open `dir/split/*.csv` files in text editor, move lines
+   around as desired)
 
-The intake-2 script currently assumes that the automated splitting
-process is sufficient for our needs, but it's possible that in
-practice we still need to hand-correct the splits, in which case we
-would need to split intake-2.sh into two parts
+5. convert corrected segmentation results to glozz,
+   create .aam templates for these (run intake-3.sh)
+
 
 [vlad]: /docs/reation_aa_ac_Vladimir.README
