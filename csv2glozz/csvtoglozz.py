@@ -284,9 +284,11 @@ if len(dialog_rightborders) == 0 or dialog_rightborders[-1] != len(dialoguetext)
 #	print ">>>>>>>>>>>"
 #	print dialoguetext[dialog_leftborders[b]:dialog_rightborders[b]]
 #	print "<<<<<<<<<<<"
-outtxtfile = codecs.open(filename.split(".soclog.csv")[0]+".ac", "w")
+
+basename=filename.split(".")[0]
+outtxtfile = codecs.open(basename+".ac", "w")
 outtxtfile.write(dialoguetext)
 outtxtfile.close()
-outxmlfile = codecs.open(filename.split(".soclog.csv")[0]+".aa", "w", "ascii")
+outxmlfile = codecs.open(basename+".aa", "w", "ascii")
 outxmlfile.write(prettify(root))
 outxmlfile.close()
