@@ -181,3 +181,6 @@ def wikitext2csv(filename):
 	outcsvfile.close()
 	print "Done.\n"
 	return [dialogue.size, dialogue.linguistic_size]
+
+if __name__ == "__main__":
+	wikitext2csv(sys.argv[1])
