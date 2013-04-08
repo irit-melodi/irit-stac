@@ -86,7 +86,6 @@ def resegment(t,seg):
 
     def from_match(m):
         lhs_span = get_span(m,'prefix')
-        lhs_span = (lhs_span[0], lhs_span[1] - 1) # avoid overlap
         rhs_span = get_span(m,'suffix')
         return (lhs_span, rhs_span)
 
