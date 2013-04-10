@@ -102,11 +102,10 @@ for csvrow in lcsvreader[1:]:
 csvheader  = ['ID', 'Timestamp', 'Emitter', 'Resources', 'Buildups', 'Text', 'Annotation', 'Comment']
 num_chunks = len(chunks)
 chunk_digits = int(math.ceil(math.log10(num_chunks)))
-print num_chunks, chunk_digits
 def mk_filename(i):
-    base   = sys.argv[1].split(".")[0]
-    subdoc = str(i).zfill(chunk_digits)
-    return base + "_" + subdoc + ".soclog.seg.csv"
+        base   = sys.argv[1].split(".")[0]
+        subdoc = str(i).zfill(chunk_digits)
+        return base + "_" + subdoc + ".soclog.seg.csv"
 
 csv_counter = 1
 for c in chunks: # N files for each game !
