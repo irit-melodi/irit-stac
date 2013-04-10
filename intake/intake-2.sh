@@ -1,5 +1,6 @@
 #!/bin/bash
 shopt -s nullglob
+set -e
 
 # Second half of the intake process:
 #
@@ -10,7 +11,7 @@ SCRIPT_DIR=$PWD
 popd > /dev/null
 
 if [ $# -ne 1 ]; then
-    echo >&2 "Usage: $0 file.soclog.csv"
+    echo >&2 "Usage: $0 file.soclog.seg.csv"
     exit 1
 fi
 
@@ -25,18 +26,18 @@ fi
 INPUT_BNAME=$(basename $INPUT_FILE .soclog.seg.csv)
 
 
-mkdir -p split unannotated units discourse
+mkdir -p sections unannotated units discourse
 CSV2GLOZZ_DIR=$SCRIPT_DIR/../csv2glozz
 pushd $CSV2GLOZZ_DIR > /dev/null
 CSV2GLOZZ_DIR=$PWD
 popd > /dev/null
 
 python $CSV2GLOZZ_DIR/splitcsv.py $INPUT_FILE
-mv ${INPUT_DNAME}/${INPUT_BNAME}_*.soclog.seg.csv split
+mv ${INPUT_DNAME}/${INPUT_BNAME}_*.soclog.seg.csv sections
 
 python $SCRIPT_DIR/create-glozz-aam.py $INPUT_FILE $INPUT_BNAME.aam
 
-echo >&2 "Now edit the decoupage in split/* by trimming lines"
+echo >&2 "Now edit the sectioning in sections/* by trimming lines"
 echo >&2 "in your text editor, or moving them between files."
 echo >&2 "You can add or delete files as needed"
 echo >&2

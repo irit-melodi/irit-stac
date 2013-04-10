@@ -10,7 +10,7 @@ SCRIPT_DIR=$PWD
 popd > /dev/null
 
 if [ $# -ne 1 ]; then
-    echo >&2 "Usage: $0 split-dir"
+    echo >&2 "Usage: $0 sections-dir"
     exit 1
 fi
 
