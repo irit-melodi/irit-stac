@@ -100,6 +100,10 @@ for csvrow in lcsvreader[1:]:
                 curr_csv += 1
                 nb_turns = 0
 
+if len(current_chunk) > 0:
+    chunks.append(current_chunk)
+    current_chunk = []
+
 # pre-pending the csv header !
 csvheader  = ['ID', 'Timestamp', 'Emitter', 'Resources', 'Buildups', 'Text', 'Annotation', 'Comment']
 num_chunks = len(chunks)
