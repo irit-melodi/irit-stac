@@ -49,10 +49,10 @@ size_limit = nb_turns / 10
 
 nb_dialogues = 1 # There always is at least one dialogue in a conversation. Moreover, the last dialogue is not ennded with a dice rolling.
 nb_turns = 0
-curr_csv = 1
 discard_lines = []
 chunks        = []
 current_chunk = []
+chunks.append(current_chunk)
 
 for csvrow in lcsvreader[1:]:
         [curr_turn_id, curr_turn_timestamp, curr_turn_emitter, curr_turn_res, curr_turn_builds, curr_turn_text, curr_turn_annot, curr_turn_comment] = csvrow
@@ -88,21 +88,15 @@ for csvrow in lcsvreader[1:]:
                                 discard_lines.append(True)
                                 i += 1
                 else:
-                        chunks.append(current_chunk)
                         current_chunk = []
-                        curr_csv += 1
+                        chunks.append(current_chunk)
                         nb_turns = 0
         else:
                 #not_first_dialogue = True
                 #old_csvrow = csvrow
-                chunks.append(current_chunk)
                 current_chunk = []
-                curr_csv += 1
+                chunks.append(current_chunk)
                 nb_turns = 0
-
-if len(current_chunk) > 0:
-    chunks.append(current_chunk)
-    current_chunk = []
 
 # pre-pending the csv header !
 csvheader  = ['ID', 'Timestamp', 'Emitter', 'Resources', 'Buildups', 'Text', 'Annotation', 'Comment']
