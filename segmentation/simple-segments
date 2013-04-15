@@ -27,13 +27,6 @@ def segment_row(t):
     segments = [segmentation.span_text(t,sp) for sp in segmentation.segment(t)]
     return join_segments(segments)
 
-def normalise_row(t):
-    """
-    Don't do any segmentation, but reformat already-segmented text
-    (for easier comparison with automatically segmented output)
-    """
-    return join_segments(split_segments(t))
-
 def get_text(row):
     return row['Text']
 
@@ -44,9 +37,6 @@ def replace_text(job, row):
 
 def join_segments(xs):
     return "&".join(xs)
-
-def split_segments(t):
-    return [ x.strip() for x in t.split('&') ]
 
 import argparse
 
@@ -71,7 +61,7 @@ filename_in  = args.input_file
 if args.segment:
     job=segment_row
 else:
-    job=normalise_row
+    job=lambda t:t
 
 with open(filename_in, 'rb') as infile:
     reader = stac_csv.mk_csv_reader(infile)
