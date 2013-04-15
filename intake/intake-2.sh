@@ -10,6 +10,11 @@ pushd `dirname $0` > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
 
+CODE_DIR=$SCRIPT_DIR/..
+pushd $CODE_DIR > /dev/null
+CODE_DIR=$PWD
+popd > /dev/null
+
 if [ $# -ne 1 ]; then
     echo >&2 "Usage: $0 file.soclog.seg.csv"
     exit 1
@@ -17,28 +22,24 @@ fi
 
 INPUT_FILE=$1
 INPUT_DNAME=$(dirname  $INPUT_FILE)
+INPUT_BNAME=$(basename $INPUT_FILE .soclog.seg.csv)
 # if this is run as a successor to the intake-1 script
-if [ "$(basename $INPUT_DNAME)" == "segmented" ]; then
+if [ "$(dirname $INPUT_DNAME)" == "${INPUT_BNAME}" ]; then
     cd ${INPUT_DNAME}/..
-    INPUT_DNAME=segmented
+    INPUT_DNAME=$(basename $INPUT_DNAME)
     INPUT_FILE=${INPUT_DNAME}/$(basename $INPUT_FILE)
 fi
-INPUT_BNAME=$(basename $INPUT_FILE .soclog.seg.csv)
-
 
 mkdir -p sections unannotated units discourse
-CSV2GLOZZ_DIR=$SCRIPT_DIR/../csv2glozz
-pushd $CSV2GLOZZ_DIR > /dev/null
-CSV2GLOZZ_DIR=$PWD
-popd > /dev/null
 
-python $CSV2GLOZZ_DIR/splitcsv.py $INPUT_FILE
+echo >&2 '== Splitting into sections == [sections/*.soclog.seg.csv]'
+python $CODE_DIR/txt2csv/split_csv.py $INPUT_FILE
+python $SCRIPT_DIR/rename-series.py $INPUT_FILE --verbose
 mv ${INPUT_DNAME}/${INPUT_BNAME}_*.soclog.seg.csv sections
 
-python $SCRIPT_DIR/create-glozz-aam.py $INPUT_FILE $INPUT_BNAME.aam
-
-echo >&2 "Now edit the sectioning in sections/* by trimming lines"
-echo >&2 "in your text editor, or moving them between files."
-echo >&2 "You can add or delete files as needed"
-echo >&2
-echo >&2 "After that, run ./intake-3.sh on the split directory"
+echo >&2 '== Writing Glozz am/ac files == [unannotated/*.{ac,aa}]'
+for i in sections/*.soclog.seg.csv; do
+    echo $i
+    python $CODE_DIR/csv2glozz/csvtoglozz.py -f $i
+done
+mv sections/*.{aa,ac} unannotated

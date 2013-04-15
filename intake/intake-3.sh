@@ -27,9 +27,3 @@ CSV2GLOZZ_DIR=$SCRIPT_DIR/../csv2glozz
 pushd $CSV2GLOZZ_DIR > /dev/null
 CSV2GLOZZ_DIR=$PWD
 popd > /dev/null
-
-for i in $SPLIT_DIR/*.soclog.seg.csv; do
-    echo $i
-    python $CSV2GLOZZ_DIR/csvtoglozz.py -f $i
-done
-mv $SPLIT_DIR/*.{aa,ac} unannotated
