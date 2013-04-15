@@ -6,6 +6,7 @@
 
 from xml.etree import ElementTree
 from xml.dom import minidom
+import sys
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -14,3 +15,7 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string.replace('\n', ''))
     return reparsed.toprettyxml(indent="")
 
+if __name__ == '__main__':
+    tree = ElementTree.parse(sys.argv[1])
+    root = tree.getroot()
+    print prettify(root)
