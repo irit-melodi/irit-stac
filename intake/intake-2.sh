@@ -28,6 +28,7 @@ if [ "$(dirname $INPUT_DNAME)" == "${INPUT_BNAME}" ]; then
     cd ${INPUT_DNAME}/..
     INPUT_DNAME=$(basename $INPUT_DNAME)
     INPUT_FILE=${INPUT_DNAME}/$(basename $INPUT_FILE)
+    STANDARD_MODE=1
 fi
 
 mkdir -p sections unannotated units discourse
@@ -43,3 +44,13 @@ for i in sections/*.soclog.seg.csv; do
     python $CODE_DIR/csv2glozz/csvtoglozz.py -f $i
 done
 mv sections/*.{aa,ac} unannotated
+
+if [ "$STANDARD_MODE" == "1" ]; then
+    echo >&2 '== Creating zip file for annotators =='
+    cd ..
+    mkdir -p for-annotators/$INPUT_BNAME
+    cp $INPUT_BNAME/*.aam $INPUT_BNAME/unannotated/* for-annotators/$INPUT_BNAME
+    cd for-annotators
+    zip -r $INPUT_BNAME.zip $INPUT_BNAME
+    cd ..
+fi
