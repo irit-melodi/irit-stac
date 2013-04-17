@@ -14,20 +14,29 @@ import sys
 
 from prettifyxml import prettify
 
+def nub(xs):
+    """
+    First occurrence of each list member
+    """
+    ys = []
+    for x in xs:
+        if x not in ys: ys.append(x)
+    return ys
+
 def tidy(filename, output):
     tree    = ET.parse(filename)
 
     date_elems = tree.findall('.//creation-date')
     unit_elems = tree.findall('.//unit')
 
-    dates     = [ int(x.text) for x in date_elems ]
+    dates     = [ int(x.text.strip()) for x in date_elems ]
     unit_ids  = [ x.attrib['id'] for x in unit_elems ]
 
-    new_ids  ={ v:str(i)      for i,v in enumerate(unit_ids) }
-    new_dates={ str(v):str(i) for i,v in enumerate(dates)    }
+    new_ids  ={ v:str(i)      for i,v in enumerate(nub(unit_ids)) }
+    new_dates={ str(v):str(i) for i,v in enumerate(nub(dates))    }
 
     for x in date_elems:
-        old    = str(x.text)
+        old    = str(x.text.strip())
         x.text = new_dates[old]
     for x in unit_elems:
         old = x.attrib['id']
