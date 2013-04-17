@@ -36,8 +36,7 @@ Example: for an input filename like document1.soclog.seg.csv, the pair  (documen
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 import copy
 import csv, sys, codecs
-import hashlib
-
+import datetime, time
 from prettifyxml import prettify
 
 def append_unit(root, unit_id, date, type, features, left, right):
@@ -154,10 +153,14 @@ def mk_id():
     Pair containing a brand new id and (false) creation-date
     """
     mk_id.counter += 1
-    the_id = '_'.join(['stac', mk_id.hash, str(mk_id.counter)])
-    return (the_id, mk_id.counter)
+    fake_timestamp = mk_id.starting_time + mk_id.counter
+    the_id = '_'.join(['stac', str(fake_timestamp)])
+    return (the_id, fake_timestamp)
+
+# not sure why this is preferable to time.time()
+# inherited it from the old version of the code
+mk_id.starting_time = int(time.mktime(datetime.datetime.now().timetuple()))
 mk_id.counter = 0
-mk_id.hash    = hashlib.sha1(whole_text(csvrows)).hexdigest()[:8]
 
 for r in range(0,len(csvrows)):
     i += 1
