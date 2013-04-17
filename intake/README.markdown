@@ -15,23 +15,26 @@ This is *not* self-contained.  It currently calls scripts in
 
 See the scripts intake-1-batch.sh and intake-2.sh for details
 
-0. put soclog files in a directory, with a comma-separated mappings.txt
+0. Put soclog files in a directory, with a comma-separated mappings.txt
    file that assigns a clean name to each file, as in eg.
 
-          League 1-2012-06-17-19-53-24-+0100.soclog,s1-l1-g02
-          League 1 game-2012-06-19-18-49-00-+0100.soclog,s1-l1-g03
+          s1-l1-g02,League 1-2012-06-17-19-53-24-+0100.soclog
+          s1-l1-g03,League 1 game-2012-06-19-18-49-00-+0100.soclog
 
-1. in that directory, pre-segment all soclog files, create aam templates
+1. [AUTO]
+   In that directory, pre-segment all soclog files, create aam templates
    (run intake-1-batch.sh)
 
-2. For each soclog file (we assume here you are working incrementally):
+2. [MANUAL]
+   For each soclog file (we assume here you are working incrementally):
 
-   manually correct segmentation results (OpenOffice, Excel, etc),
+   Manually correct segmentation results (OpenOffice, Excel, etc),
    using '&' to separate EDUS, and
    inserting blank lines to create document sections
    (foo/segmented/foo.soclog.seg.csv)
 
-3. As you create the segmented files, convert the results to glozz
+3. [AUTO]
+   As you create the segmented files, convert the results to glozz
    (run intake-2.sh foo/segmented/foo.soclog.seg.csv)
 
 

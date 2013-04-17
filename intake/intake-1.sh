@@ -34,8 +34,7 @@ mv ${TURNS_FILE}csv $CLEAN_SOCLOG
 python $SCRIPT_DIR/create-glozz-aam.py $CLEAN_SOCLOG $OUTPUT_BNAME/$OUTPUT_BNAME.aam
 
 # presegment automatically (human would still have to clean up)
-# TODO: have temporarily disabled segmentation for comparability
-python $CODE_DIR/segmentation/simple-segments  --csv --no-seg\
+python $CODE_DIR/segmentation/simple-segments  --csv\
     $OUTPUT_BNAME/unsegmented/${OUTPUT_BNAME}.soclog.csv\
     $OUTPUT_BNAME/segmented/${OUTPUT_BNAME}.soclog.seg.csv
 # TODO restore removal of turns

@@ -14,7 +14,7 @@ if [ $# -ne 1 ]; then
 fi
 
 MAPPING_FILE=$1
-while IFS=, read original clean; do
+while IFS=, read clean original; do
     bash $SCRIPT_DIR/intake-1.sh "$original" "$clean" batch
 done < $MAPPING_FILE
 
