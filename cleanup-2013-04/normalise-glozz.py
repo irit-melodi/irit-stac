@@ -27,7 +27,7 @@ def tidy(filename, output):
     tree    = ET.parse(filename)
 
     date_elems = tree.findall('.//creation-date')
-    unit_elems = tree.findall('.//unit')
+    unit_elems = tree.findall('.//*[@id]')
 
     dates     = [ int(x.text.strip()) for x in date_elems ]
     unit_ids  = [ x.attrib['id'] for x in unit_elems ]
