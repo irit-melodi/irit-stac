@@ -105,7 +105,7 @@ def resegment(t,seg):
     rhs_words  = [ 'sorry'
                  , 'thanks'
                  , 'haha', 'doh!'
-                 , r'[:;]-?[PD\(\)/\\]'
+                 #, r'[:;]-?[PD\(\)/\\]'
                  ]
     rhs       = mk_group('prefix', '.+\s')\
               + mk_group('suffix', sub_re(rhs_words), '.*$')
