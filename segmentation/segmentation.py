@@ -62,7 +62,8 @@ def segment(t):
     spans1 = tokenizer.span_tokenize(t)
     spans2 = concat([ resegment(t,s) for s in spans1 ])
     spans3 = fuse_segments(t,spans2)
-    return spans3
+    spans4 = ungap_segments(spans3)
+    return spans4
 
 def resegment(t,seg):
     """
@@ -180,3 +181,23 @@ def fuse_segments(t,xs):
     else: # default case, just keep walking
         head  = xs[0]
         return [head] + fuse_segments(t,xs[1:])
+
+def ungap_segments(xs):
+    """
+    Given a list of adjacent segments, anytime there is a gap between two segments
+    L and R, absorb the gap into the right-hand segment
+    """
+    last=xs[0][1]
+    if len(xs) > 1:
+        ys=[xs[0]]
+        for x in xs[1:]:
+            if x[0] == last:
+                ys.append((x[0],x[1]))
+            if x[0] > last:
+                ys.append((last,x[1]))
+            elif x[0] < last:
+                raise Exception("Segments unexpectedly out of order")
+            last=x[1]
+        return ys
+    else:
+        return xs
