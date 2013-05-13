@@ -37,8 +37,7 @@ python $SCRIPT_DIR/create-glozz-aam.py $CLEAN_SOCLOG $OUTPUT_BNAME/$OUTPUT_BNAME
 python $CODE_DIR/segmentation/simple-segments  --csv\
     $OUTPUT_BNAME/unsegmented/${OUTPUT_BNAME}.soclog.csv\
     $OUTPUT_BNAME/segmented/${OUTPUT_BNAME}.soclog.seg.csv
-# TODO restore removal of turns
-#rm ${TURNS_FILE}
+rm ${TURNS_FILE}
 
 if [ -z "$BATCH" ]; then
     echo >&2 "Now edit segmented/$OUTPUT_BNAME.soclog.seg.csv (in eg. Excel)"

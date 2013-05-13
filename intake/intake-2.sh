@@ -45,6 +45,12 @@ for i in sections/*.soclog.seg.csv; do
 done
 mv sections/*.{aa,ac} unannotated
 
+echo >&2 '== Writing sanity check ac files == [sanity/*.{ac,aa}]'
+mkdir -p sanity-check
+python $CODE_DIR/csv2glozz/csvtoglozz.py -f $INPUT_FILE
+rm -f $INPUT_BNAME.aa
+mv $INPUT_BNAME.ac sanity-check/segmented.ac
+
 if [ "$STANDARD_MODE" == "1" ]; then
     echo >&2 '== Creating zip file for annotators =='
     cd ..
