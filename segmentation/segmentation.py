@@ -108,8 +108,8 @@ def resegment(t,seg):
                  , 'haha', 'doh!'
                  #, r'[:;]-?[PD\(\)/\\]'
                  ]
-    rhs       = mk_group('prefix', '.+\s')\
-              + mk_group('suffix', sub_re(rhs_words), '.*$')
+    rhs       = mk_group('prefix', '.+')\
+              + mk_group('suffix', r'\s', sub_re(rhs_words), '.*$')
     rhs_re    = re.compile(rhs, flags=re.IGNORECASE)
     match_rhs = rhs_re.match(fragment)
 
