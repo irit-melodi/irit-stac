@@ -10,10 +10,17 @@ pushd `dirname $0` > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
 
-CODE_DIR=$SCRIPT_DIR/..
-pushd $CODE_DIR > /dev/null
-CODE_DIR=$PWD
-popd > /dev/null
+view_ac () {
+    sed -e $'s/ \([0-9][0-9]* : \)/\\\n\\1/g' $1
+}
+
+abspath () {
+    pushd $1 > /dev/null
+    echo $PWD
+    popd > /dev/null
+}
+
+CODE_DIR=$(abspath $SCRIPT_DIR/..)
 
 if [ $# -ne 1 ]; then
     echo >&2 "Usage: $0 file.soclog.seg.csv"
@@ -33,6 +40,24 @@ fi
 
 mkdir -p sections unannotated units discourse
 
+echo >&2 '== Sanity checking == [sanity-check/*.{ac,aa}]'
+mkdir -p sanity-check
+UNSEGMENTED_DIR=$(abspath ${INPUT_DNAME}/../unsegmented)
+python $CODE_DIR/csv2glozz/csvtoglozz.py -f ${UNSEGMENTED_DIR}/${INPUT_BNAME}.soclog.csv
+python $CODE_DIR/csv2glozz/csvtoglozz.py -f $INPUT_FILE
+view_ac ${UNSEGMENTED_DIR}/${INPUT_BNAME}.ac > sanity-check/unsegmented.txt
+view_ac ${INPUT_DNAME}/${INPUT_BNAME}.ac     > sanity-check/segmented.txt
+rm ${UNSEGMENTED_DIR}/${INPUT_BNAME}.aa ${UNSEGMENTED_DIR}/${INPUT_BNAME}.ac
+rm ${INPUT_DNAME}/${INPUT_BNAME}.aa     ${INPUT_DNAME}/${INPUT_BNAME}.ac
+diff sanity-check/unsegmented.txt sanity-check/segmented.txt > sanity-check/differences.txt || :
+SIZE_DIFFS=$(wc -l sanity-check/differences.txt | awk '{ print $1 }')
+NUM_ERRORS=$(($SIZE_DIFFS / 4))
+if [ -s sanity-check/differences.txt ]; then
+    echo >&2 "ERROR: sanity check failed in $NUM_ERRORS places"
+    echo >&2 "See sanity-check/differences.txt for details"
+    exit 1
+fi
+
 echo >&2 '== Splitting into sections == [sections/*.soclog.seg.csv]'
 python $CODE_DIR/txt2csv/split_csv.py $INPUT_FILE
 python $SCRIPT_DIR/rename-series.py $INPUT_FILE --verbose
@@ -44,12 +69,6 @@ for i in sections/*.soclog.seg.csv; do
     python $CODE_DIR/csv2glozz/csvtoglozz.py -f $i
 done
 mv sections/*.{aa,ac} unannotated
-
-echo >&2 '== Writing sanity check ac files == [sanity/*.{ac,aa}]'
-mkdir -p sanity-check
-python $CODE_DIR/csv2glozz/csvtoglozz.py -f $INPUT_FILE
-rm -f $INPUT_BNAME.aa
-mv $INPUT_BNAME.ac sanity-check/segmented.ac
 
 if [ "$STANDARD_MODE" == "1" ]; then
     echo >&2 '== Creating zip file for annotators =='
