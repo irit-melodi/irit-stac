@@ -135,8 +135,6 @@ parser.add_argument('-f', '--file', dest = 'file', nargs = '+', help = "specify 
 args = parser.parse_args(sys.argv[1:])
 filename = ' '.join(args.file)
 
-print filename
-
 incsvfile = codecs.open(filename, 'rt')
 csvreader = csv.reader(incsvfile, delimiter='\t')
 firstcsvrow = csvreader.next()
