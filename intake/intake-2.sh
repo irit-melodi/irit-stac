@@ -43,12 +43,12 @@ mkdir -p sections unannotated units discourse
 echo >&2 '== Sanity checking == [sanity-check/*.{ac,aa}]'
 mkdir -p sanity-check
 UNSEGMENTED_DIR=$(abspath ${INPUT_DNAME}/../unsegmented)
-python $CODE_DIR/csv2glozz/csvtoglozz.py -f ${UNSEGMENTED_DIR}/${INPUT_BNAME}.soclog.csv
-python $CODE_DIR/csv2glozz/csvtoglozz.py -f $INPUT_FILE
-view_ac ${UNSEGMENTED_DIR}/${INPUT_BNAME}.ac > sanity-check/unsegmented.txt
-view_ac ${INPUT_DNAME}/${INPUT_BNAME}.ac     > sanity-check/segmented.txt
-rm ${UNSEGMENTED_DIR}/${INPUT_BNAME}.aa ${UNSEGMENTED_DIR}/${INPUT_BNAME}.ac
-rm ${INPUT_DNAME}/${INPUT_BNAME}.aa     ${INPUT_DNAME}/${INPUT_BNAME}.ac
+cp ${UNSEGMENTED_DIR}/${INPUT_BNAME}.soclog.csv sanity-check/unsegmented.csv
+grep -v '^[[:space:]]*$' $INPUT_FILE          > sanity-check/segmented.csv
+python $CODE_DIR/csv2glozz/csvtoglozz.py -f sanity-check/unsegmented.csv
+python $CODE_DIR/csv2glozz/csvtoglozz.py -f sanity-check/segmented.csv
+view_ac sanity-check/unsegmented.ac > sanity-check/unsegmented.txt
+view_ac sanity-check/segmented.ac   > sanity-check/segmented.txt
 diff sanity-check/unsegmented.txt sanity-check/segmented.txt > sanity-check/differences.txt || :
 SIZE_DIFFS=$(wc -l sanity-check/differences.txt | awk '{ print $1 }')
 NUM_ERRORS=$(($SIZE_DIFFS / 4))
