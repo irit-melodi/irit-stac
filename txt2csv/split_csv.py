@@ -51,7 +51,7 @@ for (i,line) in enumerate(infile[1:]):
         line = chomped(awkward(line))
 
     if line.strip()=="" or i==nb-2:
-        outf = open("%s%d%s"%(base,count,ext),"w")
+        outf = open("%s%02d%s"%(base,count,ext),"w")
         if i==nb-2:
             current.append(line)
         for one in current:
