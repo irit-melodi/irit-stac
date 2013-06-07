@@ -65,14 +65,14 @@ else:
 
 with open(filename_in, 'rb') as infile:
     reader = stac_csv.mk_csv_reader(infile)
-    rows   = list(reader)
-
-with open(args.output_file, 'wb') as outfile:
     if args.csv:
-        writer = stac_csv.mk_csv_writer(outfile)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(replace_text(job,row))
+        # csv library has built-in utf-8 encoding
+        with open(args.output_file, 'wb') as outfile:
+            writer = stac_csv.mk_csv_writer(outfile)
+            writer.writeheader()
+            for row in reader:
+                writer.writerow(replace_text(job,row))
     else:
-        segmented = [job(get_text(r)) for r in rows]
-        print >> outfile, "\n".join(segmented)
+        with codecs.open(args.output_file, 'wb', encoding='utf-8') as outfile:
+            segmented = [job(get_text(r)) for r in reader]
+            print >> outfile, "\n".join(segmented)
