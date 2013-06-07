@@ -38,6 +38,7 @@ if [ "$(dirname $INPUT_DNAME)" == "${INPUT_BNAME}" ]; then
     STANDARD_MODE=1
 fi
 
+rm -rf sections unannotated units discourse
 mkdir -p sections unannotated units discourse
 
 echo >&2 '== Sanity checking == [sanity-check/*.{ac,aa}]'
@@ -73,6 +74,7 @@ mv sections/*.{aa,ac} unannotated
 if [ "$STANDARD_MODE" == "1" ]; then
     echo >&2 '== Creating zip file for annotators =='
     cd ..
+    rm -rf for-annotators/$INPUT_BNAME
     mkdir -p for-annotators/$INPUT_BNAME
     cp $INPUT_BNAME/*.aam $INPUT_BNAME/unannotated/* for-annotators/$INPUT_BNAME
     cd for-annotators
