@@ -120,6 +120,19 @@ def whole_text(csvrows):
             dialoguetext += turn.text
     return dialoguetext
 
+def utf8_csv_reader(utf8_data, **kwargs):
+    """
+    Read utf-8 encoded CSV data as Unicode strings.
+
+    The issue here is that the Python csv library seems to work on bytestrings.
+    To work with arbitrary Unicode files, they do this thing where they encode
+    the Unicode into UTF-8 on read (yes, encode), and decode it back.  This
+    seems rather silly to do if you already know the encoding is UTF-8 and you
+    just want the Unicode behind it.
+    """
+    csv_reader = csv.reader(utf8_data, **kwargs)
+    for row in csv_reader:
+        yield [unicode(cell, 'utf-8') for cell in row]
 
 # ---------------------------------------------------------------------
 # main
@@ -135,8 +148,8 @@ parser.add_argument('-f', '--file', dest = 'file', nargs = '+', help = "specify 
 args = parser.parse_args(sys.argv[1:])
 filename = ' '.join(args.file)
 
-incsvfile = codecs.open(filename, 'rt')
-csvreader = csv.reader(incsvfile, delimiter='\t')
+incsvfile = open(filename, 'rt') # bytestring
+csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
 firstcsvrow = csvreader.next()
 dialoguetext = ' ' # for the .ac file
 i=0
@@ -357,7 +370,7 @@ if len(dialog_rightborders) == 0 or dialog_rightborders[-1] != len(dialoguetext)
 #    print "<<<<<<<<<<<"
 
 basename=filename.split(".")[0]
-outtxtfile = codecs.open(basename+".ac", "w")
+outtxtfile = codecs.open(basename+".ac", "w", "utf-8")
 outtxtfile.write(dialoguetext)
 outtxtfile.close()
 outxmlfile = codecs.open(basename+".aa", "w", "ascii")
