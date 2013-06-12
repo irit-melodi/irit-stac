@@ -43,8 +43,8 @@ is_interesting=util.mk_is_interesting(args)
 taggers = [ args.ark_tweet_nlp ]
 
 if all([t is None for t in taggers]):
-    print >> sys.stderr, "At least one tagger must be satisfied"
-    args.print_help()
+    print >> sys.stderr, "At least one tagger must be specified"
+    print >> sys.stderr, "See the --help option"
     sys.exit(1)
 
 # ---------------------------------------------------------------------
