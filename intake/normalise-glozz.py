@@ -23,7 +23,7 @@ def nub(xs):
         if x not in ys: ys.append(x)
     return ys
 
-def tidy(filename, output):
+def tidy(filename, output, zero=False):
     tree    = ET.parse(filename)
 
     date_elems = tree.findall('.//creation-date')
@@ -32,8 +32,12 @@ def tidy(filename, output):
     dates     = [ int(x.text.strip()) for x in date_elems ]
     unit_ids  = [ x.attrib['id'] for x in unit_elems ]
 
-    new_ids  ={ v:str(i)      for i,v in enumerate(nub(unit_ids)) }
-    new_dates={ str(v):str(i) for i,v in enumerate(nub(dates))    }
+    if zero:
+        new_ids  ={ v:'0'      for v in nub(unit_ids) }
+        new_dates={ str(v):'0' for v in nub(dates)    }
+    else:
+        new_ids  ={ v:str(i)      for i,v in enumerate(nub(unit_ids)) }
+        new_dates={ str(v):str(i) for i,v in enumerate(nub(dates))    }
 
     for x in date_elems:
         old    = str(x.text.strip())
@@ -58,6 +62,9 @@ arg_parser.add_argument('--output', metavar='DIR'
                        , required=True
                        , help='Output directory'
                        )
+arg_parser.add_argument('--zero', action='store_true'
+                       , help='Set all IDs and dates to 0 (avoid unless you have a good reason)'
+                       )
 arg_parser.add_argument('--verbose', '-v', action='store_true')
 args=arg_parser.parse_args()
 
@@ -65,4 +72,4 @@ if not os.path.exists(args.output): os.mkdir(args.output)
 
 for f in args.input:
     f2 = os.path.join(args.output, os.path.basename(f))
-    tidy(f, f2)
+    tidy(f, f2, args.zero)
