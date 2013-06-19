@@ -1,6 +1,6 @@
 
 sheep:ressource:NN:sheep
-mouton:ressource:NN:sheep
+mutton:ressource:NN:sheep
 cattle:ressource:NN:sheep
 animal:ressource:NN:sheep
 beast:ressource:NN:sheep
