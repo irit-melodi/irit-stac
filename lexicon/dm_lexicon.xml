@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lexicon>
+	<connective cat="csu" id="c1" lemma="because">
+		<form>
+			because
+		</form>
+		<form>
+			cos
+		</form>
+		<use discourse="+" id="u1" relation="explanation" sub_position="all" type_rel="sub">
+			<example>
+				you got to move the robber because you played a card
+			</example>
+		</use>
+		<use discourse="+" id="u2" relation="explanation*" sub_position="all" type_rel="sub">
+			<example>
+				are you done ? cos I'm freezing here
+			</example>
+		</use>
+	</connective>
+	<connective cat="csu" id="c2" lemma="if">
+		<form>
+			if
+		</form>
+		<use discourse="+" id="u3" relation="condition" sub_position="all" type_rel="sub">
+			<example>
+				he can win the game if he gets wheat
+			</example>
+		</use>
+		<use discourse="+" id="u4" relation="concession" sub_position="ante" type_rel="sub">
+			<commentary>
+			often combined with something else in the second clause
+			</commentary>
+			<example>
+			  If he was too young to understand the lyrics, he could still appreciate the music 
+			</example>
+		</use>
+	</connective>
+
+
+</lexicon>
