@@ -15,6 +15,8 @@ Quick start
 """
 
 from collections import defaultdict
+
+import educe.util
 from educe import stac
 
 import argparse
@@ -23,19 +25,27 @@ import sys
 
 arg_parser = argparse.ArgumentParser(description='Check corpus for potential problems.')
 arg_parser.add_argument('corpus', metavar='DIR')
+arg_parser.add_argument('un_corpus', metavar='DIR', help='Corpus w unannotated dirs [may be same]')
 arg_parser.add_argument('--verbose', '-v',
                         action='count',
                         default=0)
+educe.util.add_corpus_filters(arg_parser)
 args=arg_parser.parse_args()
+is_interesting=educe.util.mk_is_interesting(args)
 
-idir=args.corpus
+def is_unannotated(k):
+    return k.stage == 'unannotated' and is_interesting(k)
 
-def is_interesting(k):
-    return k.stage in ['discourse', 'units', 'unannotated']
-
-reader     = stac.Reader(idir)
+reader     = stac.Reader(args.corpus)
 anno_files = reader.filter(reader.files(), is_interesting)
 corpus     = reader.slurp(anno_files, verbose=True)
+
+# bit of a mess: we have to read a separate batch of unannotated files
+# because they were lost and may have to be reconstructed
+un_reader     = stac.Reader(args.un_corpus)
+un_anno_files = reader.filter(un_reader.files(), is_unannotated)
+un_corpus     = reader.slurp(un_anno_files, verbose=True)
+
 
 all_annos = {}
 all_dupes = {}
@@ -69,6 +79,33 @@ if args.verbose and len(all_dupes) > 0:
                 print "   %s  %s" % (id_padding, v)
         print ""
 elif len(all_dupes) > 0:
-    print "WARNING: duplicate annoation ids found in the following files:"
-    for k in sorted(all_dupes):
+    print "WARNING: duplicate annotation ids found in the following files:"
+    for k in sorted(all_dupes, key=stac.id_to_path):
         print anno_files[k][0]
+
+
+def has_match(unit, other_units):
+    def is_me(unit2):
+        # they won't have the same identifiers because the reconstructed
+        # aa files are regenerated, and have different glozz identifiers
+        return unit2.type == unit.type and\
+               unit2.span == unit.span
+
+    return len(filter(is_me, other_units)) > 0
+
+for k in un_corpus:
+    units = un_corpus[k].units
+    for k2 in corpus:
+        if k2.doc != k.doc or k2.subdoc != k.subdoc: continue
+        units2 = corpus[k2].units
+        for unit in units:
+            txt = un_corpus[k].text_for(unit)
+            if unit.type in stac.structure_types:
+                if not has_match(unit, units2):
+                    print "MISSING %s annotation %s in %s: [%s]" %\
+                    (unit.type, unit.span, stac.id_to_path(k2), txt)
+        for unit2 in units2:
+            if unit2.type in stac.structure_types:
+                if not has_match(unit2, units):
+                    print "PARASITE %s annotation %s in %s: [%s]" %\
+                    (unit2.type, unit2.span, stac.id_to_path(k2), txt)
