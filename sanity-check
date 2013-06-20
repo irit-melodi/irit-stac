@@ -100,11 +100,16 @@ for k in un_corpus:
         units2 = corpus[k2].units
         for unit in units:
             txt = un_corpus[k].text_for(unit)
+            if len(txt) > 50:
+                txt = txt[1:50] + "..."
             if unit.type in stac.structure_types:
                 if not has_match(unit, units2):
                     print "MISSING %s annotation %s in %s: [%s]" %\
                     (unit.type, unit.span, stac.id_to_path(k2), txt)
         for unit2 in units2:
+            txt2 = corpus[k2].text_for(unit2)
+            if len(txt) > 50:
+                txt2 = txt2[1:50] + "..."
             if unit2.type in stac.structure_types:
                 if not has_match(unit2, units):
                     print "PARASITE %s annotation %s in %s: [%s]" %\
