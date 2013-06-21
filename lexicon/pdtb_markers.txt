@@ -1,28 +1,28 @@
-accordingly
-additionally
-after
-afterward
-also
-alternatively
-although
-and
-as
-as a result
-as an alternative
-as if
-as long as
+accordingly  ; result
+additionally ; parallel
+after   ; flashback
+afterward ; narration
+also  ; parallel
+alternatively ; alternation
+although ; contrast \wedge background
+and ; whatever
+as ; explanation explanation* background
+as a result ; result result*
+as an alternative ; alternation
+as if ; ??
+as long as 
 as soon as
 as though
-as well
-because
+as well ; parallel
+because  ; explanation
 before
 before and after
 besides
-but
+but ; contrast 
 by comparison
-by contrast
+by contrast  ; contrast
 by then
-consequently
+consequently  ; result result*
 conversely
 earlier
 either:or
@@ -30,7 +30,7 @@ else
 except
 finally
 for
-for example
+for example   ; elaboration
 for instance
 further
 furthermore
@@ -38,7 +38,7 @@ hence
 however
 if
 if and when
-if:then
+if:then   ; conditional
 in addition
 in contrast
 in fact
@@ -81,7 +81,7 @@ simultaneously
 since
 so
 so that
-speciﬁcally
+speciﬁcally  ; elaboration, elaboration*
 still
 then
 thereafter
