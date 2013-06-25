@@ -1,4 +1,3 @@
-
 sheep:ressource:NN:sheep
 mutton:ressource:NN:sheep
 cattle:ressource:NN:sheep
