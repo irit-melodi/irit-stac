@@ -35,6 +35,11 @@ arg_parser.add_argument('odir', metavar='DIR',
 arg_parser.add_argument('--ark-tweet-nlp', metavar='FILE',
                         help='Path to ark-tweet-nlp jar file'
                        )
+arg_parser.add_argument('--live',
+                        action='store_const',
+                        const=True,
+                        help='"Live" data (not the annotated corpus)')
+
 util.add_corpus_filters(arg_parser, fields=[ 'doc', 'subdoc' ])
 args=arg_parser.parse_args()
 args.stage     = 'unannotated'
@@ -51,8 +56,13 @@ if all([t is None for t in taggers]):
 # main
 # ---------------------------------------------------------------------
 
-reader     = stac.Reader(args.idir)
-anno_files = reader.filter(reader.files(), is_interesting)
+if args.live:
+    reader = stac.LiveInputReader(args.idir)
+    anno_files = reader.files()
+else:
+    reader     = stac.Reader(args.idir)
+    anno_files = reader.filter(reader.files(), is_interesting)
+
 corpus     = reader.slurp(anno_files, verbose=True)
 if args.ark_tweet_nlp:
     postag.run_tagger(corpus, args.odir, args.ark_tweet_nlp)
