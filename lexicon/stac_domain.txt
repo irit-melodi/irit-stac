@@ -8,7 +8,7 @@ ewe:ressource:NN:sheep
 bovid:ressource:NN:sheep
 ruminant:ressource:NN:sheep
 mammal:ressource:NN:sheep
-ore:ressource:NN:NN:ore
+ore:ressource:NN:ore
 mineral:ressource:NN:ore
 clay:ressource:NN:clay
 brick:ressource:NN:clay

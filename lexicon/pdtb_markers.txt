@@ -81,7 +81,7 @@ simultaneously
 since
 so
 so that
-speciﬁcally  ; elaboration, elaboration*
+specifically  ; elaboration elaboration*
 still
 then
 thereafter
