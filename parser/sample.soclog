@@ -1,0 +1,240 @@
+2012:11:17:17:28:58:319:+0000:SOCRollDice:game=Master League Game 3
+2012:11:17:17:28:58:319:+0000:SOCDiceResult:game=Master League Game 3|param=8
+2012:11:17:17:28:58:319:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=gotwood4sheep rolled a 4 and a 4.
+2012:11:17:17:28:58:319:+0000:SOCGameState:game=Master League Game 3|state=20
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=2|value=1
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=3|value=0
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=5|value=0
+2012:11:17:17:28:58:320:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=0|count=3
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=1|value=2
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=2|value=2
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=3|value=0
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:17:17:28:58:320:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=1|count=4
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=101|elementType=1|value=1
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=101|elementType=2|value=1
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=1|value=3
+2012:11:17:17:28:58:320:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=3|value=0
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=5|value=1
+2012:11:17:17:28:58:321:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=2|count=7
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=101|elementType=2|value=1
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=2|value=2
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:17:17:28:58:321:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=5|value=1
+2012:11:17:17:28:58:321:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=3|count=3
+2012:11:17:17:28:58:321:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm gets 1 ore. inca gets 1 clay, 1 ore. ljaybrad123 gets 1 ore.
+2012:11:17:17:28:59:871:+0000:SOCEndTurn:game=Master League Game 3
+2012:11:17:17:28:59:872:+0000:SOCClearGameHistory:game=Master League Game 3
+2012:11:17:17:28:59:872:+0000:SOCGameState:game=Master League Game 3|state=15
+2012:11:17:17:28:59:872:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=It's dmm's turn to roll the dice.
+2012:11:17:17:28:59:872:+0000:SOCClearOffer:game=Master League Game 3|playerNumber=-1
+2012:11:17:17:28:59:872:+0000:SOCSetPlayedDevCard:game=Master League Game 3|playerNumber=1|playedDevCard=false
+2012:11:17:17:28:59:872:+0000:SOCTurn:game=Master League Game 3|playerNumber=1
+2012:11:17:17:28:59:872:+0000:SOCRollDicePrompt:game=Master League Game 3|playerNumber=1
+2012:11:17:17:29:02:991:+0000:SOCRollDice:game=Master League Game 3
+2012:11:17:17:29:02:991:+0000:SOCDiceResult:game=Master League Game 3|param=7
+2012:11:17:17:29:02:991:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm rolled a 4 and a 3.
+2012:11:17:17:29:02:991:+0000:SOCGameState:game=Master League Game 3|state=33
+2012:11:17:17:29:02:991:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm will move the robber.
+2012:11:17:17:29:09:235:+0000:SOCMoveRobber:game=Master League Game 3|playerNumber=1|coord=9b
+2012:11:17:17:29:09:235:+0000:SOCMoveRobber:game=Master League Game 3|playerNumber=1|coord=9b
+2012:11:17:17:29:09:235:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm moved the robber, must choose a victim.
+2012:11:17:17:29:09:235:+0000:SOCGameState:game=Master League Game 3|state=51
+2012:11:17:17:29:11:042:+0000:SOCChoosePlayer:game=Master League Game 3|choice=0
+2012:11:17:17:29:11:042:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:17:17:29:11:042:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=102|elementType=2|value=1
+2012:11:17:17:29:11:042:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:17:17:29:11:042:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=102|elementType=2|value=1
+2012:11:17:17:29:11:042:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=6|value=1
+2012:11:17:17:29:11:042:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=102|elementType=6|value=1
+2012:11:17:17:29:11:042:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=You stole an ore resource from gotwood4sheep.
+2012:11:17:17:29:11:042:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm stole an ore resource from you.
+2012:11:17:17:29:11:042:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm stole a resource from gotwood4sheep
+2012:11:17:17:29:11:042:+0000:SOCGameState:game=Master League Game 3|state=20
+2012:11:17:17:29:37:824:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=dmm|speaking-queue=[]|clay=2|ore=3|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[100,120,136]|settlements=[116,120]|cities=[]|dev-cards=0|text=i suppose this is pretty unlikely, but does anybody have 2 wheat they'd give me for 2 clay?]
+2012:11:17:17:29:37:824:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:29:37:824:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=dmm|text=i suppose this is pretty unlikely, but does anybody have 2 wheat they'd give me for 2 clay?
+
+2012:11:17:17:29:44:153:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=inca|speaking-queue=[]|clay=3|ore=3|sheep=0|wheat=0|wood=1|unknown=0|knights=0|roads=[171,68]|settlements=[171,84]|cities=[]|dev-cards=0|text=sorry, no wheat]
+2012:11:17:17:29:44:153:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:29:44:153:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=inca|text=sorry, no wheat
+
+2012:11:17:17:29:48:549:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=gotwood4sheep|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=2|wood=0|unknown=0|knights=0|roads=[138,54,38]|settlements=[139,71]|cities=[]|dev-cards=0|text=not after I got stoled from :(]
+2012:11:17:17:29:48:549:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:29:48:549:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=gotwood4sheep|text=not after I got stoled from :(
+
+2012:11:17:17:29:54:671:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=ljaybrad123|speaking-queue=[]|clay=0|ore=2|sheep=0|wheat=0|wood=1|unknown=0|knights=0|roads=[167,82,98,114]|settlements=[184,82]|cities=[]|dev-cards=0|text=sorry]
+2012:11:17:17:29:54:671:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:29:54:671:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=ljaybrad123|text=sorry
+
+2012:11:17:17:30:04:255:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=dmm|speaking-queue=[]|clay=2|ore=3|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[100,120,136]|settlements=[116,120]|cities=[]|dev-cards=0|text=i did think that was a bit optimistic]
+2012:11:17:17:30:04:262:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:30:04:262:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=dmm|text=i did think that was a bit optimistic
+
+2012:11:17:17:30:07:866:+0000:SOCEndTurn:game=Master League Game 3
+2012:11:17:17:30:07:866:+0000:SOCClearGameHistory:game=Master League Game 3
+2012:11:17:17:30:07:866:+0000:SOCGameState:game=Master League Game 3|state=15
+2012:11:17:17:30:07:866:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=It's inca's turn to roll the dice.
+2012:11:17:17:30:07:866:+0000:SOCClearOffer:game=Master League Game 3|playerNumber=-1
+2012:11:17:17:30:07:866:+0000:SOCSetPlayedDevCard:game=Master League Game 3|playerNumber=2|playedDevCard=false
+2012:11:17:17:30:07:866:+0000:SOCTurn:game=Master League Game 3|playerNumber=2
+2012:11:17:17:30:07:866:+0000:SOCRollDicePrompt:game=Master League Game 3|playerNumber=2
+2012:11:17:17:30:11:145:+0000:SOCRollDice:game=Master League Game 3
+2012:11:17:17:30:11:145:+0000:SOCDiceResult:game=Master League Game 3|param=9
+2012:11:17:17:30:11:145:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=inca rolled a 4 and a 5.
+2012:11:17:17:30:11:145:+0000:SOCGameState:game=Master League Game 3|state=20
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=101|elementType=5|value=1
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=3|value=0
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=5|value=1
+2012:11:17:17:30:11:145:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=0|count=3
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=1|value=2
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=2|value=3
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=3|value=0
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:17:17:30:11:145:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:17:17:30:11:146:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=1|count=5
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=1|value=3
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=3|value=0
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=5|value=1
+2012:11:17:17:30:11:146:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=2|count=7
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=101|elementType=5|value=1
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=2|value=2
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:17:17:30:11:146:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:17:17:30:11:146:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=3|count=4
+2012:11:17:17:30:11:146:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=gotwood4sheep gets 1 wood. ljaybrad123 gets 1 wood.
+2012:11:17:17:30:14:254:+0000:SOCBuildRequest:game=Master League Game 3|pieceType=0
+2012:11:17:17:30:14:254:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=102|elementType=1|value=1
+2012:11:17:17:30:14:254:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=102|elementType=5|value=1
+2012:11:17:17:30:14:254:+0000:SOCGameState:game=Master League Game 3|state=30
+2012:11:17:17:30:21:411:+0000:SOCPutPiece:game=Master League Game 3|playerNumber=2|pieceType=0|coord=34
+2012:11:17:17:30:21:411:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=inca built a road.
+2012:11:17:17:30:21:411:+0000:SOCPutPiece:game=Master League Game 3|playerNumber=2|pieceType=0|coord=34
+2012:11:17:17:30:21:411:+0000:SOCGameState:game=Master League Game 3|state=20
+2012:11:17:17:30:28:131:+0000:SOCEndTurn:game=Master League Game 3
+2012:11:17:17:30:28:131:+0000:SOCClearGameHistory:game=Master League Game 3
+2012:11:17:17:30:28:131:+0000:SOCGameState:game=Master League Game 3|state=15
+2012:11:17:17:30:28:131:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=It's ljaybrad123's turn to roll the dice.
+2012:11:17:17:30:28:131:+0000:SOCClearOffer:game=Master League Game 3|playerNumber=-1
+2012:11:17:17:30:28:131:+0000:SOCSetPlayedDevCard:game=Master League Game 3|playerNumber=3|playedDevCard=false
+2012:11:17:17:30:28:131:+0000:SOCTurn:game=Master League Game 3|playerNumber=3
+2012:11:17:17:30:28:131:+0000:SOCRollDicePrompt:game=Master League Game 3|playerNumber=3
+2012:11:17:17:30:33:363:+0000:SOCRollDice:game=Master League Game 3
+2012:11:17:17:30:33:364:+0000:SOCDiceResult:game=Master League Game 3|param=5
+2012:11:17:17:30:33:364:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=ljaybrad123 rolled a 4 and a 1.
+2012:11:17:17:30:33:364:+0000:SOCGameState:game=Master League Game 3|state=20
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=101|elementType=1|value=1
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=1|value=1
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=3|value=0
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=5|value=1
+2012:11:17:17:30:33:364:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=0|count=4
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=1|value=1
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=3|value=1
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=1|value=3
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=2|value=3
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=3|value=1
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:17:17:30:33:364:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=1|count=7
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=1|value=2
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=3|value=0
+2012:11:17:17:30:33:364:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:17:17:30:33:365:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:17:17:30:33:365:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=2|count=5
+2012:11:17:17:30:33:365:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:17:17:30:33:365:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=2|value=2
+2012:11:17:17:30:33:365:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:17:17:30:33:365:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:17:17:30:33:365:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:17:17:30:33:365:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=3|count=4
+2012:11:17:17:30:33:365:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=gotwood4sheep gets 1 clay. dmm gets 1 clay, 1 sheep.
+2012:11:17:17:31:12:878:+0000:SOCEndTurn:game=Master League Game 3
+2012:11:17:17:31:12:878:+0000:SOCClearGameHistory:game=Master League Game 3
+2012:11:17:17:31:12:878:+0000:SOCGameState:game=Master League Game 3|state=15
+2012:11:17:17:31:12:878:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=It's gotwood4sheep's turn to roll the dice.
+2012:11:17:17:31:12:878:+0000:SOCClearOffer:game=Master League Game 3|playerNumber=-1
+2012:11:17:17:31:12:878:+0000:SOCSetPlayedDevCard:game=Master League Game 3|playerNumber=0|playedDevCard=false
+2012:11:17:17:31:12:878:+0000:SOCTurn:game=Master League Game 3|playerNumber=0
+2012:11:17:17:31:12:878:+0000:SOCRollDicePrompt:game=Master League Game 3|playerNumber=0
+2012:11:17:17:31:16:209:+0000:SOCRollDice:game=Master League Game 3
+2012:11:17:17:31:16:210:+0000:SOCDiceResult:game=Master League Game 3|param=8
+2012:11:17:17:31:16:210:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=gotwood4sheep rolled a 2 and a 6.
+2012:11:17:17:31:16:210:+0000:SOCGameState:game=Master League Game 3|state=20
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=1|value=1
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=3|value=0
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=0|actionType=100|elementType=5|value=1
+2012:11:17:17:31:16:210:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=0|count=4
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=1|value=3
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=2|value=4
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=3|value=1
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:17:17:31:16:210:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=1|count=8
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=101|elementType=1|value=1
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=101|elementType=2|value=1
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=1|value=3
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=2|value=4
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=3|value=0
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:17:17:31:16:210:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:17:17:31:16:211:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=2|count=7
+2012:11:17:17:31:16:211:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=101|elementType=2|value=1
+2012:11:17:17:31:16:211:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:17:17:31:16:211:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=2|value=3
+2012:11:17:17:31:16:211:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:17:17:31:16:211:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:17:17:31:16:211:+0000:SOCPlayerElement:game=Master League Game 3|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:17:17:31:16:211:+0000:SOCResourceCount:game=Master League Game 3|playerNumber=3|count=5
+2012:11:17:17:31:16:211:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm gets 1 ore. inca gets 1 clay, 1 ore. ljaybrad123 gets 1 ore.
+2012:11:17:17:31:26:659:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=gotwood4sheep|speaking-queue=[]|clay=1|ore=0|sheep=0|wheat=2|wood=1|unknown=0|knights=0|roads=[138,54,38]|settlements=[139,71]|cities=[]|dev-cards=0|text=dmm will swap you a wheat for a sheep?]
+2012:11:17:17:31:26:659:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:31:26:659:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=gotwood4sheep|text=dmm will swap you a wheat for a sheep?
+
+2012:11:17:17:31:32:034:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=gotwood4sheep|speaking-queue=[]|clay=1|ore=0|sheep=0|wheat=2|wood=1|unknown=0|knights=0|roads=[138,54,38]|settlements=[139,71]|cities=[]|dev-cards=0|text=if 1 will do it for ya]
+2012:11:17:17:31:32:034:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:31:32:034:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=gotwood4sheep|text=if 1 will do it for ya
+
+2012:11:17:17:32:46:714:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=gotwood4sheep|speaking-queue=[]|clay=1|ore=0|sheep=0|wheat=2|wood=1|unknown=0|knights=0|roads=[138,54,38]|settlements=[139,71]|cities=[]|dev-cards=0|text=or anyone else if dmm is snoozing, anyone got a sheep to trade for a wheat?]
+2012:11:17:17:32:46:714:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:32:46:714:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=gotwood4sheep|text=or anyone else if dmm is snoozing, anyone got a sheep to trade for a wheat?
+
+2012:11:17:17:32:52:584:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=inca|speaking-queue=[]|clay=3|ore=4|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[171,68,52]|settlements=[171,84]|cities=[]|dev-cards=0|text=sorry, not me]
+2012:11:17:17:32:52:584:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:32:52:584:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=inca|text=sorry, not me
+
+2012:11:17:17:33:25:356:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=gotwood4sheep|speaking-queue=[]|clay=1|ore=0|sheep=0|wheat=2|wood=1|unknown=0|knights=0|roads=[138,54,38]|settlements=[139,71]|cities=[]|dev-cards=0|text=LJ? dmm?]
+2012:11:17:17:33:25:356:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:33:25:356:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=gotwood4sheep|text=LJ? dmm?
+
+2012:11:17:17:33:35:089:+0000:SOCLeaveGame:nickname=dmm|host=cpc1-sgyl22-0-0-cust438.sgyl.cable.virginmedia.com|game=Master League Game 3
+2012:11:17:17:33:35:089:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=dmm left the game
+2012:11:17:17:33:35:090:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=Fetching a robot player...
+2012:11:17:17:33:35:094:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=Server|text=Sorry, no robots on this server.
+2012:11:17:17:33:40:007:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=gotwood4sheep|speaking-queue=[]|clay=1|ore=0|sheep=0|wheat=2|wood=1|unknown=0|knights=0|roads=[138,54,38]|settlements=[139,71]|cities=[]|dev-cards=0|text=uh ohhh]
+2012:11:17:17:33:40:007:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:33:40:007:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=gotwood4sheep|text=uh ohhh
+
+2012:11:17:17:33:42:027:+0000:GAME-TEXT-MESSAGE:[game=Master League Game 3|player=ljaybrad123|speaking-queue=[]|clay=0|ore=3|sheep=0|wheat=0|wood=2|unknown=0|knights=0|roads=[167,82,98,114]|settlements=[184,82]|cities=[]|dev-cards=0|text=none sorry]
+2012:11:17:17:33:42:027:+0000:SOCSpeakingQueueChanged:game=Master League Game 3|param=[]
+2012:11:17:17:33:42:027:+0000:SOCGameTextMsg:game=Master League Game 3|nickname=ljaybrad123|text=none sorry

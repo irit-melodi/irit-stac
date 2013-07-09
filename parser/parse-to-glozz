@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Eric Kow
+# License: BSD3
+
+import argparse
+import collections
+import codecs
+import copy
+import csv
+import shutil
+import os
+
+import educe.corpus
+import educe.glozz
+import educe.util
+from educe import stac
+from educe.corpus import FileId
+from educe.annotation import RelSpan, Relation
+import educe.stac.csv as stac_csv
+
+
+"""
+Help visualise output of a discourse parser.  Concretely, augment unannotated
+Glozz files with attachments/relations from some CSV file, producing a copy of
+each aa file in an output directory.
+
+As a minimum, each row of a CSV file has as a minimum the identifiers for the
+document/subdocument, for two EDUs, and a relation label.  EDUs which do not
+have attachments should be omitted from this file.  The name of the header must
+be as in the csv header section of this script.
+
+Quick start
+-----------
+
+    cd Stac
+    python code/parser/parse-to-glozz\
+           flat-dir-with-glozz-files\
+           parse.csv\
+           output-dir
+    glozz-graph --live --png output-dir output-dir-png
+"""
+
+# ----------------------------------------------------------------------
+# csv header
+# ----------------------------------------------------------------------
+
+# TODO : consider refactoring this with the rel-info script
+k_doc    = 'm#document'
+k_subdoc = 'm#subdocument'
+k_id_du1 = 'm#id_DU1'
+k_id_du2 = 'm#id_DU2'
+k_label  = 'c#label'
+
+# ----------------------------------------------------------------------
+# helpers
+# ----------------------------------------------------------------------
+
+def from_global_id(doc, x):
+    """
+    Given an educe.annotation global identifier, return its local equivalent
+    """
+    # implementation of this function is somewhat evil
+    prefix_size = len(doc.global_id(''))
+    return x[prefix_size:]
+
+def mk_relation(doc, row, counter):
+    """
+    Note that this relies on global state
+    """
+    t1       = from_global_id(doc, row[k_id_du1])
+    t2       = from_global_id(doc, row[k_id_du2])
+    span     = RelSpan(t1, t2)
+    label    = row[k_label]
+    annotator = 'stacparser'
+    rel_id    = annotator + '_' + str(counter)
+    features = {}
+    metadata                  = {}
+    metadata['author']        = annotator
+    metadata['creation-date'] = str(counter)
+    return Relation(rel_id=rel_id, span=span, type=label, features=features, metadata=metadata)
+
+# ----------------------------------------------------------------------
+# options
+# ----------------------------------------------------------------------
+
+arg_parser = argparse.ArgumentParser(description='Display features related to relations.')
+arg_parser.add_argument('input', metavar='DIR',
+                        help='Glozz files (flat structure)')
+arg_parser.add_argument('parse', metavar='FILE',
+                        help='Resource dir (eg. data/resource)')
+arg_parser.add_argument('output', metavar='DIR',
+                        help='Output directory')
+args=arg_parser.parse_args()
+
+# ---------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------
+
+reader     = stac.LiveInputReader(args.input)
+anno_files = reader.files()
+corpus     = reader.slurp(anno_files, verbose=True)
+
+# build dictionary from FileId to relations in that document
+relations = collections.defaultdict(list)
+with codecs.open(args.parse, 'r,', 'utf-8') as f:
+    csv_reader = stac_csv.Utf8DictReader(f)
+    for counter, row in enumerate(csv_reader, 1):
+        subdoc_ = row[k_subdoc].strip()
+        k = FileId(doc       = row[k_doc],
+                   subdoc    = subdoc_ if subdoc_ else None,
+                   stage     = 'unannotated',
+                   annotator = None)
+        rel = mk_relation(corpus[k], row, counter)
+        relations[k].append(rel)
+
+for k in corpus:
+    doc = corpus[k]
+    doc.relations.extend(relations[k])
+    basename = os.path.join(args.output, k.doc)
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+    educe.glozz.write_annotation_file(basename + '.aa', doc)
+    shutil.copyfile(anno_files[k][1], basename + '.ac')
