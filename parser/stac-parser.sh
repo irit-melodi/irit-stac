@@ -6,22 +6,29 @@ pushd `dirname $0` > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
 
-pushd $SCRIPT_DIR/.. > /dev/null
-CODE_DIR=$PWD
+pushd $SCRIPT_DIR/../.. > /dev/null
+STAC_DIR=$PWD
 popd > /dev/null
+CODE_DIR=$STAC_DIR/code
+DATA_DIR=$STAC_DIR/data
 
-pushd $CODE_DIR/../data > /dev/null
-DATA_DIR=$PWD
-popd > /dev/null
+SHIPPED_TAGGER=ark-tweet-nlp-0.3.2.jar
 
-if [ $# -lt 3 ]; then
-    echo >&2 "Usage: $0 ark-tweet-nlp.jar file.soclog output-dir"
+if [ -e $STAC_DIR/lib/$SHIPPED_TAGGER ]; then
+    TAGGER_JAR=$1
+else
+    echo >&2 "Need $SHIPPED_TAGGER in $STAC_DIR/lib"
+    echo >&2 "See http://www.ark.cs.cmu.edu/TweetNLP"
     exit 1
 fi
 
-TAGGER_JAR=$1
-INPUT_FILE=$2
-OUTPUT_DIR=$3
+if [ $# -lt 2 ]; then
+    echo >&2 "Usage: $0 file.soclog output-dir"
+    exit 1
+fi
+
+INPUT_FILE=$1
+OUTPUT_DIR=$2
 T=$(mktemp -d -t stac.XXXX)
 
 # Note that much of this replicates the functionality in code/intake
