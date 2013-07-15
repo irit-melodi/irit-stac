@@ -54,7 +54,7 @@ python $CODE_DIR/csv2glozz/csvtoglozz.py -f segmented.csv
 popd > /dev/null
 
 # pos tag
-python $CODE_DIR/pos-tag --live --ark-tweet-nlp $TAGGER_JAR $T $T
+python $CODE_DIR/run-3rd-party --live --ark-tweet-nlp $TAGGER_JAR $T $T
 
 # extract features
 python $CODE_DIR/queries/rel-info --live $T $DATA_DIR/resources/lexicon $T

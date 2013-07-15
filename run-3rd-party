@@ -5,8 +5,14 @@
 # License: BSD3
 
 """
-Part-of-speech tag all the EDUs in all the documents
-(this uses the unannotated portion of the corpus)
+Run third party tools on the unannotated data we have.
+So far:
+
+  * Supplying --ark-tweet-nlp (jar file) will
+    run this CMU tagger on all EDUs in the documents
+
+  * Supplying --corenlp (dir) will run the Stanford
+    CoreNLP pipeline on all the turns
 """
 
 import argparse
@@ -19,7 +25,7 @@ import sys
 
 from educe import stac, util
 from educe.annotation import Span
-from educe.stac import postag
+from educe.stac import postag, corenlp
 
 # ---------------------------------------------------------------------
 # args
@@ -35,20 +41,23 @@ arg_parser.add_argument('odir', metavar='DIR',
 arg_parser.add_argument('--ark-tweet-nlp', metavar='FILE',
                         help='Path to ark-tweet-nlp jar file'
                        )
+arg_parser.add_argument('--corenlp', metavar='DIR',
+                        help='Path to CoreNLP directory'
+                       )
 arg_parser.add_argument('--live',
                         action='store_const',
                         const=True,
                         help='"Live" data (not the annotated corpus)')
-
-util.add_corpus_filters(arg_parser, fields=[ 'doc', 'subdoc' ])
+educe_group = arg_parser.add_argument_group('corpus filtering arguments')
+util.add_corpus_filters(educe_group, fields=[ 'doc', 'subdoc' ])
 args=arg_parser.parse_args()
 args.stage     = 'unannotated'
 args.annotator = None
 is_interesting=util.mk_is_interesting(args)
-taggers = [ args.ark_tweet_nlp ]
+pipelines = [ args.ark_tweet_nlp, args.corenlp ]
 
-if all([t is None for t in taggers]):
-    print >> sys.stderr, "At least one tagger must be specified"
+if all(t is None for t in pipelines):
+    print >> sys.stderr, "At least one pipeline must be specified"
     print >> sys.stderr, "See the --help option"
     sys.exit(1)
 
@@ -66,3 +75,6 @@ else:
 corpus     = reader.slurp(anno_files, verbose=True)
 if args.ark_tweet_nlp:
     postag.run_tagger(corpus, args.odir, args.ark_tweet_nlp)
+
+if args.corenlp:
+    corenlp.run_pipeline(corpus, args.odir, args.corenlp)
