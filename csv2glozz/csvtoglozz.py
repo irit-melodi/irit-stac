@@ -350,8 +350,8 @@ if len(dialog_rightborders) == 0 or dialog_rightborders[-1] != len(dialoguetext)
 
     unit_id, creation_date = mk_id()
 
-    if len(dialog_leftborders) >= 1:
-        span_left = dialog_leftborders[-1]
+    if len(dialog_rightborders) >= 1:
+        span_left = dialog_rightborders[-1]
     else:
         span_left = 0
     span_right = len(dialoguetext)
