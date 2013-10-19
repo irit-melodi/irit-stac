@@ -40,6 +40,9 @@ import datetime, time
 from prettifyxml import prettify
 
 def append_unit(root, unit_id, date, type, features, left, right):
+    if right < left:
+        raise Exception("Span with right boundary less than left")
+
     metadata = [ ('author'              , 'stac')
                , ('creation-date'       , str(date))
                , ('lastModifier'        , 'n/a' )
