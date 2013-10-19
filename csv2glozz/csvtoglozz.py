@@ -189,27 +189,19 @@ for r in range(0,len(csvrows)):
             print >> sys.stderr, "Error on row %d: %s" % (i, the_row)
             raise
     if curr_turn_emitter != "Server":
-        dialoguetext +=curr_turn_id+' : '+curr_turn_emitter+' : '
-        seg_leftborders = [len(dialoguetext)-1]
-        seg_rightborders = [] # For dealing with ampersands which stand for segments' right borders
+        dialoguetext  +=curr_turn_id+' : '+curr_turn_emitter+' : '
+        tmp_seg_right      = len(dialoguetext)-1
+        curr_turn_segments = [ x for x in curr_turn_text.split('&') if len(x) > 0 ]
+        seg_spans  = []
+        for tseg in curr_turn_segments:
+            tmp_seg_left  = tmp_seg_right + 1
+            tmp_seg_right = tmp_seg_left  + len(tseg)
+            seg_spans.append((tmp_seg_left, tmp_seg_right))
+
         # .ac buffer
-        dialoguetext +=curr_turn_text+' '
-        #dialog_leftborders = [0]
-        #dialog_rightborders = [len(dialoguetext)-1]
-        nosegs = 1
-        for d in dialoguetext:
-            if d == '&':
-                nosegs += 1
-                seg_rightborders.append(dialoguetext.index(d))
-                if len(seg_rightborders) >= 1:
-                    seg_leftborders.append(seg_rightborders[-1])
-                dialoguetext = dialoguetext[:dialoguetext.index(d)]+dialoguetext[dialoguetext.index(d)+1:]
-        seg_rightborders.append(len(dialoguetext)-1)
-        for t in curr_turn_text:
-            if t == '&':
-                curr_turn_text = curr_turn_text[:curr_turn_text.index(t)]+curr_turn_text[curr_turn_text.index(t)+1:]
+        curr_turn_text = "".join(curr_turn_segments)
+        dialoguetext  += curr_turn_text + ' '
         # .aa typographic annotations
-        #
         typid, typdate = mk_id()
 
         if dialoguetext.index(curr_turn_text) != 0:
@@ -265,21 +257,15 @@ for r in range(0,len(csvrows)):
                     right    = actualendpos)
 
         # Segments information
-#        print seg_leftborders
-#        print seg_rightborders
-#        print nosegs
-#        print csvrows[r]
-#        print "##"
-        if len(seg_leftborders) == len(seg_rightborders):
-            for k in range(0,len(seg_leftborders)):
-                segment_id, screation_date = mk_id()
-                append_unit(root,
-                            unit_id  = segment_id,
-                            date     = screation_date,
-                            type     = 'Segment',
-                            features = [],
-                            left     = seg_leftborders[k]+1,
-                            right    = seg_rightborders[k])
+        for sp in seg_spans:
+            segment_id, screation_date = mk_id()
+            append_unit(root,
+                        unit_id  = segment_id,
+                        date     = screation_date,
+                        type     = 'Segment',
+                        features = [],
+                        left     = sp[0],
+                        right    = sp[1])
 
     if curr_turn_emitter == "Server" and "rolled a" in curr_turn_text: # dialogue right boundary
     # hence, a dialogue is between the beginning and such a text (minus server's turns), or between such a text + 1 and another such text (minus server's turns).
