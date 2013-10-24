@@ -33,11 +33,16 @@ def tidy(filename, output, zero=False):
     unit_ids  = [ x.attrib['id'] for x in unit_elems ]
 
     if zero:
-        new_ids  ={ v:'0'      for v in nub(unit_ids) }
         new_dates={ str(v):'0' for v in nub(dates)    }
     else:
-        new_ids  ={ v:str(i)      for i,v in enumerate(nub(unit_ids)) }
         new_dates={ str(v):str(i) for i,v in enumerate(nub(dates))    }
+
+    def adjust_id(x):
+        xparts = x.rsplit('_', 1)
+        date2  = new_dates[xparts[-1]]
+        return '_'.join(xparts[:-1] + [date2])
+
+    new_ids = { x:adjust_id(x) for x in unit_ids }
 
     for x in date_elems:
         old    = str(x.text.strip())
