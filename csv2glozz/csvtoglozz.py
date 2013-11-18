@@ -31,6 +31,7 @@ Usage:
 @note: The output file names are formed by appending the .ac and .aa extensions to the input CSV file basename.
 Example: for an input filename like document1.soclog.seg.csv, the pair  (document1.ac, document1.aa) is generated.
 @note: The program supports filenames with empty spaces in them.
+@note: Glozz is 0-indexed (but our .ac files systematically start with a space)
 '''
 
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
@@ -190,12 +191,15 @@ for r in range(0,len(csvrows)):
             raise
     if curr_turn_emitter != "Server":
         dialoguetext  +=curr_turn_id+' : '+curr_turn_emitter+' : '
-        tmp_seg_right      = len(dialoguetext)-1
+        next_seg_left = len(dialoguetext)
         curr_turn_segments = [ x for x in curr_turn_text.split('&') if len(x) > 0 ]
         seg_spans  = []
         for tseg in curr_turn_segments:
-            tmp_seg_left  = tmp_seg_right + 1
-            tmp_seg_right = tmp_seg_left  + len(tseg)
+            tseg_l        = tseg.lstrip()
+            padding_left  = len(tseg)   - len(tseg_l)
+            tmp_seg_left  = next_seg_left + padding_left
+            tmp_seg_right = tmp_seg_left  + len(tseg_l)
+            next_seg_left = tmp_seg_right
             seg_spans.append((tmp_seg_left, tmp_seg_right))
 
         # .ac buffer
