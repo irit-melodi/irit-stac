@@ -196,10 +196,12 @@ for r in range(0,len(csvrows)):
         seg_spans  = []
         for tseg in curr_turn_segments:
             tseg_l        = tseg.lstrip()
+            tseg_lr       = tseg_l.rstrip()
             padding_left  = len(tseg)   - len(tseg_l)
+            padding_right = len(tseg_l) - len(tseg_lr)
             tmp_seg_left  = next_seg_left + padding_left
-            tmp_seg_right = tmp_seg_left  + len(tseg_l)
-            next_seg_left = tmp_seg_right
+            tmp_seg_right = tmp_seg_left  + len(tseg_lr)
+            next_seg_left = tmp_seg_right + padding_right
             seg_spans.append((tmp_seg_left, tmp_seg_right))
 
         # .ac buffer
