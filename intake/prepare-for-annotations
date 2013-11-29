@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+pushd `dirname $0` > /dev/null
+SCRIPT_DIR="$PWD"
+popd > /dev/null
+
+if [ $# -ne 1 ]; then
+    echo >&2 "Usage: $0 annotator"
+    exit 1
+fi
+
+if [ ! -d unannotated ]; then
+    echo >&2 "Must be in a document subdirectory"
+    exit 1
+fi
+
+ANNO=$1
+mkdir -p {units,discourse}/"$ANNO"
+
+pushd "units/$ANNO" > /dev/null
+ln -s ../../unannotated/*.ac .
+popd > /dev/null
+
+pushd "discourse/$ANNO" > /dev/null
+ln -s ../../unannotated/*.ac .
+popd > /dev/null
+
+git add units discourse
+
+echo >&2 <<END_NAG
+Don't forget to
+
+1. copy the files
+2. check that they open in glozz
+3. make sure units v discourse is right
+4. sanity-check
+5. git commit .
+6. update the spreadsheet
+END_NAG
