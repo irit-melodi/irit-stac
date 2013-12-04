@@ -1,0 +1,363 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Eric Kow
+# License: BSD3
+
+"""
+STAC Swiss-Army knife modeled on the Glozz equivalent
+"""
+
+import argparse
+from   collections import defaultdict
+import copy
+import itertools
+import math
+import os
+import sys
+import tempfile
+import textwrap
+from   cStringIO import StringIO
+
+import educe.util
+from educe import glozz, stac
+from educe.annotation import Unit, Relation, Schema, Span
+from educe.stac import stac_output_settings, stac_unannotated_output_settings
+
+# ---------------------------------------------------------------------
+# very generic utilities
+# ---------------------------------------------------------------------
+
+def concat(xs):
+    """
+    Flatten a list of lists into a list.
+    """
+    return list(itertools.chain.from_iterable(xs))
+
+# ---------------------------------------------------------------------
+# stac utilities
+# ---------------------------------------------------------------------
+
+def get_output_dir(args):
+    if args.output:
+        if os.path.isfile(args.output):
+            print >> sys.stderr, "Sorry, %s already exists and is not a directory" % args.output
+            sys.exit(1)
+        elif not os.path.isdir(args.output):
+            os.makedirs(args.output)
+        return args.output
+    else:
+        return tempfile.mkdtemp()
+
+def output_path_stub(odir, k):
+    # directory and basename, needs extension
+    relpath        = stac.id_to_path(k)
+    ofile_dirname  = os.path.join(odir, os.path.dirname(relpath))
+    ofile_basename = os.path.basename(relpath)
+    return os.path.join(ofile_dirname, ofile_basename)
+
+def mk_parent_dirs(f):
+    dirname = os.path.dirname(f)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+def save_document(output_dir, k, doc):
+    stub = output_path_stub(output_dir, k)
+    mk_parent_dirs(stub)
+    doc_bytes = doc.text().encode('utf-8')
+    is_unannotated = k.stage == 'unannotated'
+
+    # .aa file
+    settings = stac_unannotated_output_settings\
+            if is_unannotated else stac_output_settings
+    out_doc          = copy.copy(doc)
+    out_doc.hashcode = glozz.hashcode(StringIO(doc_bytes))
+    glozz.write_annotation_file(stub + ".aa", out_doc, settings=settings)
+
+    # .ac file
+    if is_unannotated:
+        with open(stub + ".ac", 'wb') as f:
+            f.write(doc_bytes)
+
+# ---------------------------------------------------------------------
+# annotate
+# ---------------------------------------------------------------------
+
+default_inserts =\
+        { 'Turn'   : ('\n', '')
+        , 'Dialogue' : ('\n', '')
+        , 'Segment': ('[', ']')
+        }
+
+def sorted_first_widest(xs):
+    """
+    Given a list of nodes, return the nodes ordered by their starting point,
+    and in case of a tie their inverse width (ie. widest first).
+    """
+    def from_span(sp):
+        # negate the endpoint so that if we have a tie on the starting
+        # point, the widest span comes first
+        return (sp.char_start, 0 - sp.char_end)
+    return sorted(xs, key=lambda x:from_span(x.text_span()))
+
+def annotate(txt, annotations, inserts=default_inserts):
+    """
+    Decorate a text with arbitrary bracket symbols, as a visual
+    guide to the annotations on that text. For example, in a
+    chat corpus, you might use newlines to indicate turn
+    boundaries and square brackets for segments.
+
+    FIXME: this needs to become a standard educe utility,
+    maybe as part of the educe.annotation layer?
+    """
+    def is_visible(x):
+        return x.type in inserts
+    if not annotations:
+        return txt
+
+    def add_endpoints(endpoints, buf, i):
+        endpoints2 = []
+        buf2 = buf
+        for i2,rparen in endpoints:
+            if i == i2:
+                buf2 = buf2 + rparen
+            else:
+                endpoints2.append((i2,rparen))
+        return endpoints2, buf2
+
+    s_annos    = sorted_first_widest(filter(is_visible, annotations))
+    endpoints  = []
+    buf        = ""
+    for i in range(0,len(txt)):
+        c = txt[i]
+        endpoints, buf = add_endpoints(endpoints, buf, i)
+        while s_annos:
+            nxt = s_annos[0]
+            sp  = nxt.text_span()
+            if sp.char_start == i:
+                lparen, rparen = inserts[nxt.type]
+                buf = buf + lparen
+                endpoints.insert(0,(sp.char_end,rparen)) # lifo
+                del s_annos[0]
+            else:
+                break
+        buf = buf + c
+
+    _, buf = add_endpoints(endpoints, buf, len(txt))
+    return buf
+
+# ---------------------------------------------------------------------
+# portion adjustment
+# ---------------------------------------------------------------------
+
+def is_portion(anno):
+    return anno.type == 'portion'
+
+def is_portion_adjustment(anno):
+    return anno.type in [ 'portion', 'merge' ]
+
+def appends_to_last(portion):
+    return portion.text_span.char_start == 0
+
+def evil_set_text(doc, text):
+    """
+    This is a bit evil as it's using undocumented functionality
+    from the educe.annotation.Document object
+    """
+    doc._text = text
+
+def evil_set_id(anno, new_id):
+    """
+    This is a bit evil as it's using undocumented functionality
+    from the educe.annotation.Standoff object
+    """
+    anno._anno_id = new_id
+
+def shift_annotations(doc, offset):
+    """
+    Return a deep copy of a document such that all annotations
+    have been shifted by an offset.
+
+    If shifting right, we pad the document with whitespace
+    to act as filler. If shifting left, we cut the text
+    """
+    def shift(x):
+        if offset != 0 and isinstance(x, Unit):
+            x2      = copy.deepcopy(x)
+            x2.span = x.span.shift(offset)
+            return x2
+        else:
+            return copy.deepcopy(x)
+
+    if offset > 0:
+        padding = " " * offset
+        txt2    = padding + doc.text()
+    else:
+        start   = 0-offset
+        txt2    = doc.text()[start:]
+    doc2           = copy.copy(doc)
+    evil_set_text(doc2, txt2)
+    doc2.units     = map(shift, doc.units)
+    doc2.schemas   = map(shift, doc.schemas)
+    doc2.relations = map(shift, doc.relations)
+    return doc2
+
+def narrow_to_span(doc, span):
+    """
+    Return a deep copy of a document with only the text and
+    annotations that are within the span specified by portion.
+    """
+    offset = 0 - span.char_start
+    def slice(xs):
+        return [ copy.copy(x) for x in xs if span.encloses(x.text_span()) ]
+    doc2           = copy.copy(doc)
+    doc2.units     = slice(doc.units)
+    doc2.schemas   = slice(doc.schemas)
+    doc2.relations = slice(doc.relations)
+    doc2           = shift_annotations(doc2, offset)
+    evil_set_text(doc2, doc.text()[span.char_start:span.char_end])
+    return doc2
+
+def avoid_ids(avoid_doc, doc):
+    """
+    Return a deep copy of a document, with ids reassigned so that
+    they do not clash with the ones in the avoided document
+    """
+    doc2  = copy.deepcopy(doc)
+    dates = defaultdict(list)
+    # map of creator to largest absolute value
+    for a in avoid_doc.annotations():
+        author  = a.metadata['author']
+        date    = int(a.metadata['creation-date'])
+        dates[author].append(date)
+    min_dates = { k:min(v) for k,v in dates.items() }
+    max_dates = { k:max(v) for k,v in dates.items() }
+    for a in doc2.annotations():
+        author  = a.metadata['author']
+        date    = int(a.metadata['creation-date'])
+        if author in dates and date in dates[author]:
+            if date < 0:
+                date2 = min_dates[author] - 1
+                min_dates[author] = date2
+            else:
+                date2 = max_dates[author] + 1
+                max_dates[author] = date2
+            dates[author].append(date2)
+            a.metadata['creation-date'] = str(date2)
+            evil_set_id(a, '%s_%s' % (author, date2))
+    return doc2
+
+def move_portion(src_doc, tgt_doc, span):
+    """
+    Return a copy of the documents such that the span has been moved
+    from source to target
+    """
+    tgt_txt    = tgt_doc.text()
+    snipped    = narrow_to_span(src_doc, span)
+    if snipped.text()[0]  == ' ' and tgt_doc.text()[-1] == ' ':
+        tgt_txt = tgt_txt[:-1]
+    tgt_offset = len(tgt_txt)
+    snipped    = shift_annotations(snipped, tgt_offset)
+    snipped    = avoid_ids(tgt_doc, snipped)
+
+    src_txt    = snipped.text()[tgt_offset:]
+
+    new_tgt_doc           = copy.deepcopy(tgt_doc)
+    new_tgt_doc.units     = new_tgt_doc.units     + snipped.units
+    new_tgt_doc.relations = new_tgt_doc.relations + snipped.relations
+    new_tgt_doc.schemas   = new_tgt_doc.schemas   + snipped.schemas
+
+    if span.char_start == 0:
+        # tgt_doc is on the left
+        evil_set_text(new_tgt_doc, tgt_txt + src_txt)
+        leftover_span = Span(span.char_end,len(src_doc.text()))
+        new_src_doc   = narrow_to_span(src_doc, leftover_span)
+        return new_src_doc, new_tgt_doc
+    else:
+        raise Exception('Merged portion must either be at beginning: %s' % span)
+
+# ---------------------------------------------------------------------
+# COMMAND move
+# ---------------------------------------------------------------------
+
+def is_source(k):
+    return k.doc == args.doc and k.subdoc == args.source
+
+def is_target(k):
+    return k.doc == args.doc and k.subdoc == args.target
+
+def reflow(text, width=40):
+    def wrap(t):
+        xs = textwrap.wrap(t, width)
+        if xs:
+            return xs
+        else:
+            return ['']
+    return concat(wrap(t) for t in text.split("\n"))
+
+def annotate_doc(doc):
+    return annotate(doc.text(), doc.annotations())
+
+def show_diff(doc_before, doc_after):
+    lines_before = reflow(annotate_doc(doc_before))
+    lines_after  = reflow(annotate_doc(doc_after))
+    pairs = itertools.izip_longest(lines_before, lines_after, fillvalue='')
+    return "\n".join("%-40s | %-40s" % p for p in pairs)
+
+def main_move(args):
+    output_dir = get_output_dir(args)
+    if args.start != 0:
+        print >> sys.stderr, "Sorry, only know how to deal with start=0 at the moment"
+        sys.exit(1)
+
+    reader     = stac.Reader(args.corpus)
+    src_files  = reader.filter(reader.files(), is_source)
+    tgt_files  = reader.filter(reader.files(), is_target)
+    src_corpus = reader.slurp(src_files)
+    tgt_corpus = reader.slurp(tgt_files)
+
+    portion    = Span(args.start, args.end)
+
+    for src_k in src_corpus:
+        tgt_k        = copy.copy(src_k)
+        tgt_k.subdoc = args.target
+        if tgt_k not in tgt_corpus:
+            print >> sys.stderr, "Uh-oh! we don't have %s in the corpus" % tgt_k
+            sys.exit(1)
+        else:
+            src_doc = src_corpus[src_k]
+            tgt_doc = tgt_corpus[tgt_k]
+            new_src_doc, new_tgt_doc = move_portion(src_doc, tgt_doc, portion)
+            diffs = ["======= TO %s   ========" % tgt_k,
+                     show_diff(tgt_doc, new_tgt_doc),
+                     "^------ FROM %s" % src_k,
+                     show_diff(src_doc, new_src_doc),
+                     ""]
+            print >> sys.stderr, "\n".join(diffs)
+            save_document(output_dir, src_k, new_src_doc)
+            save_document(output_dir, tgt_k, new_tgt_doc)
+
+    print >> sys.stderr, "Output files written to", output_dir
+
+# ---------------------------------------------------------------------
+# options
+# ---------------------------------------------------------------------
+
+arg_parser = argparse.ArgumentParser(description='STAC Swiss Army Knife')
+subparsers = arg_parser.add_subparsers(help='sub-command help')
+
+ap_move = subparsers.add_parser('move', help='Move text from one portion to another')
+ap_move.add_argument('corpus', metavar='DIR')
+ap_move.add_argument('doc',    metavar='DOC')
+ap_move.add_argument('source', metavar='SUBDOC')
+ap_move.add_argument('start',  metavar='INT', type=int)
+ap_move.add_argument('end',    metavar='INT', type=int)
+ap_move.add_argument('target', metavar='SUBDOC')
+ap_move.add_argument('--output', '-o', metavar='DIR')
+ap_move.set_defaults(func=main_move)
+
+arg_parser.add_argument('--verbose', '-v',
+                        action='count',
+                        default=0)
+args=arg_parser.parse_args()
+args.func(args)
