@@ -89,6 +89,15 @@ default_inserts =\
         , 'Segment': ('[', ']')
         }
 
+def rough_type(anno):
+    """
+    Simplify STAC annotation types
+    """
+    if anno.type == 'Segment' or stac.is_edu(anno):
+        return 'Segment'
+    else:
+        return anno.type
+
 def sorted_first_widest(xs):
     """
     Given a list of nodes, return the nodes ordered by their starting point,
@@ -111,7 +120,7 @@ def annotate(txt, annotations, inserts=default_inserts):
     maybe as part of the educe.annotation layer?
     """
     def is_visible(x):
-        return x.type in inserts
+        return rough_type(x) in inserts
     if not annotations:
         return txt
 
@@ -135,7 +144,7 @@ def annotate(txt, annotations, inserts=default_inserts):
             nxt = s_annos[0]
             sp  = nxt.text_span()
             if sp.char_start == i:
-                lparen, rparen = inserts[nxt.type]
+                lparen, rparen = inserts[rough_type(nxt)]
                 buf = buf + lparen
                 endpoints.insert(0,(sp.char_end,rparen)) # lifo
                 del s_annos[0]
@@ -340,6 +349,22 @@ def main_move(args):
     print >> sys.stderr, "Output files written to", output_dir
 
 # ---------------------------------------------------------------------
+# COMMAND text
+# ---------------------------------------------------------------------
+
+def main_text(args):
+    is_interesting = educe.util.mk_is_interesting(args)
+    reader     = stac.Reader(args.corpus)
+    anno_files = reader.filter(reader.files(), is_interesting)
+    corpus     = reader.slurp(anno_files, verbose=True)
+    for k in sorted(corpus, key=stac.id_to_path):
+        doc = corpus[k]
+        print "========== %s ============" % k
+        print
+        print annotate(doc.text(), doc.annotations()).strip()
+        print
+
+# ---------------------------------------------------------------------
 # options
 # ---------------------------------------------------------------------
 
@@ -355,6 +380,12 @@ ap_move.add_argument('end',    metavar='INT', type=int)
 ap_move.add_argument('target', metavar='SUBDOC')
 ap_move.add_argument('--output', '-o', metavar='DIR')
 ap_move.set_defaults(func=main_move)
+
+ap_text = subparsers.add_parser('text', help='Dump the text in documents with segment annotations')
+ap_text.add_argument('corpus', metavar='DIR')
+educe.util.add_corpus_filters(ap_text)
+ap_text.set_defaults(func=main_text)
+
 
 arg_parser.add_argument('--verbose', '-v',
                         action='count',
