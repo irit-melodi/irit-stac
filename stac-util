@@ -365,6 +365,55 @@ def main_text(args):
         print
 
 # ---------------------------------------------------------------------
+# COMMAND merge dialogue
+# ---------------------------------------------------------------------
+
+def get_annotation_with_id(sought, annotations):
+    candidates = [ x for x in annotations if x.local_id() == sought ]
+    if len(candidates) == 1:
+        return candidates[0]
+    elif len(candidates) > 1:
+        raise Exception('More than one annotation found with id %s' % sought)
+    else:
+        raise Exception('No annotations found with id %s' % sought)
+
+def concatenate_features(annotations, f):
+    """
+    Concatenate the values for the given features for all the annotations.
+    Ignore cases where the feature is unset
+    """
+    values = filter(lambda x:x, [ x.features.get(f) for x in annotations ])
+    if values:
+        return " ".join(values)
+    else:
+        return None
+
+def main_merge_dia(args):
+    if len(args.dialogues) < 2:
+        print >> sys.stderr, "Must specify at least two dialogues"
+        sys.exit(1)
+    output_dir     = get_output_dir(args)
+    is_interesting = educe.util.mk_is_interesting(args)
+    reader         = stac.Reader(args.corpus)
+    anno_files     = reader.filter(reader.files(), is_interesting)
+    corpus         = reader.slurp(anno_files, verbose=True)
+    for k in corpus:
+        doc        = corpus[k]
+        dialogues  = sorted([get_annotation_with_id(d, doc.units) for d in args.dialogues],
+                            key=lambda x:x.text_span().char_start)
+        combined      = copy.deepcopy(dialogues[0])
+        combined.span =\
+                Span(min(x.text_span().char_start for x in dialogues),
+                     max(x.text_span().char_end   for x in dialogues))
+        for f in [ 'Trades', 'Gets', 'Dice_rolling' ]:
+            combined.features[f] = concatenate_features(dialogues, f)
+        for d in dialogues:
+            doc.units.remove(d)
+        doc.units.append(combined)
+        save_document(output_dir, k, doc)
+    print >> sys.stderr, "Output files written to", output_dir
+
+# ---------------------------------------------------------------------
 # options
 # ---------------------------------------------------------------------
 
@@ -386,6 +435,13 @@ ap_text.add_argument('corpus', metavar='DIR')
 educe.util.add_corpus_filters(ap_text)
 ap_text.set_defaults(func=main_text)
 
+ap_merge_dia = subparsers.add_parser('merge-dialogue', help='Merge several dialogue level annotations into one')
+ap_merge_dia.add_argument('corpus', metavar='DIR')
+ap_merge_dia.add_argument('doc',    metavar='DOC')
+ap_merge_dia.add_argument('subdoc', metavar='SUBDOC')
+ap_merge_dia.add_argument('--dialogues',    metavar='ANNO_ID', nargs='+')
+ap_merge_dia.add_argument('--output', '-o', metavar='DIR')
+ap_merge_dia.set_defaults(func=main_merge_dia)
 
 arg_parser.add_argument('--verbose', '-v',
                         action='count',
