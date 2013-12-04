@@ -365,6 +365,20 @@ def main_text(args):
         print
 
 # ---------------------------------------------------------------------
+# COMMAND rewrite
+# ---------------------------------------------------------------------
+
+def main_rewrite(args):
+    is_interesting = educe.util.mk_is_interesting(args)
+    output_dir     = get_output_dir(args)
+    reader         = stac.Reader(args.corpus)
+    anno_files     = reader.filter(reader.files(), is_interesting)
+    corpus         = reader.slurp(anno_files, verbose=True)
+    for k in corpus:
+        save_document(output_dir, k, corpus[k])
+    print >> sys.stderr, "Output files written to", output_dir
+
+# ---------------------------------------------------------------------
 # COMMAND merge dialogue
 # ---------------------------------------------------------------------
 
@@ -419,6 +433,12 @@ def main_merge_dia(args):
 
 arg_parser = argparse.ArgumentParser(description='STAC Swiss Army Knife')
 subparsers = arg_parser.add_subparsers(help='sub-command help')
+
+ap_rewrite = subparsers.add_parser('rewrite', help='Read and write back without changing anything else; potentially reformats XML (for version control diffs)')
+ap_rewrite.add_argument('corpus', metavar='DIR')
+ap_rewrite.add_argument('--output', '-o', metavar='DIR')
+educe.util.add_corpus_filters(ap_rewrite)
+ap_rewrite.set_defaults(func=main_rewrite)
 
 ap_move = subparsers.add_parser('move', help='Move text from one portion to another')
 ap_move.add_argument('corpus', metavar='DIR')
