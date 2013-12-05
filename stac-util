@@ -79,6 +79,15 @@ def save_document(output_dir, k, doc):
         with open(stub + ".ac", 'wb') as f:
             f.write(doc_bytes)
 
+def anno_author(x):
+    return x.metadata['author']
+
+def anno_date(x):
+    return int(x.metadata['creation-date'])
+
+def set_anno_date(a,d):
+    a.metadata['creation-date'] = str(d)
+
 # ---------------------------------------------------------------------
 # annotate
 # ---------------------------------------------------------------------
@@ -236,14 +245,14 @@ def avoid_ids(avoid_doc, doc):
     dates = defaultdict(list)
     # map of creator to largest absolute value
     for a in avoid_doc.annotations():
-        author  = a.metadata['author']
-        date    = int(a.metadata['creation-date'])
+        author  = anno_author(a)
+        date    = anno_date(a)
         dates[author].append(date)
     min_dates = { k:min(v) for k,v in dates.items() }
     max_dates = { k:max(v) for k,v in dates.items() }
-    for a in doc2.annotations():
-        author  = a.metadata['author']
-        date    = int(a.metadata['creation-date'])
+    for a in sorted(doc2.annotations(), key=anno_date):
+        author  = anno_author(a)
+        date    = anno_date(a)
         if author in dates and date in dates[author]:
             if date < 0:
                 date2 = min_dates[author] - 1
@@ -252,7 +261,7 @@ def avoid_ids(avoid_doc, doc):
                 date2 = max_dates[author] + 1
                 max_dates[author] = date2
             dates[author].append(date2)
-            a.metadata['creation-date'] = str(date2)
+            set_anno_date(a, date2)
             evil_set_id(a, '%s_%s' % (author, date2))
     return doc2
 
