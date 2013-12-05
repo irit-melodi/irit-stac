@@ -236,36 +236,55 @@ def narrow_to_span(doc, span):
     evil_set_text(doc2, doc.text()[span.char_start:span.char_end])
     return doc2
 
-def avoid_ids(avoid_doc, doc):
+def compute_renames(avoid, incoming):
     """
-    Return a deep copy of a document, with ids reassigned so that
-    they do not clash with the ones in the avoided document
+    Given two sets of documents, return a dictionary which would
+    allow us to rename ids in `incoming` so that they do not
+    overlap with those in `avoid`.
+
+    :rtype `author -> date -> date`
     """
-    doc2  = copy.deepcopy(doc)
-    dates = defaultdict(list)
-    # map of creator to largest absolute value
-    for a in avoid_doc.annotations():
-        author  = anno_author(a)
-        date    = anno_date(a)
-        dates[author].append(date)
+    dates   = defaultdict(list)
+    renames = defaultdict(dict)
+    for doc1 in avoid.values():
+        for a in doc1.annotations():
+            author  = anno_author(a)
+            date    = anno_date(a)
+            dates[author].append(date)
     min_dates = { k:min(v) for k,v in dates.items() }
     max_dates = { k:max(v) for k,v in dates.items() }
-    for a in sorted(doc2.annotations(), key=anno_date):
+    for doc2 in incoming.values():
+        for a in doc2.annotations():
+            author   = anno_author(a)
+            old_date = anno_date(a)
+            if author in dates and old_date in dates[author] and\
+               not (author in renames and old_date in renames[author]):
+                if old_date < 0:
+                    new_date = min_dates[author] - 1
+                    min_dates[author] = new_date
+                else:
+                    new_date = max_dates[author] + 1
+                    max_dates[author] = new_date
+                dates[author].append(new_date)
+                renames[author][old_date] = new_date
+    return renames
+
+def rename_ids(renames, doc):
+    """
+    Return a deep copy of a document, with ids reassigned
+    according to the renames dictionary
+    """
+    doc2 = copy.deepcopy(doc)
+    for a in doc2.annotations():
         author  = anno_author(a)
         date    = anno_date(a)
-        if author in dates and date in dates[author]:
-            if date < 0:
-                date2 = min_dates[author] - 1
-                min_dates[author] = date2
-            else:
-                date2 = max_dates[author] + 1
-                max_dates[author] = date2
-            dates[author].append(date2)
-            set_anno_date(a, date2)
-            evil_set_id(a, '%s_%s' % (author, date2))
+        if author in renames and date in renames[author]:
+            new_date = renames[author][date]
+            set_anno_date(a, new_date)
+            evil_set_id(a, '%s_%s' % (author, new_date))
     return doc2
 
-def move_portion(src_doc, tgt_doc, span):
+def move_portion(renames, src_doc, tgt_doc, span):
     """
     Return a copy of the documents such that the span has been moved
     from source to target
@@ -276,7 +295,7 @@ def move_portion(src_doc, tgt_doc, span):
         tgt_txt = tgt_txt[:-1]
     tgt_offset = len(tgt_txt)
     snipped    = shift_annotations(snipped, tgt_offset)
-    snipped    = avoid_ids(tgt_doc, snipped)
+    snipped    = rename_ids(renames, snipped)
 
     src_txt    = snipped.text()[tgt_offset:]
 
@@ -336,6 +355,7 @@ def main_move(args):
 
     portion    = Span(args.start, args.end)
 
+    renames = compute_renames(tgt_corpus, src_corpus)
     for src_k in src_corpus:
         tgt_k        = copy.copy(src_k)
         tgt_k.subdoc = args.target
@@ -345,7 +365,7 @@ def main_move(args):
         else:
             src_doc = src_corpus[src_k]
             tgt_doc = tgt_corpus[tgt_k]
-            new_src_doc, new_tgt_doc = move_portion(src_doc, tgt_doc, portion)
+            new_src_doc, new_tgt_doc = move_portion(renames, src_doc, tgt_doc, portion)
             diffs = ["======= TO %s   ========" % tgt_k,
                      show_diff(tgt_doc, new_tgt_doc),
                      "^------ FROM %s" % src_k,
