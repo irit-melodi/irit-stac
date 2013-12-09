@@ -1,3 +1,8 @@
+NB: not the same as stac-util the swiss-army-knife tool.
+Sorry for the naming clashing! When creating stac-util,
+I forgot that stacutil already exists. Maybe stac-tool
+would be a better name
+
 Utility modules that several STAC scripts may have in common.
 In case of duplication, the versions in this directory should
 be considered canonical.
