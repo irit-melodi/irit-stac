@@ -286,34 +286,49 @@ def rename_ids(renames, doc):
             evil_set_id(a, '%s_%s' % (author, new_date))
     return doc2
 
-def move_portion(renames, src_doc, tgt_doc, span):
+def move_portion(renames, src_doc, tgt_doc, src_span, prepend=False):
     """
-    Return a copy of the documents such that the span has been moved
+    Return a copy of the documents such that the src_span has been moved
     from source to target
     """
+    snipped    = narrow_to_span(src_doc, src_span)
+    src_txt    = snipped.text()
     tgt_txt    = tgt_doc.text()
-    snipped    = narrow_to_span(src_doc, span)
-    if snipped.text()[0]  == ' ' and tgt_doc.text()[-1] == ' ':
-        tgt_txt = tgt_txt[:-1]
-    tgt_offset = len(tgt_txt)
-    snipped    = shift_annotations(snipped, tgt_offset)
+    if prepend and tgt_txt[0] == ' ':
+        old_len    = len(tgt_txt)
+        tgt_txt    = tgt_txt.lstrip()
+        pad_len    = old_len - len(tgt_txt)
+        src_offset = 0
+        tgt_offset = len(src_txt) - pad_len
+    elif not prepend and src_txt[0]  == ' ':
+        tgt_txt    = tgt_txt.rstrip()
+        src_offset = len(tgt_txt)
+        tgt_offset = 0
+
+    snipped    = shift_annotations(snipped, src_offset)
     snipped    = rename_ids(renames, snipped)
 
-    src_txt    = snipped.text()[tgt_offset:]
-
-    new_tgt_doc           = copy.deepcopy(tgt_doc)
+    new_tgt_doc           = shift_annotations(tgt_doc, tgt_offset)
     new_tgt_doc.units     = new_tgt_doc.units     + snipped.units
     new_tgt_doc.relations = new_tgt_doc.relations + snipped.relations
     new_tgt_doc.schemas   = new_tgt_doc.schemas   + snipped.schemas
 
-    if span.char_start == 0:
+    if prepend:
+        if src_span != snipped.text_span():
+            print src_span
+            print snipped.text_span()
+            raise Exception('Not yet implemented: prepending from other than whole doc: %s' % src_span)
+        # tgt_doc is on the right
+        evil_set_text(new_tgt_doc, src_txt + tgt_txt)
+        return None, new_tgt_doc
+    else:
+        if src_span.char_start != 0:
+            raise Exception('Not yet implemented: moving from other than document start: %s' % src_span)
         # tgt_doc is on the left
         evil_set_text(new_tgt_doc, tgt_txt + src_txt)
-        leftover_span = Span(span.char_end,len(src_doc.text()))
-        new_src_doc   = narrow_to_span(src_doc, leftover_span)
+        leftover_src_span = Span(src_span.char_end,len(src_doc.text()))
+        new_src_doc       = narrow_to_span(src_doc, leftover_src_span)
         return new_src_doc, new_tgt_doc
-    else:
-        raise Exception('Merged portion must either be at beginning: %s' % span)
 
 # ---------------------------------------------------------------------
 # COMMAND move
@@ -376,6 +391,41 @@ def main_move(args):
             print >> sys.stderr, "\n".join(diffs)
             save_document(output_dir, src_k, new_src_doc)
             save_document(output_dir, tgt_k, new_tgt_doc)
+
+    print >> sys.stderr, "Output files written to", output_dir
+
+# ---------------------------------------------------------------------
+# COMMAND insert
+# ---------------------------------------------------------------------
+
+def main_insert(args):
+    output_dir = get_output_dir(args)
+
+    src_reader = stac.LiveInputReader(args.insert)
+    src_corpus = src_reader.slurp(src_reader.files())
+
+    if not src_corpus:
+        print >> sys.stderr, "Insert dir must have exactly one .aa/.ac pair (none found)"
+        sys.exit(1)
+    elif len(src_corpus) > 1:
+        print >> sys.stderr, "Insert dir must have exactly one .aa/.ac pair (%d found)" % len(src_corpus)
+        sys.exit(1)
+
+    src_doc    = src_corpus.values()[0]
+    src_span   = src_doc.text_span()
+
+    reader     = stac.Reader(args.corpus)
+    tgt_files  = reader.filter(reader.files(), is_target)
+    tgt_corpus = reader.slurp(tgt_files)
+
+    renames = compute_renames(tgt_corpus, src_corpus)
+    for tgt_k in tgt_corpus:
+        tgt_doc = tgt_corpus[tgt_k]
+        _, new_tgt_doc = move_portion(renames, src_doc, tgt_doc, src_span, prepend=True)
+        diffs = ["======= INSERT IN %s   ========" % tgt_k,
+                 show_diff(tgt_doc, new_tgt_doc)]
+        print >> sys.stderr, "\n".join(diffs).encode('utf-8')
+        save_document(output_dir, tgt_k, new_tgt_doc)
 
     print >> sys.stderr, "Output files written to", output_dir
 
@@ -495,12 +545,22 @@ ap_move = subparsers.add_parser('move', help='Move text from one portion to anot
 ap_move.add_argument('corpus', metavar='DIR')
 ap_move.add_argument('doc',    metavar='DOC')
 ap_move.add_argument('source', metavar='SUBDOC')
-ap_move.add_argument('start',  metavar='INT', type=int)
-ap_move.add_argument('end',    metavar='INT', type=int)
+ap_move.add_argument('start',  metavar='INT', type=int, help='Text span start')
+ap_move.add_argument('end',    metavar='INT', type=int, help='Text span end')
 ap_move.add_argument('target', metavar='SUBDOC')
 ap_move.add_argument('--output', '-o', metavar='DIR')
 ap_move.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 ap_move.set_defaults(func=main_move)
+
+ap_insert = subparsers.add_parser('insert', help='Insert new text into a portion')
+ap_insert.add_argument('insert', metavar='DIR', help='Dir with just one pair of .aa/.ac files')
+ap_insert.add_argument('corpus', metavar='DIR', help='Corpus')
+ap_insert.add_argument('doc',    metavar='DOC')
+ap_insert.add_argument('target', metavar='SUBDOC')
+ap_insert.add_argument('start',  metavar='INT', type=int, help='Insert before Nth char')
+ap_insert.add_argument('--output', '-o', metavar='DIR')
+ap_insert.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
+ap_insert.set_defaults(func=main_insert)
 
 ap_text = subparsers.add_parser('text', help='Dump the text in documents with segment annotations')
 ap_text.add_argument('corpus', metavar='DIR')
