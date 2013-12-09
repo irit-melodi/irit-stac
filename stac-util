@@ -407,9 +407,9 @@ def main_text(args):
                 if len(dialogues) > 1:
                     d_last = dialogues[-1]
                     print "...\n"
-                    print anno(d_last.text_span())
+                    print anno(d_last.text_span()).encode('utf-8')
         else:
-            print anno()
+            print anno().encode('utf-8')
         print
 
 # ---------------------------------------------------------------------
