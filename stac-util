@@ -46,6 +46,8 @@ def get_output_dir(args):
         elif not os.path.isdir(args.output):
             os.makedirs(args.output)
         return args.output
+    elif args.overwrite_input:
+        return args.corpus
     else:
         return tempfile.mkdtemp()
 
@@ -485,6 +487,7 @@ subparsers = arg_parser.add_subparsers(help='sub-command help')
 ap_rewrite = subparsers.add_parser('rewrite', help='Read and write back without changing anything else; potentially reformats XML (for version control diffs)')
 ap_rewrite.add_argument('corpus', metavar='DIR')
 ap_rewrite.add_argument('--output', '-o', metavar='DIR')
+ap_rewrite.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 educe.util.add_corpus_filters(ap_rewrite)
 ap_rewrite.set_defaults(func=main_rewrite)
 
