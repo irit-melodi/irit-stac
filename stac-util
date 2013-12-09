@@ -499,6 +499,7 @@ ap_move.add_argument('start',  metavar='INT', type=int)
 ap_move.add_argument('end',    metavar='INT', type=int)
 ap_move.add_argument('target', metavar='SUBDOC')
 ap_move.add_argument('--output', '-o', metavar='DIR')
+ap_move.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 ap_move.set_defaults(func=main_move)
 
 ap_text = subparsers.add_parser('text', help='Dump the text in documents with segment annotations')
@@ -513,6 +514,7 @@ ap_merge_dia.add_argument('doc',    metavar='DOC')
 ap_merge_dia.add_argument('subdoc', metavar='SUBDOC')
 ap_merge_dia.add_argument('--dialogues',    metavar='ANNO_ID', nargs='+')
 ap_merge_dia.add_argument('--output', '-o', metavar='DIR')
+ap_merge_dia.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 ap_merge_dia.set_defaults(func=main_merge_dia)
 
 arg_parser.add_argument('--verbose', '-v',
