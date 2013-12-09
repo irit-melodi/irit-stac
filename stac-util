@@ -388,9 +388,28 @@ def main_text(args):
     corpus     = reader.slurp(anno_files, verbose=True)
     for k in sorted(corpus, key=stac.id_to_path):
         doc = corpus[k]
+        def anno(sp=None):
+            if sp:
+                units_ = [u for u in doc.units if sp.encloses(u.span)]
+                units  = copy.deepcopy(units_)
+                for x in units:
+                    x.span = x.span.relative(sp)
+            else:
+                units = doc.units
+            return annotate(doc.text(sp), units).strip()
         print "========== %s ============" % k
         print
-        print annotate(doc.text(), doc.annotations()).strip()
+        if args.edges:
+            dialogues = sorted_first_widest(u for u in doc.units if u.type == 'Dialogue')
+            if dialogues:
+                d_first = dialogues[0]
+                print anno(d_first.text_span())
+                if len(dialogues) > 1:
+                    d_last = dialogues[-1]
+                    print "...\n"
+                    print anno(d_last.text_span())
+        else:
+            print anno()
         print
 
 # ---------------------------------------------------------------------
@@ -481,6 +500,7 @@ ap_move.set_defaults(func=main_move)
 
 ap_text = subparsers.add_parser('text', help='Dump the text in documents with segment annotations')
 ap_text.add_argument('corpus', metavar='DIR')
+ap_text.add_argument('--edges', action='store_true', help='First/last dialogues only')
 educe.util.add_corpus_filters(ap_text)
 ap_text.set_defaults(func=main_text)
 
