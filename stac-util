@@ -482,6 +482,17 @@ def main_rewrite(args):
 # COMMAND nudge
 # ---------------------------------------------------------------------
 
+def enclosing_turn_span(doc, span):
+    """
+    Return the span for any turn annotations that enclose this span.
+    If none are found, return the span itself
+    """
+    def is_match(x):
+        return stac.is_turn(x) and x.text_span().encloses(span)
+    spans = [span] + [ u.text_span() for u in doc.units if is_match(u) ]
+    return Span(min(x.char_start for x in spans),
+                max(x.char_end   for x in spans))
+
 def main_nudge(args):
     is_interesting = educe.util.mk_is_interesting(args)
     output_dir     = get_output_dir(args)
@@ -500,8 +511,13 @@ def main_nudge(args):
                 a.span = copy.deepcopy(new_span)
                 found  = True
         if found:
+            interesting_span = enclosing_turn_span(old_doc, old_span)
+            mini_old_doc = narrow_to_span(old_doc, interesting_span)
+            mini_new_doc = narrow_to_span(new_doc, interesting_span)
             diffs = ["======= NUDGE %s to %s in %s ========" % (old_span, new_span, k),
-                     show_diff(old_doc, new_doc),
+                     "...",
+                     show_diff(mini_old_doc, mini_new_doc),
+                     "...",
                      ""]
             print >> sys.stderr, "\n".join(diffs).encode('utf-8')
         else:
