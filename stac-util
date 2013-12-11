@@ -14,6 +14,7 @@ import copy
 import itertools
 import math
 import os
+import re
 import sys
 import tempfile
 import textwrap
@@ -46,7 +47,7 @@ def get_output_dir(args):
         elif not os.path.isdir(args.output):
             os.makedirs(args.output)
         return args.output
-    elif args.overwrite_input:
+    elif "overwrite_input" in args.__dict__ and args.overwrite_input:
         return args.corpus
     else:
         return tempfile.mkdtemp()
@@ -468,6 +469,30 @@ def main_text(args):
         print
 
 # ---------------------------------------------------------------------
+# COMMAND filter
+# ---------------------------------------------------------------------
+
+def main_filter(args):
+    is_interesting = educe.util.mk_is_interesting(args)
+    output_dir     = get_output_dir(args)
+    reader         = stac.Reader(args.corpus)
+    anno_files     = reader.filter(reader.files(), is_interesting)
+    corpus         = reader.slurp(anno_files, verbose=True)
+    if args.type:
+        type_re    = re.compile(args.type)
+        pred       = lambda x:type_re.search(x.type)
+    else:
+        print >> sys.stderr, "No filters specified, aborting"
+        sys.exit(1)
+    for k in corpus:
+        doc = corpus[k]
+        doc.units     = filter(pred, doc.units)
+        doc.relations = filter(pred, doc.relations)
+        doc.schemas   = filter(pred, doc.schemas)
+        save_document(output_dir, k, doc)
+    print >> sys.stderr, "Output files written to", output_dir
+
+# ---------------------------------------------------------------------
 # COMMAND rewrite
 # ---------------------------------------------------------------------
 
@@ -604,6 +629,13 @@ ap_text.add_argument('corpus', metavar='DIR')
 ap_text.add_argument('--edges', action='store_true', help='First/last dialogues only')
 educe.util.add_corpus_filters(ap_text)
 ap_text.set_defaults(func=main_text)
+
+ap_filter = subparsers.add_parser('filter', help='Return a subset of the annotations')
+ap_filter.add_argument('corpus', metavar='DIR')
+ap_filter.add_argument('--output', '-o', metavar='DIR')
+ap_filter.add_argument('--type', metavar='PY_REGEX', help='Filter on annotation type (hint: negation via (?!foo)')
+educe.util.add_corpus_filters(ap_filter)
+ap_filter.set_defaults(func=main_filter)
 
 ap_rewrite = subparsers.add_parser('rewrite', help='Read and write back without changing anything else; potentially reformats XML (for version control diffs)')
 ap_rewrite.add_argument('corpus', metavar='DIR')
