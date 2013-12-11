@@ -117,7 +117,10 @@ def sorted_first_widest(xs):
     def from_span(sp):
         # negate the endpoint so that if we have a tie on the starting
         # point, the widest span comes first
-        return (sp.char_start, 0 - sp.char_end)
+        if sp:
+            return (sp.char_start, 0 - sp.char_end)
+        else:
+            return None
     return sorted(xs, key=lambda x:from_span(x.text_span()))
 
 def annotate(txt, annotations, inserts=default_inserts):
@@ -475,7 +478,12 @@ def main_rewrite(args):
     anno_files     = reader.filter(reader.files(), is_interesting)
     corpus         = reader.slurp(anno_files, verbose=True)
     for k in corpus:
-        save_document(output_dir, k, corpus[k])
+        doc = corpus[k]
+        if args.sort_by_span:
+            doc.units     = sorted_first_widest(doc.units)
+            doc.relations = sorted_first_widest(doc.relations)
+            doc.schemas   = sorted_first_widest(doc.schemas)
+        save_document(output_dir, k, doc)
     print >> sys.stderr, "Output files written to", output_dir
 
 # ---------------------------------------------------------------------
@@ -600,6 +608,7 @@ ap_text.set_defaults(func=main_text)
 ap_rewrite = subparsers.add_parser('rewrite', help='Read and write back without changing anything else; potentially reformats XML (for version control diffs)')
 ap_rewrite.add_argument('corpus', metavar='DIR')
 ap_rewrite.add_argument('--output', '-o', metavar='DIR')
+ap_rewrite.add_argument('--sort-by-span',    action='store_true', help='Order annotations by text span')
 ap_rewrite.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 educe.util.add_corpus_filters(ap_rewrite)
 ap_rewrite.set_defaults(func=main_rewrite)
