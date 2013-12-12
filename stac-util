@@ -526,7 +526,19 @@ def enclosing_turn_span(doc, span):
     return Span(min(x.char_start for x in spans),
                 max(x.char_end   for x in spans))
 
+def is_nudge(x):
+    return abs(x) <= 1
+
 def main_nudge(args):
+    # FIXME: there's probably a more idiomatic way to express this
+    # particularly as part of the argparse block
+    if not args.allow_shove and\
+            (not is_nudge(args.nudge_start) or
+             not is_nudge(args.nudge_end)):
+        msg = "Use --allow-shove if you really mean to nudge by [%d,%d]"\
+                % (args.nudge_start, args.nudge_end)
+        print >> sys.stderr, msg
+        sys.exit(1)
     is_interesting = educe.util.mk_is_interesting(args)
     output_dir     = get_output_dir(args)
     reader         = stac.Reader(args.corpus)
@@ -611,16 +623,6 @@ def main_merge_dia(args):
 # options
 # ---------------------------------------------------------------------
 
-def trilean(string):
-    """
-    One of -1, 0, or 1
-    """
-    value = int(string)
-    if value < -1 or value >1:
-        msg = "%r must be -1, 0, or 1" % string
-        raise argparse.ArgumentTypeError(msg)
-    return value
-
 arg_parser = argparse.ArgumentParser(description='STAC Swiss Army Knife')
 subparsers = arg_parser.add_subparsers(help='sub-command help')
 
@@ -651,8 +653,9 @@ ap_nudge.add_argument('doc',    metavar='DOC')
 ap_nudge.add_argument('subdoc', metavar='SUBDOC')
 ap_nudge.add_argument('start',  metavar='INT', type=int, help='Text span start')
 ap_nudge.add_argument('end',    metavar='INT', type=int, help='Text span end')
-ap_nudge.add_argument('nudge_start',  metavar='TRI', type=trilean, help='Text span start')
-ap_nudge.add_argument('nudge_end',    metavar='TRI', type=trilean, help='Text span end')
+ap_nudge.add_argument('nudge_start',  metavar='INT', type=int, help='Adjust start [-1 to 1]')
+ap_nudge.add_argument('nudge_end',    metavar='INT', type=int, help='Adjust end   [-1 to 1]')
+ap_nudge.add_argument('--allow-shove', action='store_true', help='Allow adjustments larger than 1')
 ap_nudge.add_argument('--output', '-o', metavar='DIR')
 ap_nudge.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 ap_nudge.set_defaults(func=main_nudge)
