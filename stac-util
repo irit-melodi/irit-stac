@@ -485,10 +485,12 @@ def main_filter(args):
     if args.id:
         regex = re.compile(args.id)
         preds.append(lambda x:regex.search(x.local_id()))
-    pred = lambda x:all(f(x) for f in preds)
-    if not any([args.type, args.id]):
+    if preds:
+        pred = lambda x:all(f(x) for f in preds)
+    else:
         print >> sys.stderr, "No filters specified, aborting"
         sys.exit(1)
+
     for k in corpus:
         doc = corpus[k]
         doc.units     = filter(pred, doc.units)
