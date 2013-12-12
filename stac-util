@@ -480,13 +480,17 @@ def main_filter(args):
     corpus         = reader.slurp(anno_files, verbose=True)
     preds          = []
     if args.type:
-        regex = re.compile(args.type)
-        preds.append(lambda x:regex.search(x.type))
-    if args.id:
-        regex = re.compile(args.id)
-        preds.append(lambda x:regex.search(x.local_id()))
+        r = re.compile(args.type)
+        def fn(x):
+            m = r.search(x.type)
+            return m is not None and m.span() != (0,0)
+        preds.append(fn)
+    if args.not_id:
+        def fn(x):
+            return x.local_id() != args.not_id
+        preds.append(fn)
     if preds:
-        pred = lambda x:all(f(x) for f in preds)
+        pred = lambda x:all([f(x) for f in preds])
     else:
         print >> sys.stderr, "No filters specified, aborting"
         sys.exit(1)
@@ -651,8 +655,8 @@ ap_text.set_defaults(func=main_text)
 ap_filter = subparsers.add_parser('filter', help='Return a subset of the annotations')
 ap_filter.add_argument('corpus', metavar='DIR')
 ap_filter.add_argument('--output', '-o', metavar='DIR')
-ap_filter.add_argument('--type', metavar='PY_REGEX', help='desired type (hint: negation via (?!foo)')
-ap_filter.add_argument('--id',   metavar='PY_REGEX', help='desired id   (hint: negation via (?!foo)')
+ap_filter.add_argument('--type',   metavar='PY_REGEX', help='desired type (hint: negation via ^(?!foo)')
+ap_filter.add_argument('--not-id', metavar='STRING',   help='id to delete')
 ap_filter.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 educe.util.add_corpus_filters(ap_filter)
 ap_filter.set_defaults(func=main_filter)
