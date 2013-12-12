@@ -496,6 +496,15 @@ def main_filter(args):
 # COMMAND rewrite
 # ---------------------------------------------------------------------
 
+def sans_modified_by(anno):
+    anno2 = copy.deepcopy(anno)
+    anno2.metadata['lastModifier']         = 'n/a'
+    anno2.metadata['lastModificationDate'] = 0
+    return anno2
+
+def diff_friendly(annos):
+    return sorted_first_widest(map(sans_modified_by, annos))
+
 def main_rewrite(args):
     is_interesting = educe.util.mk_is_interesting(args)
     output_dir     = get_output_dir(args)
@@ -504,10 +513,10 @@ def main_rewrite(args):
     corpus         = reader.slurp(anno_files, verbose=True)
     for k in corpus:
         doc = corpus[k]
-        if args.sort_by_span:
-            doc.units     = sorted_first_widest(doc.units)
-            doc.relations = sorted_first_widest(doc.relations)
-            doc.schemas   = sorted_first_widest(doc.schemas)
+        if args.diff_friendly:
+            doc.units     = diff_friendly(doc.units)
+            doc.relations = diff_friendly(doc.relations)
+            doc.schemas   = diff_friendly(doc.schemas)
         save_document(output_dir, k, doc)
     print >> sys.stderr, "Output files written to", output_dir
 
@@ -642,8 +651,9 @@ ap_filter.set_defaults(func=main_filter)
 ap_rewrite = subparsers.add_parser('rewrite', help='Read and write back without changing anything else; potentially reformats XML (for version control diffs)')
 ap_rewrite.add_argument('corpus', metavar='DIR')
 ap_rewrite.add_argument('--output', '-o', metavar='DIR')
-ap_rewrite.add_argument('--sort-by-span',    action='store_true', help='Order annotations by text span')
-ap_rewrite.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
+ap_rewrite_mutex = ap_rewrite.add_mutually_exclusive_group()
+ap_rewrite_mutex.add_argument('--diff-friendly',   action='store_true', help='Normalise for diffing')
+ap_rewrite_mutex.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 educe.util.add_corpus_filters(ap_rewrite)
 ap_rewrite.set_defaults(func=main_rewrite)
 
