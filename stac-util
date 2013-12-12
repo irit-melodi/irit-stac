@@ -478,10 +478,15 @@ def main_filter(args):
     reader         = stac.Reader(args.corpus)
     anno_files     = reader.filter(reader.files(), is_interesting)
     corpus         = reader.slurp(anno_files, verbose=True)
+    preds          = []
     if args.type:
-        type_re    = re.compile(args.type)
-        pred       = lambda x:type_re.search(x.type)
-    else:
+        regex = re.compile(args.type)
+        preds.append(lambda x:regex.search(x.type))
+    if args.id:
+        regex = re.compile(args.id)
+        preds.append(lambda x:regex.search(x.local_id()))
+    pred = lambda x:all(f(x) for f in preds)
+    if not any([args.type, args.id]):
         print >> sys.stderr, "No filters specified, aborting"
         sys.exit(1)
     for k in corpus:
@@ -644,7 +649,8 @@ ap_text.set_defaults(func=main_text)
 ap_filter = subparsers.add_parser('filter', help='Return a subset of the annotations')
 ap_filter.add_argument('corpus', metavar='DIR')
 ap_filter.add_argument('--output', '-o', metavar='DIR')
-ap_filter.add_argument('--type', metavar='PY_REGEX', help='Filter on annotation type (hint: negation via (?!foo)')
+ap_filter.add_argument('--type', metavar='PY_REGEX', help='desired type (hint: negation via (?!foo)')
+ap_filter.add_argument('--id',   metavar='PY_REGEX', help='desired id   (hint: negation via (?!foo)')
 educe.util.add_corpus_filters(ap_filter)
 ap_filter.set_defaults(func=main_filter)
 
