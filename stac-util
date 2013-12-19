@@ -39,6 +39,9 @@ def concat(xs):
 # stac utilities
 # ---------------------------------------------------------------------
 
+def anno_id_from_tuple(t):
+    return "%s_%d" % t
+
 def get_output_dir(args):
     if args.output:
         if os.path.isfile(args.output):
@@ -88,8 +91,6 @@ def anno_author(x):
 def anno_date(x):
     return int(x.metadata['creation-date'])
 
-def set_anno_date(a,d):
-    a.metadata['creation-date'] = str(d)
 
 # ---------------------------------------------------------------------
 # annotate
@@ -190,12 +191,14 @@ def evil_set_text(doc, text):
     """
     doc._text = text
 
-def evil_set_id(anno, new_id):
+def evil_set_id(anno, author, date):
     """
     This is a bit evil as it's using undocumented functionality
     from the educe.annotation.Standoff object
     """
-    anno._anno_id = new_id
+    anno._anno_id = anno_id_from_tuple((author, date))
+    anno.metadata['author']        = author
+    anno.metadata['creation-date'] = str(date)
 
 def shift_annotations(doc, offset):
     """
@@ -287,7 +290,7 @@ def rename_ids(renames, doc):
         if author in renames and date in renames[author]:
             new_date = renames[author][date]
             set_anno_date(a, new_date)
-            evil_set_id(a, '%s_%s' % (author, new_date))
+            evil_set_id(a, author, new_date)
     return doc2
 
 def move_portion(renames, src_doc, tgt_doc, src_span, prepend=False):
@@ -508,6 +511,67 @@ def main_filter(args):
     print >> sys.stderr, "Output files written to", output_dir
 
 # ---------------------------------------------------------------------
+# COMMAND rename
+# ---------------------------------------------------------------------
+
+def main_rename(args):
+    def is_match(anno_tuple):
+        match_id = anno_id_from_tuple(anno_tuple)
+        def pred(x):
+            return x.local_id() == match_id
+        return pred
+
+    is_interesting = educe.util.mk_is_interesting(args)
+    output_dir     = get_output_dir(args)
+    reader         = stac.Reader(args.corpus)
+    anno_files     = reader.filter(reader.files(), is_interesting)
+    corpus         = reader.slurp(anno_files, verbose=True)
+
+    source_author, source_date = args.source
+    pretty_source = anno_id_from_tuple(args.source)
+    if args.target:
+        # check for collisions
+        target_author, target_date = args.target
+        pretty_target = anno_id_from_tuple(args.target)
+        for k in corpus:
+            doc = corpus[k]
+            if filter(is_match(args.target), doc.annotations()):
+                sys.exit("Can't rename! We already have annotation(s) with ID %s" % pretty_target)
+    else:
+        # generate a new name
+        renames = compute_renames(corpus, corpus)
+        target_author = source_author
+        target_date   = renames[source_author][source_date]
+        pretty_target = anno_id_from_tuple((target_author, target_date))
+
+    def replace_pointer(ms):
+        return [ pretty_target if m == pretty_source else m for m in ms ]
+
+    for k in corpus:
+        print k
+        doc     = corpus[k]
+        matches = filter(is_match(args.source), doc.annotations())
+        if not matches:
+            sys.exit("No annotations found with id %s" % pretty_source)
+        elif len(matches) > 1:
+            sys.exit("Huh?! More than one annotation with id %s" % pretty_source)
+        match = matches[0]
+        evil_set_id(matches[0], target_author, target_date)
+        for x in doc.relations:
+            if x.span.t1 == pretty_source:
+                x.span.t1 = pretty_target
+            if x.span.t2 == pretty_source:
+                x.span.t2 = pretty_target
+        for x in doc.schemas:
+            x.units     = replace_pointer(x.units)
+            x.relations = replace_pointer(x.relations)
+            x.schemas   = replace_pointer(x.schemas)
+        save_document(output_dir, k, doc)
+
+    print >> sys.stderr, "Renamed from %s to %s" % (pretty_source, pretty_target)
+    print >> sys.stderr, "Output files written to", output_dir
+
+# ---------------------------------------------------------------------
 # COMMAND rewrite
 # ---------------------------------------------------------------------
 
@@ -598,7 +662,8 @@ def main_nudge(args):
 # COMMAND merge dialogue
 # ---------------------------------------------------------------------
 
-def get_annotation_with_id(sought, annotations):
+def get_annotation_with_id(sought_tuple, annotations):
+    sought = anno_id_from_tuple(sought_tuple)
     candidates = [ x for x in annotations if x.local_id() == sought ]
     if len(candidates) == 1:
         return candidates[0]
@@ -671,6 +736,13 @@ def add_usual_output_args(p):
     p.add_argument('--overwrite-input', action='store_true',
                    help='save results back to input dir')
 
+def anno_id(string):
+    parts = string.split('_')
+    if len(parts) != 2:
+        msg = "%r is not of form author_date" % string
+        raise argparse.ArgumentTypeError(msg)
+    return (parts[0],int(parts[1]))
+
 arg_parser = argparse.ArgumentParser(description='STAC Swiss Army Knife')
 subparsers = arg_parser.add_subparsers(help='sub-command help')
 
@@ -692,6 +764,15 @@ add_usual_input_args(ap_rewrite)
 add_usual_output_args(ap_rewrite_mutex)
 ap_rewrite_mutex.add_argument('--diff-friendly',   action='store_true', help='Normalise for diffing')
 ap_rewrite.set_defaults(func=main_rewrite)
+
+ap_rename = subparsers.add_parser('rename', help='rename an annotation')
+add_usual_input_args(ap_rename, doc_subdoc_required=True)
+add_usual_output_args(ap_rename)
+ap_rename.add_argument('--stage',     metavar='STAGE',  choices=['discourse', 'units'], required=True)
+ap_rename.add_argument('--annotator', metavar='STRING', required=True)
+ap_rename.add_argument('--source', type=anno_id, metavar='ANNO_ID', required=True, help='id to rename (eg. kowey_398190)')
+ap_rename.add_argument('--target', type=anno_id, metavar='ANNO_ID', help='id to rename to (default: autogenerated)')
+ap_rename.set_defaults(func=main_rename)
 
 ap_nudge = subparsers.add_parser('nudge', help='slightly adjust unit annotation boundaries')
 add_usual_input_args(ap_nudge, doc_subdoc_required=True)
@@ -720,7 +801,11 @@ ap_move.set_defaults(func=main_move)
 
 ap_merge_dia = subparsers.add_parser('merge-dialogue', help='Merge several dialogue level annotations into one')
 add_usual_input_args(ap_merge_dia, doc_subdoc_required=True, help_suffix='in which to merge')
-ap_merge_dia.add_argument('--dialogues',    metavar='ANNO_ID', nargs='+', required=True, help='eg. stac_39819045 stac_98871771')
+ap_merge_dia.add_argument('--dialogues',
+                          metavar='ANNO_ID', type=anno_id,
+                          nargs='+',
+                          required=True,
+                          help='eg. stac_39819045 stac_98871771')
 ap_merge_dia.set_defaults(func=main_merge_dia)
 
 arg_parser.add_argument('--verbose', '-v',
