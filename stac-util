@@ -720,7 +720,7 @@ def main_merge_dia(args):
         starting_turn = get_turn(args.turns[0], doc)
         ending_turn   = get_turn(args.turns[1], doc)
         span = Span(starting_turn.text_span().char_start - 1,
-                    ending_turn.text_span().char_end)
+                    ending_turn.text_span().char_end + 1)
         def is_in_range(x):
             return x.type == 'Dialogue' and span.encloses(x.span)
         matching_dialogues = filter(is_in_range, doc.annotations())
