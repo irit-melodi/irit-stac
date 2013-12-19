@@ -42,6 +42,13 @@ def concat(xs):
 def anno_id_from_tuple(t):
     return "%s_%d" % t
 
+def anno_id_to_tuple(string):
+    parts = string.split('_')
+    if len(parts) != 2:
+        msg = "%r is not of form author_date" % string
+        raise Exception(msg)
+    return (parts[0],int(parts[1]))
+
 def get_output_dir(args):
     if args.output:
         if os.path.isfile(args.output):
@@ -90,6 +97,20 @@ def anno_author(x):
 
 def anno_date(x):
     return int(x.metadata['creation-date'])
+
+def get_turn(tid, doc):
+    """
+    Return the turn annotation with the desired ID
+    """
+    def is_match(x):
+        return stac.is_turn(x) and int(x.features['Identifier']) == tid
+    turns = filter(is_match, doc.annotations())
+    if not turns:
+        sys.exit("Turn %d not found" % tid)
+    elif len(turns) > 1:
+        sys.exit("Huh?! Found more than one turn with id %d" % tid)
+    else:
+        return turns[0]
 
 
 # ---------------------------------------------------------------------
@@ -684,17 +705,34 @@ def concatenate_features(annotations, f):
         return None
 
 def main_merge_dia(args):
-    if len(args.dialogues) < 2:
-        print >> sys.stderr, "Must specify at least two dialogues"
-        sys.exit(1)
+    if not args.turns and len(args.dialogues) < 2:
+        sys.exit("Must specify at least two dialogues")
     output_dir     = get_output_dir(args)
     is_interesting = educe.util.mk_is_interesting(args)
     reader         = stac.Reader(args.corpus)
     anno_files     = reader.filter(reader.files(), is_interesting)
     corpus         = reader.slurp(anno_files, verbose=True)
+    if args.turns:
+        if not corpus.values():
+            sys.exit("No documents selected")
+        doc  = corpus.values()[0]
+
+        starting_turn = get_turn(args.turns[0], doc)
+        ending_turn   = get_turn(args.turns[1], doc)
+        span = Span(starting_turn.text_span().char_start - 1,
+                    ending_turn.text_span().char_end)
+        def is_in_range(x):
+            return x.type == 'Dialogue' and span.encloses(x.span)
+        matching_dialogues = filter(is_in_range, doc.annotations())
+        sought    = [ anno_id_to_tuple(x.local_id()) for x in matching_dialogues ]
+        if len(sought) < 2:
+            sys.exit("Must specify at least two dialogues")
+        print >> sys.stderr, "Merging dialogues %s" % map(anno_id_from_tuple, sought)
+    else:
+        sought = args.dialogues
     for k in corpus:
         doc        = corpus[k]
-        dialogues  = sorted([get_annotation_with_id(d, doc.units) for d in args.dialogues],
+        dialogues  = sorted([get_annotation_with_id(d, doc.units) for d in sought],
                             key=lambda x:x.text_span().char_start)
         combined      = copy.deepcopy(dialogues[0])
         combined.span =\
@@ -801,11 +839,16 @@ ap_move.set_defaults(func=main_move)
 
 ap_merge_dia = subparsers.add_parser('merge-dialogue', help='Merge several dialogue level annotations into one')
 add_usual_input_args(ap_merge_dia, doc_subdoc_required=True, help_suffix='in which to merge')
-ap_merge_dia.add_argument('--dialogues',
-                          metavar='ANNO_ID', type=anno_id,
-                          nargs='+',
-                          required=True,
-                          help='eg. stac_39819045 stac_98871771')
+add_usual_output_args(ap_merge_dia)
+ap_merge_dia_mutex = ap_merge_dia.add_mutually_exclusive_group(required=True)
+ap_merge_dia_mutex.add_argument('--dialogues',
+                                metavar='ANNO_ID', type=anno_id,
+                                nargs='+',
+                                help='eg. stac_39819045 stac_98871771')
+ap_merge_dia_mutex.add_argument('--turns',
+                                metavar='INT', type=int,
+                                nargs=2,
+                                help='eg. 187 192')
 ap_merge_dia.set_defaults(func=main_merge_dia)
 
 arg_parser.add_argument('--verbose', '-v',
