@@ -338,11 +338,15 @@ def move_portion(renames, src_doc, tgt_doc, src_span, prepend=False):
 # COMMAND move
 # ---------------------------------------------------------------------
 
-def is_source(k):
-    return k.doc == args.doc and k.subdoc == args.source
+def is_target(args):
+    def is_match(k):
+        return k.doc == args.doc and k.subdoc == args.target
+    return is_match
 
-def is_target(k):
-    return k.doc == args.doc and k.subdoc == args.target
+def is_requested(args):
+    def is_match(k):
+        return k.doc == args.doc and k.subdoc == args.subdoc
+    return is_match
 
 def reflow(text, width=40):
     def wrap(t):
@@ -369,8 +373,8 @@ def main_move(args):
         sys.exit(1)
 
     reader     = stac.Reader(args.corpus)
-    src_files  = reader.filter(reader.files(), is_source)
-    tgt_files  = reader.filter(reader.files(), is_target)
+    src_files  = reader.filter(reader.files(), is_requested(args))
+    tgt_files  = reader.filter(reader.files(), is_target(args))
     src_corpus = reader.slurp(src_files)
     tgt_corpus = reader.slurp(tgt_files)
 
@@ -419,7 +423,7 @@ def main_insert(args):
     src_span   = src_doc.text_span()
 
     reader     = stac.Reader(args.corpus)
-    tgt_files  = reader.filter(reader.files(), is_target)
+    tgt_files  = reader.filter(reader.files(), is_requested(args))
     tgt_corpus = reader.slurp(tgt_files)
 
     renames = compute_renames(tgt_corpus, src_corpus)
@@ -643,74 +647,80 @@ def main_merge_dia(args):
 # options
 # ---------------------------------------------------------------------
 
+def add_usual_input_args(p,
+                         doc_subdoc_required=False,
+                         help_suffix=None):
+    p.add_argument('corpus', metavar='DIR', help='corpus dir')
+    if doc_subdoc_required:
+        doc_help    = 'document'
+        subdoc_help = 'subdocument'
+        if help_suffix:
+            doc_help    = doc_help    + ' ' + help_suffix
+            subdoc_help = subdoc_help + ' ' + help_suffix
+        p.add_argument('--doc', metavar='DOC',
+                       help=doc_help, required=doc_subdoc_required)
+        p.add_argument('--subdoc', metavar='SUBDOC',
+                       help=subdoc_help, required=doc_subdoc_required)
+    else:
+        educe.util.add_corpus_filters(p)
+
+
+def add_usual_output_args(p):
+    p.add_argument('--output', '-o', metavar='DIR',
+                   help='output directory (default mktemp)')
+    p.add_argument('--overwrite-input', action='store_true',
+                   help='save results back to input dir')
+
 arg_parser = argparse.ArgumentParser(description='STAC Swiss Army Knife')
 subparsers = arg_parser.add_subparsers(help='sub-command help')
 
-ap_text = subparsers.add_parser('text', help='Dump the text in documents with segment annotations')
-ap_text.add_argument('corpus', metavar='DIR')
+ap_text = subparsers.add_parser('text', help='dump the text in documents with segment annotations')
+add_usual_input_args(ap_text)
 ap_text.add_argument('--edges', action='store_true', help='First/last dialogues only')
-educe.util.add_corpus_filters(ap_text)
 ap_text.set_defaults(func=main_text)
 
-ap_filter = subparsers.add_parser('filter', help='Return a subset of the annotations')
-ap_filter.add_argument('corpus', metavar='DIR')
-ap_filter.add_argument('--output', '-o', metavar='DIR')
+ap_filter = subparsers.add_parser('filter', help='return a subset of the annotations')
+add_usual_input_args(ap_filter)
+add_usual_output_args(ap_filter)
 ap_filter.add_argument('--type',   metavar='PY_REGEX', help='desired type (hint: negation via ^(?!foo)')
 ap_filter.add_argument('--not-id', metavar='STRING',   help='id to delete')
-ap_filter.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
-educe.util.add_corpus_filters(ap_filter)
 ap_filter.set_defaults(func=main_filter)
 
-ap_rewrite = subparsers.add_parser('rewrite', help='Read and write back without changing anything else; potentially reformats XML (for version control diffs)')
-ap_rewrite.add_argument('corpus', metavar='DIR')
-ap_rewrite.add_argument('--output', '-o', metavar='DIR')
+ap_rewrite = subparsers.add_parser('rewrite', help='read and write back without changing anything else; potentially reformats XML (for version control diffs)')
 ap_rewrite_mutex = ap_rewrite.add_mutually_exclusive_group()
+add_usual_input_args(ap_rewrite)
+add_usual_output_args(ap_rewrite_mutex)
 ap_rewrite_mutex.add_argument('--diff-friendly',   action='store_true', help='Normalise for diffing')
-ap_rewrite_mutex.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
-educe.util.add_corpus_filters(ap_rewrite)
 ap_rewrite.set_defaults(func=main_rewrite)
 
-ap_nudge = subparsers.add_parser('nudge', help='Slightly adjust unit annotation boundaries')
-ap_nudge.add_argument('corpus', metavar='DIR')
-ap_nudge.add_argument('doc',    metavar='DOC')
-ap_nudge.add_argument('subdoc', metavar='SUBDOC')
-ap_nudge.add_argument('start',  metavar='INT', type=int, help='Text span start')
-ap_nudge.add_argument('end',    metavar='INT', type=int, help='Text span end')
-ap_nudge.add_argument('nudge_start',  metavar='INT', type=int, help='Adjust start [-1 to 1]')
-ap_nudge.add_argument('nudge_end',    metavar='INT', type=int, help='Adjust end   [-1 to 1]')
-ap_nudge.add_argument('--allow-shove', action='store_true', help='Allow adjustments larger than 1')
-ap_nudge.add_argument('--output', '-o', metavar='DIR')
-ap_nudge.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
+ap_nudge = subparsers.add_parser('nudge', help='slightly adjust unit annotation boundaries')
+add_usual_input_args(ap_nudge, doc_subdoc_required=True)
+add_usual_output_args(ap_nudge)
+ap_nudge.add_argument('start',  metavar='INT', type=int, help='text span start')
+ap_nudge.add_argument('end',    metavar='INT', type=int, help='text span end')
+ap_nudge.add_argument('nudge_start',  metavar='INT', type=int, help='adjust start [-1 to 1]')
+ap_nudge.add_argument('nudge_end',    metavar='INT', type=int, help='adjust end   [-1 to 1]')
+ap_nudge.add_argument('--allow-shove', action='store_true', help='allow adjustments larger than 1')
 ap_nudge.set_defaults(func=main_nudge)
 
-ap_insert = subparsers.add_parser('insert', help='Insert new text into a portion')
-ap_insert.add_argument('insert', metavar='DIR', help='Dir with just one pair of .aa/.ac files')
-ap_insert.add_argument('corpus', metavar='DIR', help='Corpus')
-ap_insert.add_argument('doc',    metavar='DOC')
-ap_insert.add_argument('target', metavar='SUBDOC')
-ap_insert.add_argument('start',  metavar='INT', type=int, help='Insert before Nth char')
-ap_insert.add_argument('--output', '-o', metavar='DIR')
-ap_insert.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
+ap_insert = subparsers.add_parser('insert', help='insert new text into a portion')
+add_usual_input_args(ap_insert, doc_subdoc_required=True, help_suffix='to insert into')
+add_usual_output_args(ap_insert)
+ap_insert.add_argument('insert', metavar='DIR', help='dir with just one pair of .aa/.ac files')
+ap_insert.add_argument('start',  metavar='INT', type=int, help='insert before Nth char')
 ap_insert.set_defaults(func=main_insert)
 
 ap_move = subparsers.add_parser('move', help='Move text from one portion to another')
-ap_move.add_argument('corpus', metavar='DIR')
-ap_move.add_argument('doc',    metavar='DOC')
-ap_move.add_argument('source', metavar='SUBDOC')
+add_usual_input_args(ap_move, doc_subdoc_required=True, help_suffix='to move from')
+add_usual_output_args(ap_move)
 ap_move.add_argument('start',  metavar='INT', type=int, help='Text span start')
 ap_move.add_argument('end',    metavar='INT', type=int, help='Text span end')
 ap_move.add_argument('target', metavar='SUBDOC')
-ap_move.add_argument('--output', '-o', metavar='DIR')
-ap_move.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 ap_move.set_defaults(func=main_move)
 
 ap_merge_dia = subparsers.add_parser('merge-dialogue', help='Merge several dialogue level annotations into one')
-ap_merge_dia.add_argument('corpus', metavar='DIR')
-ap_merge_dia.add_argument('doc',    metavar='DOC')
-ap_merge_dia.add_argument('subdoc', metavar='SUBDOC')
+add_usual_input_args(ap_merge_dia, doc_subdoc_required=True, help_suffix='in which to merge')
 ap_merge_dia.add_argument('--dialogues',    metavar='ANNO_ID', nargs='+')
-ap_merge_dia.add_argument('--output', '-o', metavar='DIR')
-ap_merge_dia.add_argument('--overwrite-input', action='store_true', help='Save results back to input dir')
 ap_merge_dia.set_defaults(func=main_merge_dia)
 
 arg_parser.add_argument('--verbose', '-v',
