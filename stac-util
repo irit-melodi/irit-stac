@@ -652,6 +652,13 @@ def main_nudge(args):
                 % (args.nudge_start, args.nudge_end)
         print >> sys.stderr, msg
         sys.exit(1)
+    if not args.allow_shove and (args.annotator or args.stage):
+        sys.exit("Use --allow-shove if you really mean to limit --stage or --annotator")
+    if args.stage:
+        if args.stage != 'unannotated' and not args.annotator:
+            sys.exit("--annotator is required unless --stage is unannotated")
+        elif args.stage == 'unannotated' and args.annotator:
+            sys.exit("--annotator is forbidden if --stage is unannotated")
     is_interesting = educe.util.mk_is_interesting(args)
     output_dir     = get_output_dir(args)
     reader         = stac.Reader(args.corpus)
@@ -824,6 +831,8 @@ ap_nudge.add_argument('end',    metavar='INT', type=int, help='text span end')
 ap_nudge.add_argument('nudge_start',  metavar='INT', type=int, help='adjust start [-1 to 1]')
 ap_nudge.add_argument('nudge_end',    metavar='INT', type=int, help='adjust end   [-1 to 1]')
 ap_nudge.add_argument('--allow-shove', action='store_true', help='allow adjustments larger than 1')
+ap_nudge.add_argument('--stage',     metavar='STAGE',  choices=['discourse', 'units', 'unannotated'])
+ap_nudge.add_argument('--annotator', metavar='STRING')
 ap_nudge.set_defaults(func=main_nudge)
 
 ap_insert = subparsers.add_parser('insert', help='insert new text into a portion')
