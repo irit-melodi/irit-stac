@@ -811,8 +811,13 @@ ap_filter.set_defaults(func=main_filter)
 ap_rewrite = subparsers.add_parser('rewrite', help='read and write back without changing anything else; potentially reformats XML (for version control diffs)')
 ap_rewrite_mutex = ap_rewrite.add_mutually_exclusive_group()
 add_usual_input_args(ap_rewrite)
-add_usual_output_args(ap_rewrite_mutex)
+# we want to forbid --diff-friendly --overwrite-input
+# but allow --diff-friendly --output
 ap_rewrite_mutex.add_argument('--diff-friendly',   action='store_true', help='Normalise for diffing')
+ap_rewrite_mutex.add_argument('--overwrite-input', action='store_true',
+                              help='save results back to input dir')
+ap_rewrite.add_argument('--output', '-o', metavar='DIR',
+                        help='output directory (default mktemp)')
 ap_rewrite.set_defaults(func=main_rewrite)
 
 ap_rename = subparsers.add_parser('rename', help='rename an annotation')
