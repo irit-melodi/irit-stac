@@ -13,23 +13,24 @@ DECODE_FLAGS="-C $SCRIPT_DIR/stac-features.config"
 DECODER=attelo
 
 for dataset in all; do
-    $DECODER $DECODE_FLAGS $DATA_DIR/$dataset.edu-pairs$DATA_EXT $DATA_DIR/$dataset.relations$DATA_EXT -l bayes -d mst
+    $DECODER evaluate $DECODE_FLAGS\
+        $DATA_DIR/$dataset.edu-pairs$DATA_EXT $DATA_DIR/$dataset.relations$DATA_EXT -l bayes -d mst
 
     # test stand-alone parser for stac
     # 1) train and save attachment model
     # -i
-    $DECODER $DECODE_FLAGS -S $DATA_DIR/$dataset.edu-pairs$DATA_EXT -l bayes
+    $DECODER learn $DECODE_FLAGS $DATA_DIR/$dataset.edu-pairs$DATA_EXT -l bayes
     mv attach.model $dataset.attach.model
 
     # 2) predict attachment (same instances here, but should be sth else) 
     # NB: updated astar decoder seems to fail / TODO: check with the real subdoc id
     # -i
-    $DECODER $DECODE_FLAGS -T -A $dataset.attach.model -o tmp\
+    $DECODER decode $DECODE_FLAGS -A $dataset.attach.model -o tmp\
         $DATA_DIR/$dataset.edu-pairs$DATA_EXT -d mst
 
     # attach + relations: TODO: relation file is not generated properly yet
     # 1b) train + save attachemtn+relations models
-    $DECODER $DECODE_FLAGS -S\
+    $DECODER learn $DECODE_FLAGS\
         $DATA_DIR/$dataset.edu-pairs$DATA_EXT\
         $DATA_DIR/$dataset.relations$DATA_EXT\
         -l bayes
@@ -38,7 +39,7 @@ for dataset in all; do
 
     # 2b) predict attachment + relations
     # -i
-    $DECODER $DECODE_FLAGS -T -A $dataset.attach.model -R $dataset.relations.model -o tmp/\
+    $DECODER decode $DECODE_FLAGS -A $dataset.attach.model -R $dataset.relations.model -o tmp/\
         $DATA_DIR/$dataset.edu-pairs$DATA_EXT\
         $DATA_DIR/$dataset.relations$DATA_EXT\
         -d mst
