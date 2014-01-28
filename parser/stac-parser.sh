@@ -11,8 +11,11 @@ STAC_DIR=$PWD
 popd > /dev/null
 CODE_DIR=$STAC_DIR/code
 DATA_DIR=$STAC_DIR/data
+SNAPSHOT_DIR="$DATA_DIR/SNAPSHOTS/latest"
 
 SHIPPED_TAGGER=ark-tweet-nlp-0.3.2.jar
+ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
+ATTELO_DECODER=mst
 
 if [ -e $STAC_DIR/lib/$SHIPPED_TAGGER ]; then
     TAGGER_JAR=$STAC_DIR/lib/$SHIPPED_TAGGER
@@ -59,5 +62,29 @@ python $CODE_DIR/run-3rd-party --live --ark-tweet-nlp $TAGGER_JAR $T $T
 # extract features
 python $CODE_DIR/queries/rel-info --live $T $DATA_DIR/resources/lexicon $T
 
-# TODO
-echo >&2 "TODO: feed $T/extracted-features.csv to the parser"
+
+# run the decoder
+# TODO - not sure if we really need to feed different data for
+# attachments ande relations here (right now just duplicating
+mkdir $T/parsed
+pushd $T/parsed > /dev/null
+attelo decode -C "$ATTELO_CONFIG"\
+    -A "$SNAPSHOT_DIR/attach.model"\
+    -R "$SNAPSHOT_DIR/relations.model"\
+    -d "$ATTELO_DECODER"\
+    -o $T/parsed\
+    "$T/extracted-features.csv"\
+    "$T/extracted-features.csv"
+popd > /dev/null
+
+PARSED0=$(ls -1 $T/parsed/*.csv | head -n 1)
+if [ ! -z "$PARSED0" ]; then
+    mkdir -p $OUTPUT_DIR
+    head -n 1 $PARSED0 > $OUTPUT_DIR/parsed.csv
+    for i in "$T/parsed/"*.csv; do
+        tail -n +2 "$i" >> $OUTPUT_DIR/parsed.csv
+    done
+fi
+
+$SCRIPT_DIR/parse-to-glozz $T $OUTPUT_DIR/parsed.csv $OUTPUT_DIR/parsed
+glozz-graph --live $OUTPUT_DIR/parsed $OUTPUT_DIR/parsed
