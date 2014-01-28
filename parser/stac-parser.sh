@@ -15,7 +15,7 @@ DATA_DIR=$STAC_DIR/data
 SHIPPED_TAGGER=ark-tweet-nlp-0.3.2.jar
 
 if [ -e $STAC_DIR/lib/$SHIPPED_TAGGER ]; then
-    TAGGER_JAR=$1
+    TAGGER_JAR=$STAC_DIR/lib/$SHIPPED_TAGGER
 else
     echo >&2 "Need $SHIPPED_TAGGER in $STAC_DIR/lib"
     echo >&2 "See http://www.ark.cs.cmu.edu/TweetNLP"
