@@ -7,14 +7,18 @@ set -e
 
 #test cross-validation avec attachement et relations
 #
-DATA_DIR=/tmp/charette-2014-01-13
+DATA_DIR=$SCRIPT_DIR/../../data/SNAPSHOTS/latest
 DATA_EXT=.csv # .2.csv
 DECODE_FLAGS="-C $SCRIPT_DIR/stac-features.config"
 DECODER=attelo
 
+T=$(mktemp -d -t stac.XXXX)
+cd $T
+
 for dataset in all; do
     $DECODER evaluate $DECODE_FLAGS\
-        $DATA_DIR/$dataset.edu-pairs$DATA_EXT $DATA_DIR/$dataset.relations$DATA_EXT -l bayes -d mst
+        $DATA_DIR/$dataset.edu-pairs$DATA_EXT $DATA_DIR/$dataset.relations$DATA_EXT -l bayes -d mst\
+        > scores
 
     # test stand-alone parser for stac
     # 1) train and save attachment model
@@ -44,6 +48,7 @@ for dataset in all; do
         $DATA_DIR/$dataset.relations$DATA_EXT\
         -d mst
 done
+echo $T >&2
 
 # results
 #socl
