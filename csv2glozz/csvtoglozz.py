@@ -38,7 +38,8 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 import copy
 import csv, sys, codecs
 import datetime, time
-from prettifyxml import prettify
+
+from stac.prettifyxml import prettify
 
 def append_unit(root, unit_id, date, type, features, left, right):
     if right < left:
