@@ -1,7 +1,12 @@
+"""
+The dialogue and turn surrounding an EDU along with some convenient
+information about it
+"""
+
 import warnings
 from educe import stac
 
-class Context:
+class Context(object):
     """
     Representation of the surrounding context for an EDU,
     basically the relevant enclosing annotations: turns,
@@ -16,64 +21,77 @@ class Context:
 
     """
     def __init__(self, turn, dialogue, position, first):
-        self.turn       = turn
-        self.dialogue   = dialogue
-        self.position   = position
-        self.first      = first
+        self.turn = turn
+        self.dialogue = dialogue
+        self.position = position
+        self.first = first
 
     @classmethod
     def for_edu(cls, doc, edu):
-        edu_span    = edu.text_span()
+        """
+        Extract the context for a single EDU
+        """
+        edu_span = edu.text_span()
         surrounders = containing(edu_span, doc.units)
 
-        def the(ty):
-            xs = [ x for x in surrounders if x.type == ty ]
-            if len(xs) == 1:
-                return xs[0]
+        def the(typ):
+            """
+            Return the surrounding annotation of the given type.
+            We are expecting there to be exactly one such surrounder.
+            If none, we we consider it worth an exception. If more
+            than one, we grit our teeth and move.
+            """
+            matches = [x for x in surrounders if x.type == typ]
+            if len(matches) == 1:
+                return matches[0]
             else:
-                msg = 'Was expecting exactly one %s for edu %s, got %d' % (ty, edu.identifier(), len(xs))
-                if xs:
+                msg = "Was expecting exactly one %s for edu %s, got %d"\
+                        % (typ, edu.identifier(), len(matches))
+                if matches:
                     warnings.warn(msg)
-                    return xs[0]
+                    return matches[0]
                 else:
                     raise Exception(msg)
 
-        turn     = the('Turn')
+        turn = the('Turn')
         dialogue = the('Dialogue')
         # the turns in this dialogue
-        dturns   = sorted(turns_in_span(doc, dialogue.span), key=lambda x:x.span)
+        dturns = sorted(turns_in_span(doc, dialogue.span), key=lambda x: x.span)
         position = dturns.index(turn)
         if position is None:
-            msg = 'For EDU %s, was expecting turn to be %s, but it\'s not in dialogue %s'\
-                    % (edu.identifier(), turn.local_id(), dialogue.local_id())
-            raise Exception(msg)
+            raise Exception(("For EDU %s, was expecting " % edu.identifier()) +
+                            ("turn to be %s, but it's " % turn.local_id()) +
+                            ("not in dialogue %s" % dialogue.local_id()))
         first = dturns[0]
         return cls(turn, dialogue, position, first)
 
-def enclosed(sp, xs):
+def enclosed(span, annos):
     """
     Given an iterable of standoff, pick just those that are
     enclosed by the given span (ie. are smaller and within)
     """
-    return filter(lambda x: sp.encloses(x.span), xs)
+    return [anno for anno in annos if span.encloses(anno.span)]
 
-def containing(sp, xs):
+
+def containing(span, annos):
     """
     Given an iterable of standoff, pick just those that
     enclose/contain the given span (ie. are bigger and around)
     """
-    return filter(lambda x: x.span.encloses(sp), xs)
+    return [anno for anno in annos if anno.span.encloses(span)]
+
 
 def edus_in_span(doc, span):
     """
     Given an document and a text span return the EDUs the
     document contains in that span
     """
-    return [ e for e in enclosed(span, doc.units) if stac.is_edu(e) ]
+    return [anno for anno in enclosed(span, doc.units) if stac.is_edu(anno)]
+
 
 def turns_in_span(doc, span):
     """
     Given a document and a text span, return the turns that the
     document contains in that span
     """
-    return [ e for e in enclosed(span, doc.units) if e.type == 'Turn' ]
+    return [anno for anno in enclosed(span, doc.units) if stac.is_turn(anno)]
