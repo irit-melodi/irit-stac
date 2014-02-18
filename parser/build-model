@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 pushd $(dirname $0) > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
@@ -17,6 +15,13 @@ ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
 DATASETS="socl-season1 pilot"
 
 mkdir -p $SNAPSHOT/tmp
+
+die () {
+    errcode=$?
+    echo "ARGH! Something went wrong; check the log files in $SNAPSHOT/tmp"
+    exit $errcode
+}
+trap die ERR
 
 for dset in $DATASETS; do
     echo >&2 "[build model] gathering features for $dset"
