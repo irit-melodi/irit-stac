@@ -6,9 +6,10 @@ Put subcommand help text here
 """
 
 from stac.util.args import\
-        add_usual_input_args, add_usual_output_args
+    add_usual_input_args, add_usual_output_args
 
 NAME = 'insert-name-here'
+
 
 def config_argparser(parser):
     """
@@ -18,6 +19,7 @@ def config_argparser(parser):
     are to be added.
     """
     pass
+
 
 def main(args):
     """

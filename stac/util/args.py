@@ -58,6 +58,7 @@ def announce_output_dir(output_dir):
     """
     print >> sys.stderr, "Output files written to", output_dir
 
+
 def add_usual_input_args(parser,
                          doc_subdoc_required=False,
                          help_suffix=None):

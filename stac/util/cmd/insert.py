@@ -11,18 +11,19 @@ from educe import stac
 
 from stac.util.annotate import show_diff
 from stac.util.args import\
-        add_usual_input_args, add_usual_output_args,\
-        get_output_dir, announce_output_dir
+    add_usual_input_args, add_usual_output_args,\
+    get_output_dir, announce_output_dir
 from stac.util.output import save_document
 from stac.util.doc import\
-        compute_renames, move_portion
+    compute_renames, move_portion
 from stac.util.cmd.move import is_requested
-
-NAME = 'insert'
 
 # ---------------------------------------------------------------------
 # command and options
 # ---------------------------------------------------------------------
+
+NAME = 'insert'
+
 
 def config_argparser(parser):
     """

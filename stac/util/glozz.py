@@ -13,7 +13,6 @@ from educe import stac
 from educe.glozz import GlozzException
 
 
-
 def anno_id_from_tuple(author_date):
     """
     Glozz string representation of authors and dates (AUTHOR_DATE)
@@ -52,6 +51,7 @@ def set_anno_date(anno, date):
     Replace the annotation creation date with the given integer
     """
     anno.metadata['creation-date'] = str(date)
+
 
 def is_dialogue(anno):
     """

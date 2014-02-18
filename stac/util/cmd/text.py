@@ -15,6 +15,7 @@ from stac.util.glozz import is_dialogue
 
 NAME = 'text'
 
+
 def config_argparser(parser):
     """
     Flags for the text subcommand.

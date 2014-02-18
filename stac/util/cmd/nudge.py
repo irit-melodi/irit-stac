@@ -13,10 +13,11 @@ from educe.annotation import Span
 
 from stac.util.annotate import show_diff
 from stac.util.args import\
-        add_usual_input_args, add_usual_output_args,\
-        read_corpus, get_output_dir, announce_output_dir
+    add_usual_input_args, add_usual_output_args,\
+    read_corpus, get_output_dir, announce_output_dir
 from stac.util.doc import narrow_to_span
 from stac.util.output import save_document
+
 
 def _enclosing_turn_span(doc, span):
     """
@@ -28,7 +29,8 @@ def _enclosing_turn_span(doc, span):
         return stac.is_turn(anno) and anno.text_span().encloses(span)
     spans = [span] + [u.text_span() for u in doc.units if is_match(u)]
     return Span(min(x.char_start for x in spans),
-                max(x.char_end   for x in spans))
+                max(x.char_end for x in spans))
+
 
 def _is_nudge(offset):
     """
@@ -36,6 +38,7 @@ def _is_nudge(offset):
     a "nudge"
     """
     return abs(offset) <= 1
+
 
 def _mini_diff(k, old_doc_span, new_doc_span):
     """
@@ -58,6 +61,7 @@ def _mini_diff(k, old_doc_span, new_doc_span):
 # ---------------------------------------------------------------------
 
 NAME = 'nudge'
+
 
 def config_argparser(parser):
     """
@@ -93,10 +97,10 @@ def _screen_args(args):
     if not args.allow_shove and\
             (not _is_nudge(args.nudge_start) or
              not _is_nudge(args.nudge_end)):
-        sys.exit("Use --allow-shove if you really mean to nudge by [%d,%d]"\
-                % (args.nudge_start, args.nudge_end))
+        sys.exit("Use --allow-shove if you really mean to nudge by [%d,%d]"
+                 % (args.nudge_start, args.nudge_end))
     if not args.allow_shove and (args.annotator or args.stage):
-        sys.exit("Use --allow-shove if you really mean to limit "\
+        sys.exit("Use --allow-shove if you really mean to limit "
                  + "--stage or --annotator")
     if args.stage:
         if args.stage != 'unannotated' and not args.annotator:
@@ -118,7 +122,7 @@ def main(args):
 
     old_span = Span(args.start, args.end)
     new_span = Span(args.start + args.nudge_start,
-                    args.end   + args.nudge_end)
+                    args.end + args.nudge_end)
     for k in corpus:
         old_doc = corpus[k]
         new_doc = copy.deepcopy(old_doc)
@@ -132,6 +136,6 @@ def main(args):
             print >> sys.stderr, "\n".join(diffs).encode('utf-8')
         else:
             print >> sys.stderr,\
-                    "WARNING: No annotations found for %s in %s" % (old_span, k)
+                "WARNING: No annotations found for %s in %s" % (old_span, k)
         save_document(output_dir, k, new_doc)
     announce_output_dir(output_dir)

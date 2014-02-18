@@ -13,10 +13,11 @@ from educe.annotation import Span
 
 from stac.util.annotate import show_diff
 from stac.util.args import\
-        add_usual_input_args, add_usual_output_args,\
-        get_output_dir, announce_output_dir
+    add_usual_input_args, add_usual_output_args,\
+    get_output_dir, announce_output_dir
 from stac.util.doc import compute_renames, move_portion
 from stac.util.output import save_document
+
 
 def is_target(args):
     """
@@ -37,6 +38,7 @@ def is_requested(args):
         return k.doc == args.doc and k.subdoc == args.subdoc
     return is_match
 
+
 def read_source_corpus(args):
     """
     Read the part of the corpus that we want to move from
@@ -44,6 +46,7 @@ def read_source_corpus(args):
     reader = stac.Reader(args.corpus)
     src_files = reader.filter(reader.files(), is_requested(args))
     return reader.slurp(src_files)
+
 
 def read_target_corpus(args):
     """
@@ -58,6 +61,7 @@ def read_target_corpus(args):
 # ---------------------------------------------------------------------
 
 NAME = 'move'
+
 
 def config_argparser(parser):
     """
@@ -75,6 +79,7 @@ def config_argparser(parser):
                         help='Text span end')
     parser.add_argument('target', metavar='SUBDOC')
     parser.set_defaults(func=main)
+
 
 def main(args):
     """

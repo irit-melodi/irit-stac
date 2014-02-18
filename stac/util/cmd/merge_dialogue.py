@@ -12,13 +12,14 @@ from educe.annotation import Span
 from educe.glozz import GlozzException
 
 from stac.util.args import\
-        add_usual_input_args, add_usual_output_args, anno_id,\
-        read_corpus,\
-        get_output_dir, announce_output_dir
+    add_usual_input_args, add_usual_output_args, anno_id,\
+    read_corpus,\
+    get_output_dir, announce_output_dir
 from stac.util.glozz import\
-        anno_id_from_tuple, anno_id_to_tuple,\
-        get_turn, is_dialogue
+    anno_id_from_tuple, anno_id_to_tuple,\
+    get_turn, is_dialogue
 from stac.util.output import save_document
+
 
 def _get_annotation_with_id(sought_tuple, annotations):
     """
@@ -78,6 +79,7 @@ def _dialogues_in_turns(corpus, turn1, turn2):
     matching_dialogues = filter(is_in_range, doc.annotations())
     return [anno_id_to_tuple(x.local_id()) for x in matching_dialogues]
 
+
 def _merge_dialogues_in_document(sought, doc):
     """
     Given an iterable of dialogue annotation ids, merge them
@@ -92,19 +94,21 @@ def _merge_dialogues_in_document(sought, doc):
                        key=lambda x: x.text_span().char_start)
     combined = copy.deepcopy(dialogues[0])
     combined.span =\
-            Span(min(x.text_span().char_start for x in dialogues),
-                 max(x.text_span().char_end   for x in dialogues))
+        Span(min(x.text_span().char_start for x in dialogues),
+             max(x.text_span().char_end for x in dialogues))
     for feat in ['Trades', 'Gets', 'Dice_rolling']:
         combined.features[feat] = _concatenate_features(dialogues, feat)
     for dialogue in dialogues:
         doc.units.remove(dialogue)
     doc.units.append(combined)
 
+
 # ---------------------------------------------------------------------
 # command and args
 # ---------------------------------------------------------------------
 
-NAME='merge-dialogue'
+NAME = 'merge-dialogue'
+
 
 def config_argparser(parser):
     """
@@ -126,6 +130,7 @@ def config_argparser(parser):
                               nargs=2,
                               help='eg. 187 192')
     parser.set_defaults(func=main)
+
 
 def main(args):
     """

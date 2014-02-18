@@ -13,19 +13,22 @@ import educe.util
 
 from stac.util.annotate import sorted_first_widest
 from stac.util.args import\
-        add_usual_input_args,\
-        get_output_dir, announce_output_dir
+    add_usual_input_args,\
+    get_output_dir, announce_output_dir
 from stac.util.output import save_document
+
 
 def _sans_modified_by(anno):
     """
-    Strip the lastModifier and lastModificationDate annotations inserted by
-    Glozz. These would constitute diff-noise (see `_diff_friendly` for details).
+    Strip the lastModifier and lastModificationDate annotations inserted
+    by Glozz. These would constitute diff-noise (see `_diff_friendly`
+    for details).
     """
     anno2 = copy.deepcopy(anno)
     anno2.metadata['lastModifier'] = 'n/a'
     anno2.metadata['lastModificationDate'] = 0
     return anno2
+
 
 def _diff_friendly(annos):
     """
@@ -42,6 +45,7 @@ def _diff_friendly(annos):
 # ---------------------------------------------------------------------
 
 NAME = 'rewrite'
+
 
 def config_argparser(parser):
     """
@@ -61,6 +65,7 @@ def config_argparser(parser):
     parser.add_argument('--output', '-o', metavar='DIR',
                         help='output directory (default mktemp)')
     parser.set_defaults(func=main)
+
 
 def main(args):
     """

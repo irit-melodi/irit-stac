@@ -9,14 +9,15 @@ import re
 import sys
 
 from stac.util.args import\
-        add_usual_input_args, add_usual_output_args,\
-        read_corpus,\
-        get_output_dir, announce_output_dir,\
-        anno_id
+    add_usual_input_args, add_usual_output_args,\
+    read_corpus,\
+    get_output_dir, announce_output_dir,\
+    anno_id
 from stac.util.glozz import anno_id_to_tuple
 from stac.util.output import save_document
 
 NAME = 'filter'
+
 
 def config_argparser(parser):
     """
@@ -33,6 +34,7 @@ def config_argparser(parser):
                         help='id to delete')
     parser.set_defaults(func=main)
 
+
 def main(args):
     """
     Subcommand main.
@@ -45,10 +47,12 @@ def main(args):
     preds = []
     if args.type:
         rgx = re.compile(args.type)
+
         def pred_type(anno):
             "Annotation is of the desired type"
             match = re.search(rgx, anno.type)
             return match is not None and match.span() != (0, 0)
+
         preds.append(pred_type)
     if args.not_id:
         def pred_not_id(anno):

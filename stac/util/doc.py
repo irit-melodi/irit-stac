@@ -13,8 +13,9 @@ import copy
 from educe.annotation import Unit, Span
 
 from stac.util.glozz import\
-        anno_id_from_tuple,\
-        anno_author, anno_date, set_anno_date
+    anno_id_from_tuple,\
+    anno_author, anno_date, set_anno_date
+
 
 def evil_set_id(anno, author, date):
     """
@@ -80,8 +81,8 @@ def compute_renames(avoid, incoming):
             author = anno_author(anno)
             date = anno_date(anno)
             dates[author].append(date)
-    min_dates = {k:min(v) for k, v in dates.items()}
-    max_dates = {k:max(v) for k, v in dates.items()}
+    min_dates = {k: min(v) for k, v in dates.items()}
+    max_dates = {k: max(v) for k, v in dates.items()}
     for doc2 in incoming.values():
         for anno in doc2.annotations():
             author = anno_author(anno)
@@ -104,11 +105,12 @@ def narrow_to_span(doc, span):
     Return a deep copy of a document with only the text and
     annotations that are within the span specified by portion.
     """
-    offset = 0 - span.char_start
     def slice_annos(annos):
         "Return a copy of all annotations within a span"
         return [copy.copy(anno) for anno in annos
                 if span.encloses(anno.text_span())]
+
+    offset = 0 - span.char_start
     doc2 = copy.copy(doc)
     doc2.units = slice_annos(doc.units)
     doc2.schemas = slice_annos(doc.schemas)
@@ -167,15 +169,15 @@ def move_portion(renames, src_doc, tgt_doc, src_span, prepend=False):
         if src_span != snipped.text_span():
             print src_span
             print snipped.text_span()
-            raise Exception("Not yet implemented: prepending from other than " +
-                            "whole doc: %s" % src_span)
+            raise Exception("Not yet implemented: prepending from other " +
+                            "than whole doc: %s" % src_span)
         # tgt_doc is on the right
         evil_set_text(new_tgt_doc, src_txt + tgt_txt)
         return None, new_tgt_doc
     else:
         if src_span.char_start != 0:
-            raise Exception("Not yet implemented: moving from other than " +
-                            "document start: %s" % src_span)
+            raise Exception("Not yet implemented: moving from other " +
+                            "than document start: %s" % src_span)
         # tgt_doc is on the left
         evil_set_text(new_tgt_doc, tgt_txt + src_txt)
         leftover_src_span = Span(src_span.char_end, len(src_doc.text()))
