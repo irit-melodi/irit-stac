@@ -11,6 +11,7 @@ STAC Swiss-Army knife modeled on the Glozz equivalent
 import argparse
 
 import stac.util.cmd.filter
+import stac.util.cmd.graph
 import stac.util.cmd.insert
 import stac.util.cmd.text
 import stac.util.cmd.merge_dialogue
@@ -20,6 +21,7 @@ import stac.util.cmd.rename
 import stac.util.cmd.rewrite
 
 SUBCOMMANDS = [stac.util.cmd.text,
+               stac.util.cmd.graph,
                stac.util.cmd.filter,
                stac.util.cmd.rename,
                stac.util.cmd.rewrite,
