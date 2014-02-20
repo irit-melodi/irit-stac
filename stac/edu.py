@@ -4,8 +4,9 @@ information about it
 """
 
 import warnings
-from educe import stac, graph
+from educe import graph
 from educe.annotation import Annotation
+import educe.stac
 
 # ---------------------------------------------------------------------
 # enclosure graph
@@ -55,11 +56,11 @@ def _stac_enclosure_ranking(anno):
     key = None
     if anno.type == "token":
         key = "token"
-    elif stac.is_edu(anno):
+    elif educe.stac.is_edu(anno):
         key = "edu"
-    elif stac.is_turn(anno):
+    elif educe.stac.is_turn(anno):
         key = "turn"
-    elif stac.is_dialogue(anno):
+    elif educe.stac.is_dialogue(anno):
         key = "dialogue"
 
     return ranking[key] if key else 0
@@ -177,7 +178,7 @@ class Context(object):
         """
         turn = cls._the(edu, enclosure.outside(edu), 'Turn')
         dialogue = cls._the(edu, enclosure.outside(turn), 'Dialogue')
-        dturns = filter(stac.is_turn, enclosure.inside(dialogue))
+        dturns = filter(educe.stac.is_turn, enclosure.inside(dialogue))
         tokens = [wrapped.token for wrapped in enclosure.inside(edu)
                   if isinstance(wrapped,WrappedToken)]
         return cls._mk_context(edu, turn, dialogue, dturns, tokens=tokens)
@@ -195,7 +196,7 @@ class Context(object):
             egraph = EnclosureGraph(doc)
         egraph.reduce()
         contexts = {}
-        for edu in filter(stac.is_edu, doc.units):
+        for edu in filter(educe.stac.is_edu, doc.units):
             contexts[edu] = cls._for_edu_given_graph(egraph, edu)
         return contexts
 
@@ -220,7 +221,8 @@ def edus_in_span(doc, span):
     Given an document and a text span return the EDUs the
     document contains in that span
     """
-    return [anno for anno in enclosed(span, doc.units) if stac.is_edu(anno)]
+    return [anno for anno in enclosed(span, doc.units)
+            if educe.stac.is_edu(anno)]
 
 
 def turns_in_span(doc, span):
@@ -228,4 +230,5 @@ def turns_in_span(doc, span):
     Given a document and a text span, return the turns that the
     document contains in that span
     """
-    return [anno for anno in enclosed(span, doc.units) if stac.is_turn(anno)]
+    return [anno for anno in enclosed(span, doc.units)
+            if educe.stac.is_turn(anno)]
