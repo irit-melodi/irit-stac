@@ -4,6 +4,7 @@ import educe.stac.graph   as egr
 from   educe.stac.tests import FakeEDU, FakeCDU, FakeRelInst, FakeDocument, FakeKey, graph_ids
 
 from   stac_sanity import *
+from stac.edu import Context
 
 class SanityCheckerTest(unittest.TestCase):
     def setUp(self):
@@ -123,7 +124,7 @@ class DialogueBoundaryTest(SanityCheckerTest):
         rel  = FakeRelInst('r', src, tgt)
 
         doc      = FakeDocument(self.edus1, [rel], [])
-        contexts = edu_contexts(doc)
+        contexts = Context.for_edus(doc)
         cp       = doc.copies
         self.assertTrue(stac.is_edu(cp[src]))
         self.assertTrue(stac.is_edu(cp[rel].source))
@@ -135,7 +136,7 @@ class DialogueBoundaryTest(SanityCheckerTest):
         rel  = FakeRelInst('r', src, tgt)
 
         doc      = FakeDocument(self.edus1, [rel], [])
-        contexts = edu_contexts(doc)
+        contexts = Context.for_edus(doc)
         cp       = doc.copies
         self.assertTrue(is_cross_dialogue(contexts)(cp[rel]))
 
@@ -146,7 +147,7 @@ class DialogueBoundaryTest(SanityCheckerTest):
         rel = FakeRelInst('r', src, tgt)
 
         doc      = FakeDocument(self.edus1, [rel], [cdu])
-        contexts = edu_contexts(doc)
+        contexts = Context.for_edus(doc)
         cp       = doc.copies
         self.assertFalse(is_cross_dialogue(contexts)(cp[rel]))
         self.assertFalse(is_cross_dialogue(contexts)(cp[cdu]))
@@ -158,13 +159,13 @@ class DialogueBoundaryTest(SanityCheckerTest):
         rel = FakeRelInst('r', src, tgt)
 
         doc      = FakeDocument(self.edus1, [rel], [cdu])
-        contexts = edu_contexts(doc)
+        contexts = Context.for_edus(doc)
         cp       = doc.copies
         self.assertTrue(is_cross_dialogue(contexts)(cp[rel]))
 
     def test_cdu_itself_cross(self):
         cdu = FakeCDU('c1',[self.edu1_1, self.edu2_1])
         doc      = FakeDocument(self.edus1, [], [cdu])
-        contexts = edu_contexts(doc)
+        contexts = Context.for_edus(doc)
         cp       = doc.copies
         self.assertTrue(is_cross_dialogue(contexts)(cp[cdu]))

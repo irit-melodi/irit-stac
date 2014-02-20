@@ -10,17 +10,6 @@ from   educe.stac.tests import FakeEDU, FakeCDU, FakeRelInst, FakeDocument
 
 from   stac.edu import Context
 
-def edu_contexts(doc):
-    contexts = {}
-    for u in doc.units:
-        if stac.is_edu(u):
-            try:
-                contexts[u] = Context.for_edu(doc, u)
-            except Exception as e:
-                print >> sys.stderr, "WARNING: error trying to fetch context for edu", u
-                print >> sys.stderr, e
-    return contexts
-
 def is_cross_dialogue(contexts):
     """
     The units connected by this relation (or cdu)
