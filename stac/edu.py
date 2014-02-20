@@ -108,17 +108,21 @@ class Context(object):
     * turn     - the turn surrounding this EDU
     * dialogue - the dialogue surrounding this EDU
     * position - this edu occurs in the Nth turn of this dialogue
+    * dialoguue_turns - all the turns in the dialogue surrounding this EDU
     * first    - the first turn in this EDU's dialogue
+    * tokens   - (may not be present): tokens contained within this EDU
 
     """
-    def __init__(self, turn, dialogue, position, first):
+    def __init__(self, turn, dialogue, position, dialogue_turns, first, tokens=None):
         self.turn = turn
         self.dialogue = dialogue
         self.position = position
+        self.dialogue_turns = dialogue_turns
         self.first = first
+        self.tokens = tokens
 
     @classmethod
-    def _the(cls, surrounders, typ):
+    def _the(cls, edu, surrounders, typ):
         """
         Return the surrounding annotation of the given type.
         We are expecting there to be exactly one such surrounder.
@@ -138,7 +142,7 @@ class Context(object):
                 raise Exception(msg)
 
     @classmethod
-    def _mk_context(cls, edu, turn, dialogue, dturns):
+    def _mk_context(cls, edu, turn, dialogue, dturns, tokens=None):
         """
         Build a context out of the minimum information we need
         """
@@ -149,7 +153,7 @@ class Context(object):
                             ("turn to be %s, but it's " % turn.local_id()) +
                             ("not in dialogue %s" % dialogue.local_id()))
         first = sorted_dturns[0]
-        return cls(turn, dialogue, position, first)
+        return cls(turn, dialogue, position, sorted_dturns, first, tokens)
 
     @classmethod
     def for_edu(cls, doc, edu):
@@ -159,8 +163,8 @@ class Context(object):
         edu_span = edu.text_span()
         surrounders = containing(edu_span, doc.units)
 
-        turn = cls._the(surrounders, 'Turn')
-        dialogue = cls._the(surrounders, 'Dialogue')
+        turn = cls._the(edu, surrounders, 'Turn')
+        dialogue = cls._the(edu, surrounders, 'Dialogue')
         # the turns in this dialogue
         dturns = turns_in_span(doc, dialogue.span)
         return cls._mk_context(edu, turn, dialogue, dturns)
@@ -171,10 +175,12 @@ class Context(object):
         Extract the context for a single EDU, but with the benefit of an
         enclosure graph to avoid repeatedly combing over objects
         """
-        turn = cls._the(enclosure.outside(edu), 'Turn')
-        dialogue = cls._the(enclosure.outside(turn), 'Dialogue')
+        turn = cls._the(edu, enclosure.outside(edu), 'Turn')
+        dialogue = cls._the(edu, enclosure.outside(turn), 'Dialogue')
         dturns = filter(stac.is_turn, enclosure.inside(dialogue))
-        return cls._mk_context(edu, turn, dialogue, dturns)
+        tokens = [wrapped.token for wrapped in enclosure.inside(edu)
+                  if isinstance(wrapped,WrappedToken)]
+        return cls._mk_context(edu, turn, dialogue, dturns, tokens=tokens)
 
     @classmethod
     def for_edus(cls, doc, postags=None):
@@ -183,7 +189,10 @@ class Context(object):
 
         :rtype dict(educe.glozz.Unit, Context)
         """
-        egraph = EnclosureGraph(doc)
+        if postags:
+            egraph = EnclosureGraph(doc, postags)
+        else:
+            egraph = EnclosureGraph(doc)
         egraph.reduce()
         contexts = {}
         for edu in filter(stac.is_edu, doc.units):
