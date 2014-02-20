@@ -9,8 +9,9 @@ import copy
 import os
 from cStringIO import StringIO
 
-from educe import glozz, stac
+from educe import glozz
 from educe.stac import stac_output_settings, stac_unannotated_output_settings
+import educe.stac
 
 # ---------------------------------------------------------------------
 # stac utilities
@@ -27,7 +28,7 @@ def output_path_stub(odir, k):
     like `{author:"bob", stage:units, doc:"pilot03", subdoc:"07"}` you might
     get something like `/tmp/foo/pilot03/units/pilot03_07`)
     """
-    relpath = stac.id_to_path(k)
+    relpath = educe.stac.id_to_path(k)
     ofile_dirname = os.path.join(odir, os.path.dirname(relpath))
     ofile_basename = os.path.basename(relpath)
     return os.path.join(ofile_dirname, ofile_basename)

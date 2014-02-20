@@ -7,7 +7,7 @@ Insert new text into a portion
 
 import sys
 
-from educe import stac
+import educe.stac
 
 from stac.util.annotate import show_diff
 from stac.util.args import\
@@ -53,7 +53,7 @@ def main(args):
         sys.exit("Sorry, only know how to deal with start=0 at the moment")
     output_dir = get_output_dir(args)
 
-    src_reader = stac.LiveInputReader(args.insert)
+    src_reader = educe.stac.LiveInputReader(args.insert)
     src_corpus = src_reader.slurp(src_reader.files())
 
     if not src_corpus:
@@ -65,7 +65,7 @@ def main(args):
     src_doc = src_corpus.values()[0]
     src_span = src_doc.text_span()
 
-    reader = stac.Reader(args.corpus)
+    reader = educe.stac.Reader(args.corpus)
     tgt_files = reader.filter(reader.files(), is_requested(args))
     tgt_corpus = reader.slurp(tgt_files)
 

@@ -8,8 +8,8 @@ Slightly adjust unit annotation boundaries
 import copy
 import sys
 
-from educe import stac
 from educe.annotation import Span
+import educe.stac
 
 from stac.util.annotate import show_diff
 from stac.util.args import\
@@ -26,7 +26,7 @@ def _enclosing_turn_span(doc, span):
     """
     def is_match(anno):
         "enclosing turn"
-        return stac.is_turn(anno) and anno.text_span().encloses(span)
+        return educe.stac.is_turn(anno) and anno.text_span().encloses(span)
     spans = [span] + [u.text_span() for u in doc.units if is_match(u)]
     return Span(min(x.char_start for x in spans),
                 max(x.char_end for x in spans))

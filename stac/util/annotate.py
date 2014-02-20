@@ -14,7 +14,7 @@ go a long way.
 import itertools
 import textwrap
 
-from educe import stac
+import educe.stac
 
 DEFAULT_INSERTS = {'Turn': ('\n', ''),
                    'Dialogue': ('\n', ''),
@@ -25,7 +25,7 @@ def rough_type(anno):
     """
     Simplify STAC annotation types
     """
-    if anno.type == 'Segment' or stac.is_edu(anno):
+    if anno.type == 'Segment' or educe.stac.is_edu(anno):
         return 'Segment'
     else:
         return anno.type

@@ -8,12 +8,12 @@ Read and write back without changing anything else; potentially reformats XML
 
 import copy
 
-from educe import stac
 import educe.util
 
 from stac.util.annotate import sorted_first_widest
 from stac.util.args import\
     add_usual_input_args,\
+    read_corpus,\
     get_output_dir, announce_output_dir
 from stac.util.output import save_document
 
@@ -74,11 +74,8 @@ def main(args):
     You shouldn't need to call this yourself if you're using
     `config_argparser`
     """
-    is_interesting = educe.util.mk_is_interesting(args)
+    corpus = read_corpus(args, verbose=True)
     output_dir = get_output_dir(args)
-    reader = stac.Reader(args.corpus)
-    anno_files = reader.filter(reader.files(), is_interesting)
-    corpus = reader.slurp(anno_files, verbose=True)
     for k in corpus:
         doc = corpus[k]
         if args.diff_friendly:

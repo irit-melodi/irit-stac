@@ -8,8 +8,8 @@ Put subcommand help text here
 import copy
 import sys
 
-from educe import stac
 from educe.annotation import Span
+import educe.stac
 
 from stac.util.annotate import show_diff
 from stac.util.args import\
@@ -43,7 +43,7 @@ def read_source_corpus(args):
     """
     Read the part of the corpus that we want to move from
     """
-    reader = stac.Reader(args.corpus)
+    reader = educe.stac.Reader(args.corpus)
     src_files = reader.filter(reader.files(), is_requested(args))
     return reader.slurp(src_files)
 
@@ -52,7 +52,7 @@ def read_target_corpus(args):
     """
     Read the part of the corpus that we want to move to
     """
-    reader = stac.Reader(args.corpus)
+    reader = educe.stac.Reader(args.corpus)
     tgt_files = reader.filter(reader.files(), is_target(args))
     return reader.slurp(tgt_files)
 

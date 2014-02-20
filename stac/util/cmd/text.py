@@ -7,7 +7,7 @@ Dump the text in documents with segment annotations
 
 import copy
 
-from educe import stac
+import educe.stac
 
 from stac.util.annotate import annotate, sorted_first_widest
 from stac.util.args import add_usual_input_args, read_corpus
@@ -36,7 +36,7 @@ def main(args):
     if you're using `config_argparser`
     """
     corpus = read_corpus(args, verbose=True)
-    for k in sorted(corpus, key=stac.id_to_path):
+    for k in sorted(corpus, key=educe.stac.id_to_path):
         doc = corpus[k]
 
         def anno(span=None):

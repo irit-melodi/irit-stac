@@ -9,9 +9,10 @@ import os.path
 import sys
 import codecs
 
-from educe import stac, graph
+from educe import graph
 from educe.stac import postag
 import educe.corpus
+import educe.stac
 import educe.stac.graph as stacgraph
 
 from stac.util.args import get_output_dir
@@ -26,10 +27,10 @@ def _read_corpus(args):
     """
     is_interesting = educe.util.mk_is_interesting(args)
     if args.live:
-        reader = stac.LiveInputReader(args.corpus)
+        reader = educe.stac.LiveInputReader(args.corpus)
         anno_files = reader.files()
     else:
-        reader = stac.Reader(args.corpus)
+        reader = educe.stac.Reader(args.corpus)
         anno_files = reader.filter(reader.files(), is_interesting)
     return reader.slurp(anno_files, verbose=True)
 

@@ -9,9 +9,8 @@ STAC Glozz conventions
 # Alternatively the stac module should be kicked out of educe and
 # moved into the stac tree
 
-from educe import stac
 from educe.glozz import GlozzException
-
+import educe.stac
 
 def anno_id_from_tuple(author_date):
     """
@@ -66,7 +65,8 @@ def get_turn(tid, doc):
     """
     def is_match(anno):
         "Is a turn with the right turn number"
-        return stac.is_turn(anno) and int(anno.features['Identifier']) == tid
+        return educe.stac.is_turn(anno) and\
+                int(anno.features['Identifier']) == tid
 
     turns = filter(is_match, doc.annotations())
     if not turns:
