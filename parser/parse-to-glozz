@@ -7,16 +7,13 @@
 import argparse
 import collections
 import codecs
-import copy
-import csv
 import shutil
 import os
 
 import educe.corpus
 import educe.glozz
 import educe.util
-from educe import stac
-from educe.corpus import FileId
+import educe.stac
 from educe.annotation import RelSpan, Relation
 import educe.stac.csv as stac_csv
 
@@ -57,7 +54,7 @@ k_label  = 'c#CLASS'
 # TODO: should really refactor with rel-info script
 def friendly_dialogue_id(k, dialogue):
     sp    = dialogue.span
-    bname = os.path.basename(stac.id_to_path(k))
+    bname = os.path.basename(educe.stac.id_to_path(k))
     return '%s_%04d_%04d' % (bname, sp.char_start, sp.char_end)
 
 # ----------------------------------------------------------------------
@@ -105,7 +102,7 @@ args=arg_parser.parse_args()
 # main
 # ---------------------------------------------------------------------
 
-reader     = stac.LiveInputReader(args.input)
+reader = educe.stac.LiveInputReader(args.input)
 anno_files = reader.files()
 corpus     = reader.slurp(anno_files, verbose=True)
 

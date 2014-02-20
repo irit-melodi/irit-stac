@@ -16,16 +16,11 @@ So far:
 """
 
 import argparse
-import codecs
-import copy
-import itertools
-import os.path
-import subprocess
 import sys
 
-from educe import stac, util
-from educe.annotation import Span
+from educe import util
 from educe.stac import postag, corenlp
+import educe.stac
 
 # ---------------------------------------------------------------------
 # args
@@ -66,10 +61,10 @@ if all(t is None for t in pipelines):
 # ---------------------------------------------------------------------
 
 if args.live:
-    reader = stac.LiveInputReader(args.idir)
+    reader = educe.stac.LiveInputReader(args.idir)
     anno_files = reader.files()
 else:
-    reader     = stac.Reader(args.idir)
+    reader = educe.stac.Reader(args.idir)
     anno_files = reader.filter(reader.files(), is_interesting)
 
 corpus     = reader.slurp(anno_files, verbose=True)
