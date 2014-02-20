@@ -10,84 +10,13 @@ import sys
 import codecs
 
 from educe import stac, graph
-from educe.annotation import\
-    Annotation
 from educe.stac import postag
 import educe.corpus
 import educe.stac.graph as stacgraph
 
 from stac.util.args import get_output_dir
 from stac.util.output import output_path_stub, mk_parent_dirs
-
-class WrappedToken(Annotation):
-    """
-    Thin wrapper around POS tagged token which adds a local_id
-    field for use by the EnclosureGraph mechanism
-    """
-
-    def __init__(self, token):
-        self.token = token
-        anno_id = WrappedToken._mk_id(token)
-        super(WrappedToken, self).__init__(anno_id,
-                                           token.span,
-                                           "token",
-                                           {"tag":token.tag,
-                                            "word":token.word})
-
-    @classmethod
-    def _mk_id(cls, token):
-        """
-        Generate a string that could work as a node identifier
-        in the enclosure graph
-        """
-        span = token.text_span()
-        return "%s_%s_%d_%d"\
-                % (token.word,
-                   token.tag,
-                   span.char_start,
-                   span.char_end)
-
-def _stac_enclosure_ranking(anno):
-    """
-    Given an annotation, return an integer representing its position in
-    a hierarchy of nodes that are expected to enclose each other.
-
-    Smaller negative numbers are higher (say the top of the hiearchy
-    might be something like -1000 whereas the very bottom would be 0)
-    """
-    ranking = {"token": -1,
-               "edu": -2,
-               "turn": -3,
-               "dialogue": -4}
-
-    key = None
-    if anno.type == "token":
-        key = "token"
-    elif stac.is_edu(anno):
-        key = "edu"
-    elif stac.is_turn(anno):
-        key = "turn"
-    elif stac.is_dialogue(anno):
-        key = "dialogue"
-
-    return ranking[key] if key else 0
-
-
-class StacEnclosureDotGraph(graph.EnclosureDotGraph):
-    """
-    Conventions for visualising STAC enclosure graphs
-    """
-    def __init__(self, core):
-        super(StacEnclosureDotGraph, self).__init__(core)
-
-    def _unit_label(self, anno):
-        span = anno.text_span()
-        if anno.type == "token":
-            word = anno.features["word"]
-            tag = anno.features["tag"]
-            return "%s [%s] %s" % (word, tag, span)
-        else:
-            return "%s %s" % (anno.type, span)
+import stac.edu
 
 # slightly different from the stock stac-util version because it
 # supports live corpus mode
@@ -170,15 +99,17 @@ def _main_enclosure_graph(args):
     keys = corpus
     if args.tokens:
         postags = postag.read_tags(corpus, args.corpus)
+    else:
+        postags = None
 
     for k in sorted(keys):
-        annos = [anno for anno in corpus[k].units if anno.type != 'paragraph']
-        if args.tokens:
-            annos += [WrappedToken(tok) for tok in postags[k]]
-        gra_ = graph.EnclosureGraph(annos, key=_stac_enclosure_ranking)
+        if postags:
+            gra_ = stac.edu.EnclosureGraph(corpus[k], postags[k])
+        else:
+            gra_ = stac.edu.EnclosureGraph(corpus[k])
         if args.reduce:
             gra_.reduce()
-        dot_gra = StacEnclosureDotGraph(gra_)
+        dot_gra = stac.edu.EnclosureDotGraph(gra_)
         if dot_gra.get_nodes():
             dot_gra.set("ratio","compress")
             _write_dot_graph(k, output_dir, dot_gra,
