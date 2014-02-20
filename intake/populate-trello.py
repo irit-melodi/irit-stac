@@ -17,9 +17,10 @@ import os.path
 import subprocess
 import sys
 
-from educe import stac, util
+from educe import util
 from educe.annotation import Span
 from educe.stac import postag, corenlp
+import educe.stac
 
 import trello as tr
 import secrets # api-key, etc, not for revision control
@@ -53,7 +54,7 @@ is_interesting=util.mk_is_interesting(args)
 # main
 # ---------------------------------------------------------------------
 
-reader     = stac.Reader(args.idir)
+reader = educe.stac.Reader(args.idir)
 anno_files = reader.filter(reader.files(), is_interesting)
 
 trello  = tr.TrelloApi(secrets.apikey, secrets.token)

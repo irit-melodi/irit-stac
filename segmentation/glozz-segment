@@ -12,27 +12,21 @@ Quick start
 
 """
 
-from   itertools import chain
 from   os.path import basename, splitext
 import copy
-import csv
-import re
 import os
 import os.path
-import sys
 
+import argparse
 
-from nltk.tokenize import sent_tokenize
-
-from educe import glozz
-from educe import stac
+from educe.annotation import Span
 import segmentation
-import educe.stac.csv as stac_csv
+import educe.stac
+import educe.stac.csv
 
 def join_segments(xs):
     return "& ".join(xs)
 
-import argparse
 
 arg_parser = argparse.ArgumentParser(description='Segment into EDUs.')
 arg_parser.add_argument('input' , metavar='DIR')
@@ -68,7 +62,7 @@ def is_interesting(f):
    return f.stage == 'unannotated'
 
 # dictionaries from FileId to file paths
-reader       = stac.Reader(args.input)
+reader = educe.stac.Reader(args.input)
 corpus_files = reader.filter(reader.files(), is_interesting)
 corpus       = reader.slurp(corpus_files, verbose=args.verbose)
 docs         = frozenset([k.doc for k in corpus])
@@ -101,7 +95,7 @@ for d in docs:
 
         if args.csv:
             with open(output_filename, 'w') as ofile:
-                writer = stac_csv.mk_writer(ofile)
+                writer = educe.stac.csv.mk_csv_writer(ofile)
                 writer.writeheader()
                 def mk_row(u):
                     def get_feature(f,f2):
@@ -129,16 +123,16 @@ for d in docs:
 
             for t in turns:
                 def mk_segment(s):
-                    span     = glozz.GlozzSpan(*segmentation.shift_span(t.span.char_start, s))
+                    span = Span(*segmentation.shift_span(t.span.char_start, s))
                     features = {}
-                    return stac.PartialUnit(span, "Segment", features)
+                    return educe.stac.PartialUnit(span, "Segment", features)
                 spans = segmentation.segment_turn(entry.text_for(t))
                 for s in spans:
                     partial_units.append(mk_segment(s))
 
-            new_units = stac.create_units(k, entry, 'stac_segmenter', partial_units)
+            new_units = educe.stac.create_units(k, entry, 'stac_segmenter', partial_units)
             entry2.units.extend(new_units)
-            stac.write_annotation_file(output_filename, entry2)
+            educe.stac.write_annotation_file(output_filename, entry2)
         else:
             segments = [ get_segments(t) for t in turns ]
             with open(output_filename, 'w') as ofile:
