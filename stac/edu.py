@@ -176,21 +176,7 @@ class Context(object):
         return cls(turn, dialogue, position, sorted_dturns, first, tokens)
 
     @classmethod
-    def for_edu(cls, doc, edu):
-        """
-        Extract the context for a single EDU
-        """
-        edu_span = edu.text_span()
-        surrounders = containing(edu_span, doc.units)
-
-        turn = cls._the(edu, surrounders, 'Turn')
-        dialogue = cls._the(edu, surrounders, 'Dialogue')
-        # the turns in this dialogue
-        dturns = turns_in_span(doc, dialogue.span)
-        return cls._mk_context(edu, turn, dialogue, dturns)
-
-    @classmethod
-    def _for_edu_given_graph(cls, enclosure, edu):
+    def _for_edu(cls, enclosure, edu):
         """
         Extract the context for a single EDU, but with the benefit of an
         enclosure graph to avoid repeatedly combing over objects
@@ -216,7 +202,7 @@ class Context(object):
         egraph.reduce()
         contexts = {}
         for edu in filter(educe.stac.is_edu, doc.units):
-            contexts[edu] = cls._for_edu_given_graph(egraph, edu)
+            contexts[edu] = cls._for_edu(egraph, edu)
         return contexts
 
 def enclosed(span, annos):
