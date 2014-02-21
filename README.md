@@ -5,6 +5,7 @@ This is the STAC codebase.
 1. Python 2.7. Python 3 might also work.
 2. pip (see educe README if you do not)
 3. git (to keep up with educe/attelo changes)
+4. graphviz (for visualising graphs)
 
 If you are attempting to use the development version of this code
 (ie. from SVN), I highly recommend using virtualenv to create a
@@ -62,6 +63,7 @@ processed by pip
 4. Install the STAC code in development mode
 
        cd Stac/code
+       pip install -r requirements.txt
        python setup.py development
 
    Likewise, if somebody tells you to update the STAC code, it
