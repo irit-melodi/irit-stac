@@ -16,6 +16,8 @@ import textwrap
 
 import educe.stac
 
+import stac.edu
+
 DEFAULT_INSERTS = {'Turn': ('\n', ''),
                    'Dialogue': ('\n', ''),
                    'Segment': ('[', ']')}
@@ -29,23 +31,6 @@ def rough_type(anno):
         return 'Segment'
     else:
         return anno.type
-
-
-def sorted_first_widest(nodes):
-    """
-    Given a list of nodes, return the nodes ordered by their starting point,
-    and in case of a tie their inverse width (ie. widest first).
-    """
-    def from_span(span):
-        """
-        negate the endpoint so that if we have a tie on the starting
-        point, the widest span comes first
-        """
-        if span:
-            return (span.char_start, 0 - span.char_end)
-        else:
-            return None
-    return sorted(nodes, key=lambda x: from_span(x.text_span()))
 
 
 def annotate(txt, annotations, inserts=None):
@@ -86,7 +71,7 @@ def annotate(txt, annotations, inserts=None):
                 endpoints2.append((pos2, rparen))
         return endpoints2, buf2
 
-    s_annos = sorted_first_widest(filter(is_visible, annotations))
+    s_annos = stac.edu.sorted_first_widest(filter(is_visible, annotations))
     endpoints = []
     buf = ""
     for i in range(0, len(txt)):

@@ -8,9 +8,7 @@ Read and write back without changing anything else; potentially reformats XML
 
 import copy
 
-import educe.util
-
-from stac.util.annotate import sorted_first_widest
+from stac.edu import sorted_first_widest
 from stac.util.args import\
     add_usual_input_args,\
     read_corpus,\

@@ -9,7 +9,8 @@ import copy
 
 import educe.stac
 
-from stac.util.annotate import annotate, sorted_first_widest
+from stac.edu import sorted_first_widest
+from stac.util.annotate import annotate
 from stac.util.args import add_usual_input_args, read_corpus
 from stac.util.glozz import is_dialogue
 

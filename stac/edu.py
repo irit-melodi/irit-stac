@@ -8,6 +8,24 @@ from educe import graph
 from educe.annotation import Annotation
 import educe.stac
 
+
+def sorted_first_widest(nodes):
+    """
+    Given a list of nodes, return the nodes ordered by their starting point,
+    and in case of a tie their inverse width (ie. widest first).
+    """
+    def from_span(span):
+        """
+        negate the endpoint so that if we have a tie on the starting
+        point, the widest span comes first
+        """
+        if span:
+            return (span.char_start, 0 - span.char_end)
+        else:
+            return None
+    return sorted(nodes, key=lambda x: from_span(x.text_span()))
+
+
 # ---------------------------------------------------------------------
 # enclosure graph
 # ---------------------------------------------------------------------
@@ -109,7 +127,8 @@ class Context(object):
     * turn     - the turn surrounding this EDU
     * dialogue - the dialogue surrounding this EDU
     * position - this edu occurs in the Nth turn of this dialogue
-    * dialoguue_turns - all the turns in the dialogue surrounding this EDU
+    * dialogue_turns - all the turns in the dialogue surrounding this EDU
+                       (sorted by first-widest span)
     * first    - the first turn in this EDU's dialogue
     * tokens   - (may not be present): tokens contained within this EDU
 
@@ -147,7 +166,7 @@ class Context(object):
         """
         Build a context out of the minimum information we need
         """
-        sorted_dturns = sorted(dturns, key=lambda x: x.span)
+        sorted_dturns = sorted_first_widest(dturns)
         position = sorted_dturns.index(turn)
         if position is None:
             raise Exception(("For EDU %s, was expecting " % edu.identifier()) +
