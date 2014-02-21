@@ -87,4 +87,4 @@ if [ ! -z "$PARSED0" ]; then
 fi
 
 $SCRIPT_DIR/parse-to-glozz $T $OUTPUT_DIR/parsed.csv $OUTPUT_DIR/parsed
-glozz-graph --live $OUTPUT_DIR/parsed $OUTPUT_DIR/parsed
+stac-util graph --live $OUTPUT_DIR/parsed --output $OUTPUT_DIR/parsed
