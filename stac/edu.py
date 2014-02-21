@@ -125,20 +125,21 @@ class Context(object):
     like a sentence count, etc.
 
     * turn     - the turn surrounding this EDU
+    * turn_edus - the EDUs in the this turn
     * dialogue - the dialogue surrounding this EDU
-    * position - this edu occurs in the Nth turn of this dialogue
     * dialogue_turns - all the turns in the dialogue surrounding this EDU
-                       (sorted by first-widest span)
-    * first    - the first turn in this EDU's dialogue
+                       (non-empty, sorted by first-widest span)
     * tokens   - (may not be present): tokens contained within this EDU
 
     """
-    def __init__(self, turn, dialogue, position, dialogue_turns, first, tokens=None):
+    def __init__(self,
+                 turn, turn_edus,
+                 dialogue, dialogue_turns,
+                 tokens=None):
         self.turn = turn
+        self.turn_edus = turn_edus
         self.dialogue = dialogue
-        self.position = position
         self.dialogue_turns = dialogue_turns
-        self.first = first
         self.tokens = tokens
 
     @classmethod
@@ -162,31 +163,22 @@ class Context(object):
                 raise Exception(msg)
 
     @classmethod
-    def _mk_context(cls, edu, turn, dialogue, dturns, tokens=None):
-        """
-        Build a context out of the minimum information we need
-        """
-        sorted_dturns = sorted_first_widest(dturns)
-        position = sorted_dturns.index(turn)
-        if position is None:
-            raise Exception(("For EDU %s, was expecting " % edu.identifier()) +
-                            ("turn to be %s, but it's " % turn.local_id()) +
-                            ("not in dialogue %s" % dialogue.local_id()))
-        first = sorted_dturns[0]
-        return cls(turn, dialogue, position, sorted_dturns, first, tokens)
-
-    @classmethod
     def _for_edu(cls, enclosure, edu):
         """
         Extract the context for a single EDU, but with the benefit of an
         enclosure graph to avoid repeatedly combing over objects
         """
         turn = cls._the(edu, enclosure.outside(edu), 'Turn')
+        t_edus = filter(educe.stac.is_edu, enclosure.inside(turn))
+        assert t_edus
         dialogue = cls._the(edu, enclosure.outside(turn), 'Dialogue')
-        dturns = filter(educe.stac.is_turn, enclosure.inside(dialogue))
+        d_turns = filter(educe.stac.is_turn, enclosure.inside(dialogue))
+        assert d_turns
         tokens = [wrapped.token for wrapped in enclosure.inside(edu)
-                  if isinstance(wrapped,WrappedToken)]
-        return cls._mk_context(edu, turn, dialogue, dturns, tokens=tokens)
+                  if isinstance(wrapped, WrappedToken)]
+        return cls(turn, sorted_first_widest(t_edus),
+                   dialogue, sorted_first_widest(d_turns),
+                   tokens=tokens)
 
     @classmethod
     def for_edus(cls, doc, postags=None):
@@ -204,6 +196,7 @@ class Context(object):
         for edu in filter(educe.stac.is_edu, doc.units):
             contexts[edu] = cls._for_edu(egraph, edu)
         return contexts
+
 
 def enclosed(span, annos):
     """
