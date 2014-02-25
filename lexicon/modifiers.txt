@@ -8,6 +8,8 @@ shall:modal:MD:
 should:modal:MD:
 will:modal:MD:
 would:modal:MD:
+'ll:modal:MD:
+'ld:modal:MD:
 must:modal:MD:
 ought:modal:MD:
 
