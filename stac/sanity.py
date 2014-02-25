@@ -184,7 +184,7 @@ def is_disconnected(gr, contexts, x):
     else:
         ctx      = contexts[edu]
         dialogue = ctx.dialogue
-        first_turn_span = ctx.first.text_span()
+        first_turn_span = ctx.dialogue_turns[0].text_span()
         first_turn_text = gr.doc.text(first_turn_span)
         first_turn_pref = stac.split_turn_text(first_turn_text)[0]
         first_turn_start = first_turn_span.char_start + len(first_turn_pref)
