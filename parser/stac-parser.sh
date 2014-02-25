@@ -14,6 +14,8 @@ DATA_DIR=$STAC_DIR/data
 SNAPSHOT_DIR="$DATA_DIR/SNAPSHOTS/latest"
 
 SHIPPED_TAGGER=ark-tweet-nlp-0.3.2.jar
+SHIPPED_PARSER=stanford-corenlp-full-2013-06-20
+
 ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
 ATTELO_DECODER=mst
 
@@ -24,6 +26,15 @@ else
     echo >&2 "See http://www.ark.cs.cmu.edu/TweetNLP"
     exit 1
 fi
+
+if [ -e $STAC_DIR/lib/$SHIPPED_PARSER ]; then
+    CORENLP_DIR=$STAC_DIR/lib/$SHIPPED_PARSER
+else
+    echo >&2 "Need $SHIPPED_PARSER in $STAC_DIR/lib"
+    echo >&2 "See http://nlp.stanford.edu/software/corenlp.shtml"
+    exit 1
+fi
+
 
 if [ $# -lt 2 ]; then
     echo >&2 "Usage: $0 file.soclog output-dir"
@@ -59,8 +70,14 @@ popd > /dev/null
 # pos tag
 python $CODE_DIR/run-3rd-party --live --ark-tweet-nlp $TAGGER_JAR $T $T
 
+## parser
+python $CODE_DIR/run-3rd-party --live --corenlp $CORENLP_DIR $T $T
+
 # extract features
-python $CODE_DIR/queries/rel-info --live $T $DATA_DIR/resources/lexicon $T
+python $CODE_DIR/queries/rel-info\
+    --live\
+    --experimental\
+    $T $DATA_DIR/resources/lexicon $T
 
 
 # run the decoder
