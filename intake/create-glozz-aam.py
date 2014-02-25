@@ -20,7 +20,7 @@ import itertools
 import sys
 import xml.etree.ElementTree as ET
 
-import educe.stac.csv as stac_csv
+import stac.csv
 
 # ---------------------------------------------------------------------
 # template
@@ -201,7 +201,7 @@ def indent(elem, level=0):
 
 def read_players(filename):
     with open(filename, 'rb') as infile:
-        reader = stac_csv.mk_csv_reader(infile)
+        reader = stac.csv.mk_csv_reader(infile)
         players = frozenset([r['Emitter'] for r in reader])
         return (players - frozenset(['Server']))
 

@@ -15,7 +15,8 @@ import educe.glozz
 import educe.util
 import educe.stac
 from educe.annotation import RelSpan, Relation
-import educe.stac.csv as stac_csv
+
+import stac.csv
 
 
 """
@@ -117,7 +118,7 @@ for k in corpus:
 # build dictionary from FileId to relations in that document
 relations = collections.defaultdict(list)
 with codecs.open(args.parse, 'r,', 'utf-8') as f:
-    csv_reader = stac_csv.Utf8DictReader(f)
+    csv_reader = stac.csv.Utf8DictReader(f)
     for counter, row in enumerate(csv_reader, 1):
         dialogue = row[k_dialogue]
         if dialogue in key_for_dialogue:

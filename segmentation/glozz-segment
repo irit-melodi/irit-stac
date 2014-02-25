@@ -13,16 +13,16 @@ Quick start
 """
 
 from   os.path import basename, splitext
+import argparse
 import copy
 import os
 import os.path
 
-import argparse
-
 from educe.annotation import Span
 import segmentation
 import educe.stac
-import educe.stac.csv
+
+import stac.csv
 
 def join_segments(xs):
     return "& ".join(xs)
@@ -95,7 +95,7 @@ for d in docs:
 
         if args.csv:
             with open(output_filename, 'w') as ofile:
-                writer = educe.stac.csv.mk_csv_writer(ofile)
+                writer = stac.csv.mk_csv_writer(ofile)
                 writer.writeheader()
                 def mk_row(u):
                     def get_feature(f,f2):
