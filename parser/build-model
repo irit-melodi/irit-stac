@@ -26,7 +26,8 @@ trap die ERR
 for dset in $DATASETS; do
     echo >&2 "[build model] gathering features for $dset"
     code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT/tmp"\
-        --anno $ANNO --ignore-cdus\
+        --experimental\
+        --anno $ANNO\
         2> "$SNAPSHOT/tmp/$dset.features.log"
 done
 
