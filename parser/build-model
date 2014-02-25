@@ -53,7 +53,7 @@ mv "$T/"*.model "$SNAPSHOT"
 popd > /dev/null
 
 # symlink this as the latest snapshot we have
-pushd data/snapshots > /dev/null
+pushd data/SNAPSHOTS > /dev/null
 rm -f latest
 ln -s $TODAY latest
 popd > /dev/null
