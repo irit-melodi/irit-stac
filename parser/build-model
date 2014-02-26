@@ -9,7 +9,7 @@ popd > /dev/null
 cd $SCRIPT_DIR/../..
 
 SNAPSHOT=$PWD/data/SNAPSHOTS/latest
-ATTELO_LEARNER=bayes
+ATTELO_LEARNERS="bayes maxent"
 ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
 DATASETS="socl-season1 pilot"
 
@@ -21,12 +21,14 @@ fi
 T=$(mktemp -d -t stac.XXXX)
 pushd "$T" > /dev/null
 for dset in all $DATASETS; do
-    echo >&2 "[build model] learning models for dataset $dset"
-    attelo learn -C "$ATTELO_CONFIG" -l "$ATTELO_LEARNER"\
-        "$SNAPSHOT/$dset.edu-pairs.csv"\
-        "$SNAPSHOT/$dset.relations.csv"
-    for m in "$T"/*.model; do
-        mv $m "$SNAPSHOT"/$(basename $m)-$dset.model
+    for learner in $ATTELO_LEARNERS; do
+        echo >&2 "[build model] learning $learner models for dataset $dset"
+        attelo learn -C "$ATTELO_CONFIG" -l "$learner"\
+            "$SNAPSHOT/$dset.edu-pairs.csv"\
+            "$SNAPSHOT/$dset.relations.csv"
+        for m in "$T"/*.model; do
+            mv $m "$SNAPSHOT"/"$(basename $m .model)-$dset-$learner".model
+        done
     done
 done
 popd > /dev/null

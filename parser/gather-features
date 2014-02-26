@@ -21,12 +21,13 @@ die () {
 trap die ERR
 
 for dset in $DATASETS; do
-    echo >&2 "[build model] gathering features for $dset"
-    code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT"\
+    echo >&2 "gathering features for $dset"
+    code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT/tmp"\
         --experimental\
         --anno $ANNO\
         2> "$SNAPSHOT/tmp/$dset.features.log"
 done
+mv $SNAPSHOT/tmp/*.csv $SNAPSHOT
 
 # combine the csv files into one megafile
 head -n 1 "$SNAPSHOT/pilot.edu-pairs.csv" > "$SNAPSHOT/all.edu-pairs.csv"
