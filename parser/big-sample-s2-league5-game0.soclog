@@ -1,0 +1,1254 @@
+2012:11:11:19:26:36:439:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=0|state=false
+2012:11:11:19:26:36:439:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=1|state=false
+2012:11:11:19:26:36:439:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=2|state=false
+2012:11:11:19:26:36:439:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=3|state=false
+2012:11:11:19:26:36:440:+0000:SOCJoinGame:nickname=zorburt|password=***|host=dummyhost|game=L5 practicegame
+2012:11:11:19:26:38:573:+0000:SOCSitDown:game=L5 practicegame|nickname=dummy|playerNumber=1|robotFlag=false
+2012:11:11:19:26:38:574:+0000:SOCSitDown:game=L5 practicegame|nickname=zorburt|playerNumber=1|robotFlag=false
+2012:11:11:19:26:38:574:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:26:38:574:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=0
+2012:11:11:19:26:38:574:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=0
+2012:11:11:19:26:38:574:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:26:38:574:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:26:38:574:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=6|value=0
+2012:11:11:19:26:38:574:+0000:SOCGameState:game=L5 practicegame|state=0
+2012:11:11:19:26:38:574:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=1|faceId=1
+2012:11:11:19:26:38:680:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=1|faceId=1
+2012:11:11:19:26:38:680:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=1|faceId=1
+2012:11:11:19:26:39:337:+0000:SOCJoinGame:nickname=raefbrisbin|password=***|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:26:39:338:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=0|state=false
+2012:11:11:19:26:39:338:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=1|state=false
+2012:11:11:19:26:39:338:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=2|state=false
+2012:11:11:19:26:39:338:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=3|state=false
+2012:11:11:19:26:39:338:+0000:SOCJoinGame:nickname=raefbrisbin|password=***|host=dummyhost|game=L5 practicegame
+2012:11:11:19:26:42:002:+0000:SOCSitDown:game=L5 practicegame|nickname=dummy|playerNumber=2|robotFlag=false
+2012:11:11:19:26:42:002:+0000:SOCSitDown:game=L5 practicegame|nickname=raefbrisbin|playerNumber=2|robotFlag=false
+2012:11:11:19:26:42:002:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:26:42:002:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=0
+2012:11:11:19:26:42:002:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=0
+2012:11:11:19:26:42:002:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:26:42:002:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:26:42:002:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=6|value=0
+2012:11:11:19:26:42:002:+0000:SOCGameState:game=L5 practicegame|state=0
+2012:11:11:19:26:42:002:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=2|faceId=1
+2012:11:11:19:26:42:148:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=2|faceId=1
+2012:11:11:19:26:42:148:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=2|faceId=1
+2012:11:11:19:26:45:147:+0000:SOCJoinGame:nickname=Ghettoette|password=***|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:26:45:148:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=0|state=false
+2012:11:11:19:26:45:148:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=1|state=false
+2012:11:11:19:26:45:148:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=2|state=false
+2012:11:11:19:26:45:148:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=3|state=false
+2012:11:11:19:26:45:148:+0000:SOCJoinGame:nickname=Ghettoette|password=***|host=dummyhost|game=L5 practicegame
+2012:11:11:19:27:23:239:+0000:SOCJoinGame:nickname=catanstrophe|password=***|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:27:23:240:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=0|state=false
+2012:11:11:19:27:23:240:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=1|state=false
+2012:11:11:19:27:23:240:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=2|state=false
+2012:11:11:19:27:23:240:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=3|state=false
+2012:11:11:19:27:23:241:+0000:SOCJoinGame:nickname=catanstrophe|password=***|host=dummyhost|game=L5 practicegame
+2012:11:11:19:27:28:865:+0000:SOCSitDown:game=L5 practicegame|nickname=dummy|playerNumber=0|robotFlag=false
+2012:11:11:19:27:28:865:+0000:SOCSitDown:game=L5 practicegame|nickname=Ghettoette|playerNumber=0|robotFlag=false
+2012:11:11:19:27:28:865:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:27:28:865:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:27:28:865:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=0
+2012:11:11:19:27:28:865:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=0
+2012:11:11:19:27:28:865:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=0
+2012:11:11:19:27:28:865:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=6|value=0
+2012:11:11:19:27:28:865:+0000:SOCGameState:game=L5 practicegame|state=0
+2012:11:11:19:27:28:865:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=1
+2012:11:11:19:27:29:043:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=1
+2012:11:11:19:27:29:044:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=1
+2012:11:11:19:27:41:112:+0000:SOCSitDown:game=L5 practicegame|nickname=dummy|playerNumber=3|robotFlag=false
+2012:11:11:19:27:41:112:+0000:SOCSitDown:game=L5 practicegame|nickname=catanstrophe|playerNumber=3|robotFlag=false
+2012:11:11:19:27:41:112:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:27:41:112:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=0
+2012:11:11:19:27:41:112:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:11:19:27:41:112:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:11:19:27:41:112:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=0
+2012:11:11:19:27:41:112:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=6|value=0
+2012:11:11:19:27:41:112:+0000:SOCGameState:game=L5 practicegame|state=0
+2012:11:11:19:27:41:112:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=3|faceId=1
+2012:11:11:19:27:41:535:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=3|faceId=1
+2012:11:11:19:27:41:535:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=3|faceId=1
+2012:11:11:19:27:48:621:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=great!]
+2012:11:11:19:27:48:621:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:27:48:621:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=great!
+
+2012:11:11:19:27:49:808:+0000:SOCStartGame:game=L5 practicegame
+2012:11:11:19:27:49:809:+0000:SOCBoardLayout:game=L5 practicegame|hexLayout={ 51 6 10 6 6 4 5 1 10 8 2 1 3 3 6 6 2 4 4 0 2 82 37 3 5 5 3 6 6 5 4 1 12 17 6 100 6 }|numberLayout={ -1 -1 -1 -1 -1 8 9 6 -1 -1 2 4 3 7 -1 -1 5 1 8 -1 5 -1 -1 7 6 2 1 -1 -1 3 0 4 -1 -1 -1 -1 -1 }|robberHex=0x99
+2012:11:11:19:27:49:809:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=10|value=15
+2012:11:11:19:27:49:809:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=11|value=5
+2012:11:11:19:27:49:809:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=12|value=4
+2012:11:11:19:27:49:809:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=0|playedDevCard=false
+2012:11:11:19:27:49:809:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=10|value=15
+2012:11:11:19:27:49:809:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=11|value=5
+2012:11:11:19:27:49:809:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=12|value=4
+2012:11:11:19:27:49:809:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=1|playedDevCard=false
+2012:11:11:19:27:49:810:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=10|value=15
+2012:11:11:19:27:49:810:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=11|value=5
+2012:11:11:19:27:49:810:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=12|value=4
+2012:11:11:19:27:49:810:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=2|playedDevCard=false
+2012:11:11:19:27:49:810:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=10|value=15
+2012:11:11:19:27:49:810:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=11|value=5
+2012:11:11:19:27:49:810:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=12|value=4
+2012:11:11:19:27:49:810:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:27:49:810:+0000:SOCDevCardCount:game=L5 practicegame|numDevCards=25
+2012:11:11:19:27:49:810:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Randomly picking a starting player...
+2012:11:11:19:27:49:810:+0000:SOCGameState:game=L5 practicegame|state=5
+2012:11:11:19:27:49:810:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to build a settlement.
+2012:11:11:19:27:49:810:+0000:SOCStartGame:game=L5 practicegame
+2012:11:11:19:27:49:810:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=2|playedDevCard=false
+2012:11:11:19:27:49:811:+0000:SOCTurn:game=L5 practicegame|playerNumber=2
+2012:11:11:19:29:03:199:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=ok so what do we do now?]
+2012:11:11:19:29:03:200:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:03:200:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok so what do we do now?
+
+2012:11:11:19:29:08:427:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=who moves first i mean]
+2012:11:11:19:29:08:427:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:08:428:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=who moves first i mean
+
+2012:11:11:19:29:28:462:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=oh, apparently it says raef has to build a settlement.]
+2012:11:11:19:29:28:463:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:28:463:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=oh, apparently it says raef has to build a settlement.
+
+2012:11:11:19:29:35:885:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=sorry]
+2012:11:11:19:29:35:885:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:35:885:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=sorry
+
+2012:11:11:19:29:42:945:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=i think click where you want a settlement]
+2012:11:11:19:29:42:945:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:42:945:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=i think click where you want a settlement
+
+2012:11:11:19:29:48:263:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=just figuring out the resources]
+2012:11:11:19:29:48:263:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:48:263:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=just figuring out the resources
+
+2012:11:11:19:29:56:090:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0|knights=0|roads=[]|settlements=[]|cities=[]|dev-cards=0|text=yeah that's cool.]
+2012:11:11:19:29:56:090:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:29:56:090:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=yeah that's cool.
+
+2012:11:11:19:30:39:039:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=1|coord=69
+2012:11:11:19:30:39:039:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin built a settlement.
+2012:11:11:19:30:39:039:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=1|coord=69
+2012:11:11:19:30:39:040:+0000:SOCGameState:game=L5 practicegame|state=6
+2012:11:11:19:30:39:041:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to build a road.
+2012:11:11:19:30:43:092:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=0|coord=69
+2012:11:11:19:30:43:092:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin built a road.
+2012:11:11:19:30:43:092:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=0|coord=69
+2012:11:11:19:30:43:092:+0000:SOCGameState:game=L5 practicegame|state=5
+2012:11:11:19:30:43:092:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to build a settlement.
+2012:11:11:19:30:43:092:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:30:43:092:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
+2012:11:11:19:30:43:093:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=3
+2012:11:11:19:31:36:634:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=1|coord=54
+2012:11:11:19:31:36:634:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe built a settlement.
+2012:11:11:19:31:36:634:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=1|coord=54
+2012:11:11:19:31:36:634:+0000:SOCGameState:game=L5 practicegame|state=6
+2012:11:11:19:31:36:634:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to build a road.
+2012:11:11:19:31:38:606:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=0|coord=43
+2012:11:11:19:31:38:606:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe built a road.
+2012:11:11:19:31:38:606:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=0|coord=43
+2012:11:11:19:31:38:606:+0000:SOCGameState:game=L5 practicegame|state=5
+2012:11:11:19:31:38:606:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to build a settlement.
+2012:11:11:19:31:38:606:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=0|playedDevCard=false
+2012:11:11:19:31:38:606:+0000:SOCTurn:game=L5 practicegame|playerNumber=0
+2012:11:11:19:31:38:606:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=0
+2012:11:11:19:31:58:457:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=1|coord=56
+2012:11:11:19:31:58:458:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette built a settlement.
+2012:11:11:19:31:58:458:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=1|coord=56
+2012:11:11:19:31:58:458:+0000:SOCGameState:game=L5 practicegame|state=6
+2012:11:11:19:31:58:458:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to build a road.
+2012:11:11:19:32:01:738:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=0|coord=45
+2012:11:11:19:32:01:738:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette built a road.
+2012:11:11:19:32:01:738:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=0|coord=45
+2012:11:11:19:32:01:738:+0000:SOCGameState:game=L5 practicegame|state=5
+2012:11:11:19:32:01:738:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to build a settlement.
+2012:11:11:19:32:01:738:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=1|playedDevCard=false
+2012:11:11:19:32:01:738:+0000:SOCTurn:game=L5 practicegame|playerNumber=1
+2012:11:11:19:32:01:738:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=1
+2012:11:11:19:32:23:426:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=1|coord=a7
+2012:11:11:19:32:23:426:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt built a settlement.
+2012:11:11:19:32:23:426:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=1|coord=a7
+2012:11:11:19:32:23:426:+0000:SOCGameState:game=L5 practicegame|state=6
+2012:11:11:19:32:23:426:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to build a road.
+2012:11:11:19:32:31:282:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=0|coord=a6
+2012:11:11:19:32:31:282:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt built a road.
+2012:11:11:19:32:31:283:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=0|coord=a6
+2012:11:11:19:32:31:283:+0000:SOCGameState:game=L5 practicegame|state=10
+2012:11:11:19:32:31:283:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to build a settlement.
+2012:11:11:19:32:34:893:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=1|coord=ab
+2012:11:11:19:32:34:894:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt built a settlement.
+2012:11:11:19:32:34:894:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=1|coord=ab
+2012:11:11:19:32:34:894:+0000:SOCGameState:game=L5 practicegame|state=11
+2012:11:11:19:32:34:894:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to build a road.
+2012:11:11:19:32:42:051:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=0|coord=ab
+2012:11:11:19:32:42:051:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt built a road.
+2012:11:11:19:32:42:051:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=0|coord=ab
+2012:11:11:19:32:42:051:+0000:SOCGameState:game=L5 practicegame|state=10
+2012:11:11:19:32:42:051:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to build a settlement.
+2012:11:11:19:32:42:051:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=0|playedDevCard=false
+2012:11:11:19:32:42:051:+0000:SOCTurn:game=L5 practicegame|playerNumber=0
+2012:11:11:19:32:42:051:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=0
+2012:11:11:19:33:43:418:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=1|coord=74
+2012:11:11:19:33:43:418:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette built a settlement.
+2012:11:11:19:33:43:418:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=1|coord=74
+2012:11:11:19:33:43:418:+0000:SOCGameState:game=L5 practicegame|state=11
+2012:11:11:19:33:43:418:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to build a road.
+2012:11:11:19:33:57:447:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=0|coord=63
+2012:11:11:19:33:57:447:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette built a road.
+2012:11:11:19:33:57:448:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=0|coord=63
+2012:11:11:19:33:57:448:+0000:SOCGameState:game=L5 practicegame|state=10
+2012:11:11:19:33:57:448:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to build a settlement.
+2012:11:11:19:33:57:448:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:33:57:448:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
+2012:11:11:19:33:57:448:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=3
+2012:11:11:19:34:31:633:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=1|coord=87
+2012:11:11:19:34:31:633:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe built a settlement.
+2012:11:11:19:34:31:633:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=1|coord=87
+2012:11:11:19:34:31:634:+0000:SOCGameState:game=L5 practicegame|state=11
+2012:11:11:19:34:31:634:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to build a road.
+2012:11:11:19:34:38:645:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=0|coord=87
+2012:11:11:19:34:38:645:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe built a road.
+2012:11:11:19:34:38:646:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=0|coord=87
+2012:11:11:19:34:38:646:+0000:SOCGameState:game=L5 practicegame|state=10
+2012:11:11:19:34:38:646:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to build a settlement.
+2012:11:11:19:34:38:646:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=2|playedDevCard=false
+2012:11:11:19:34:38:646:+0000:SOCTurn:game=L5 practicegame|playerNumber=2
+2012:11:11:19:34:38:646:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=2
+2012:11:11:19:35:50:838:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=1|coord=34
+2012:11:11:19:35:50:838:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin built a settlement.
+2012:11:11:19:35:50:839:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=1|coord=34
+2012:11:11:19:35:50:839:+0000:SOCGameState:game=L5 practicegame|state=11
+2012:11:11:19:35:50:839:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to build a road.
+2012:11:11:19:35:54:278:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=0|coord=24
+2012:11:11:19:35:54:278:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin built a road.
+2012:11:11:19:35:54:278:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=0|coord=24
+2012:11:11:19:35:54:278:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:35:54:278:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to roll the dice.
+2012:11:11:19:35:54:278:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=2
+2012:11:11:19:35:59:603:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:35:59:603:+0000:SOCDiceResult:game=L5 practicegame|param=5
+2012:11:11:19:35:59:603:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin rolled a 3 and a 2.
+2012:11:11:19:35:59:603:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:35:59:603:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=5|value=1
+2012:11:11:19:35:59:603:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:35:59:603:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:35:59:603:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=1
+2012:11:11:19:35:59:603:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=0
+2012:11:11:19:35:59:603:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:35:59:603:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=4
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=1
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=1
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:35:59:604:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=2
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=3|value=1
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=2
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:35:59:604:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=3
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=1
+2012:11:11:19:35:59:604:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:35:59:604:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=3
+2012:11:11:19:35:59:604:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 wood. raefbrisbin gets 1 sheep.
+2012:11:11:19:36:26:647:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:36:26:647:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:36:26:647:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:36:26:647:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to roll the dice.
+2012:11:11:19:36:26:647:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:36:26:647:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:36:26:647:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
+2012:11:11:19:36:26:647:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=3
+2012:11:11:19:36:32:345:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:36:32:345:+0000:SOCDiceResult:game=L5 practicegame|param=8
+2012:11:11:19:36:32:345:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe rolled a 6 and a 2.
+2012:11:11:19:36:32:345:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=1
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=0
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:36:32:345:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=4
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=2
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=1
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:36:32:345:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=3
+2012:11:11:19:36:32:345:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=2|value=1
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:36:32:346:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=4
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=2|value=1
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=1
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=1
+2012:11:11:19:36:32:346:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:36:32:346:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=4
+2012:11:11:19:36:32:346:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt gets 1 ore. raefbrisbin gets 1 ore. catanstrophe gets 1 ore.
+2012:11:11:19:38:21:398:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=?]
+2012:11:11:19:38:21:398:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:38:21:398:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=?
+
+2012:11:11:19:39:06:071:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=0|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=whose turn is it?]
+2012:11:11:19:39:06:071:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:06:071:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=whose turn is it?
+
+2012:11:11:19:39:10:425:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=yours]
+2012:11:11:19:39:10:425:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:10:425:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=yours
+
+2012:11:11:19:39:14:287:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=i think ghettoette?]
+2012:11:11:19:39:14:287:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:14:288:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=i think ghettoette?
+
+2012:11:11:19:39:18:238:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=1|wheat=0|wood=3|unknown=0|knights=0|roads=[69,99]|settlements=[86,116]|cities=[]|dev-cards=0|text=you have to press done when done]
+2012:11:11:19:39:18:238:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:18:238:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=you have to press done when done
+
+2012:11:11:19:39:32:573:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=1|wheat=0|wood=3|unknown=0|knights=0|roads=[69,99]|settlements=[86,116]|cities=[]|dev-cards=0|text=or i cant roll]
+2012:11:11:19:39:32:574:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:32:574:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=or i cant roll
+
+2012:11:11:19:39:36:871:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=0|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=wait it skipped me?  I figured if it were my turn the "roll" button would be enabled]
+2012:11:11:19:39:36:871:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:36:872:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=wait it skipped me?  I figured if it were my turn the "roll" button would be enabled
+
+2012:11:11:19:39:46:404:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=it's been your turn the whole time]
+2012:11:11:19:39:46:404:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:46:404:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=it's been your turn the whole time
+
+2012:11:11:19:39:49:538:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=it auto rolls]
+2012:11:11:19:39:49:538:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:49:538:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=it auto rolls
+
+2012:11:11:19:39:50:462:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=i think it said catanstrophe rolled an 8]
+2012:11:11:19:39:50:462:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:39:50:462:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=i think it said catanstrophe rolled an 8
+
+2012:11:11:19:40:10:301:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=0|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=ok sorry]
+2012:11:11:19:40:10:301:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:10:301:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok sorry
+
+2012:11:11:19:40:14:676:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=the arrow points to the player as well]
+2012:11:11:19:40:14:676:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:14:676:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=the arrow points to the player as well
+
+2012:11:11:19:40:18:464:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=0|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=anyone have brick?]
+2012:11:11:19:40:18:466:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:18:469:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=anyone have brick?
+
+2012:11:11:19:40:21:200:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=no worries, all figuring it out]
+2012:11:11:19:40:21:200:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:21:200:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=no worries, all figuring it out
+
+2012:11:11:19:40:27:272:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=no brick.]
+2012:11:11:19:40:27:273:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:27:273:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=no brick.
+
+2012:11:11:19:40:29:416:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=0|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=ahhh i see the arrow thanks]
+2012:11:11:19:40:29:416:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:29:416:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ahhh i see the arrow thanks
+
+2012:11:11:19:40:30:136:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=nope]
+2012:11:11:19:40:30:137:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:40:30:137:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=nope
+
+2012:11:11:19:40:42:623:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:40:42:624:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:40:42:624:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:40:42:624:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to roll the dice.
+2012:11:11:19:40:42:624:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:40:42:624:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=0|playedDevCard=false
+2012:11:11:19:40:42:624:+0000:SOCTurn:game=L5 practicegame|playerNumber=0
+2012:11:11:19:40:42:624:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=0
+2012:11:11:19:40:45:970:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:40:45:970:+0000:SOCDiceResult:game=L5 practicegame|param=3
+2012:11:11:19:40:45:970:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette rolled a 2 and a 1.
+2012:11:11:19:40:45:970:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=4|value=1
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=1
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=1
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:40:45:970:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=5
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:40:45:970:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=2
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=1
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:40:45:971:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=3
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:40:45:971:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=4
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=4|value=1
+2012:11:11:19:40:45:971:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:40:45:972:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=1
+2012:11:11:19:40:45:972:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=0
+2012:11:11:19:40:45:972:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=2
+2012:11:11:19:40:45:972:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:40:45:972:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=5
+2012:11:11:19:40:45:972:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 wheat. catanstrophe gets 1 wheat.
+2012:11:11:19:40:54:323:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:40:54:324:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:40:54:324:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:40:54:324:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to roll the dice.
+2012:11:11:19:40:54:324:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:40:54:324:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=1|playedDevCard=false
+2012:11:11:19:40:54:324:+0000:SOCTurn:game=L5 practicegame|playerNumber=1
+2012:11:11:19:40:54:324:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=1
+2012:11:11:19:40:59:432:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:40:59:433:+0000:SOCDiceResult:game=L5 practicegame|param=10
+2012:11:11:19:40:59:433:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt rolled a 5 and a 5.
+2012:11:11:19:40:59:433:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=3|value=1
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=2
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=1
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:40:59:433:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=6
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=3|value=1
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=2
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=2
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:40:59:433:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:40:59:433:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=4
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:40:59:434:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=4
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=3|value=1
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=1
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=1
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=2
+2012:11:11:19:40:59:434:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:40:59:434:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=6
+2012:11:11:19:40:59:434:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 sheep. zorburt gets 1 sheep. catanstrophe gets 1 sheep.
+2012:11:11:19:41:15:953:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:41:15:953:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:41:15:953:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:41:15:953:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to roll the dice.
+2012:11:11:19:41:15:953:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:41:15:953:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=2|playedDevCard=false
+2012:11:11:19:41:15:953:+0000:SOCTurn:game=L5 practicegame|playerNumber=2
+2012:11:11:19:41:15:953:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=2
+2012:11:11:19:41:21:004:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:41:21:004:+0000:SOCDiceResult:game=L5 practicegame|param=8
+2012:11:11:19:41:21:004:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin rolled a 4 and a 4.
+2012:11:11:19:41:21:004:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=2
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=1
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:41:21:004:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=6
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:41:21:004:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=3
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=2
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:41:21:005:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=5
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=2|value=1
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=4
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:41:21:005:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=5
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=2|value=1
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=2
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=1
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=2
+2012:11:11:19:41:21:005:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:41:21:005:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=7
+2012:11:11:19:41:21:006:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt gets 1 ore. raefbrisbin gets 1 ore. catanstrophe gets 1 ore.
+2012:11:11:19:41:29:500:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:41:29:500:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:41:29:500:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:41:29:500:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to roll the dice.
+2012:11:11:19:41:29:500:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:41:29:500:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:41:29:500:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
+2012:11:11:19:41:29:500:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=3
+2012:11:11:19:41:35:238:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:41:35:238:+0000:SOCDiceResult:game=L5 practicegame|param=3
+2012:11:11:19:41:35:238:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe rolled a 1 and a 2.
+2012:11:11:19:41:35:239:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=4|value=1
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=2
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:41:35:239:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=7
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=3
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=2
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:41:35:239:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=5
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=4
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:41:35:239:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=5
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=4|value=1
+2012:11:11:19:41:35:239:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:41:35:240:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=2
+2012:11:11:19:41:35:240:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=1
+2012:11:11:19:41:35:240:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=3
+2012:11:11:19:41:35:240:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:41:35:240:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=8
+2012:11:11:19:41:35:240:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 wheat. catanstrophe gets 1 wheat.
+2012:11:11:19:41:41:218:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=anyone have ore?]
+2012:11:11:19:41:41:218:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:41:41:218:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=anyone have ore?
+
+2012:11:11:19:41:45:945:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=yup]
+2012:11:11:19:41:45:945:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:41:45:945:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=yup
+
+2012:11:11:19:41:48:099:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=3|sheep=2|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=i hav an ore]
+2012:11:11:19:41:48:099:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:41:48:099:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=i hav an ore
+
+2012:11:11:19:41:51:811:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=4]
+2012:11:11:19:41:51:811:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:41:51:811:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=4
+
+2012:11:11:19:41:55:650:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=will trade a sheep or wood or wheat]
+2012:11:11:19:41:55:650:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:41:55:650:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=will trade a sheep or wood or wheat
+
+2012:11:11:19:42:03:756:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=wood]
+2012:11:11:19:42:03:756:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:03:756:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=wood
+
+2012:11:11:19:42:03:871:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=3|sheep=2|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=i'll take wood or wheat for an ore]
+2012:11:11:19:42:03:871:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:03:871:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=i'll take wood or wheat for an ore
+
+2012:11:11:19:42:12:511:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=for 2]
+2012:11:11:19:42:12:512:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:12:512:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=for 2
+
+2012:11:11:19:42:17:743:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=ok will trade wood hold on let me figure this out]
+2012:11:11:19:42:17:743:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:17:743:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok will trade wood hold on let me figure this out
+
+2012:11:11:19:42:34:144:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=2
+2012:11:11:19:42:34:144:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=2
+2012:11:11:19:42:36:205:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=3
+2012:11:11:19:42:36:205:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=3
+2012:11:11:19:42:37:051:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=4
+2012:11:11:19:42:37:051:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=4
+2012:11:11:19:42:37:799:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=5
+2012:11:11:19:42:37:799:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=5
+2012:11:11:19:42:38:560:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=6
+2012:11:11:19:42:38:560:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=6
+2012:11:11:19:42:39:793:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=7
+2012:11:11:19:42:39:793:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=7
+2012:11:11:19:42:40:460:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=8
+2012:11:11:19:42:40:460:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=8
+2012:11:11:19:42:41:103:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=9
+2012:11:11:19:42:41:103:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=9
+2012:11:11:19:42:41:875:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=10
+2012:11:11:19:42:41:875:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=10
+2012:11:11:19:42:42:575:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=11
+2012:11:11:19:42:42:575:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=11
+2012:11:11:19:42:43:367:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=12
+2012:11:11:19:42:43:367:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=12
+2012:11:11:19:42:45:610:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=13
+2012:11:11:19:42:45:610:+0000:SOCChangeFace:game=L5 practicegame|playerNumber=0|faceId=13
+2012:11:11:19:42:46:662:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=hmm]
+2012:11:11:19:42:46:662:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:46:663:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=hmm
+
+2012:11:11:19:42:53:458:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=can you do 1 for 1?]
+2012:11:11:19:42:53:459:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:53:459:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=can you do 1 for 1?
+
+2012:11:11:19:42:56:892:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=3|sheep=2|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=i can!]
+2012:11:11:19:42:56:893:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:42:56:893:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=i can!
+
+2012:11:11:19:43:00:024:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=i'll give 2]
+2012:11:11:19:43:00:024:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:43:00:024:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=i'll give 2
+
+2012:11:11:19:44:05:281:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=raef: give two ore for 1 what?]
+2012:11:11:19:44:05:281:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:44:05:281:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=raef: give two ore for 1 what?
+
+2012:11:11:19:44:12:974:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=wood]
+2012:11:11:19:44:12:974:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:44:12:975:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=wood
+
+2012:11:11:19:44:24:748:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=3|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=oksounds good]
+2012:11:11:19:44:24:748:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:44:24:748:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=oksounds good
+
+2012:11:11:19:44:36:444:+0000:SOCPlayerStartsTrading:game=L5 practicegame|param=catanstrophe
+2012:11:11:19:44:36:444:+0000:SOCPlayerStartsTrading:game=L5 practicegame|param=catanstrophe
+2012:11:11:19:44:59:805:+0000:SOCMakeOffer:game=L5 practicegame|offer=game=L5 practicegame|from=3|to=false,false,true,false|give=clay=0|ore=0|sheep=0|wheat=0|wood=1|unknown=0|get=clay=0|ore=2|sheep=0|wheat=0|wood=0|unknown=0
+2012:11:11:19:44:59:805:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe made an offer to trade 1 wood for 2 ore.
+2012:11:11:19:44:59:805:+0000:SOCMakeOffer:game=L5 practicegame|offer=game=L5 practicegame|from=3|to=false,false,true,false|give=clay=0|ore=0|sheep=0|wheat=0|wood=1|unknown=0|get=clay=0|ore=2|sheep=0|wheat=0|wood=0|unknown=0
+2012:11:11:19:44:59:805:+0000:SOCClearTradeMsg:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:45:06:026:+0000:SOCAcceptOffer:game=L5 practicegame|accepting=2|offering=3
+2012:11:11:19:45:06:026:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=5|value=1
+2012:11:11:19:45:06:026:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=5|value=1
+2012:11:11:19:45:06:026:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=2|value=2
+2012:11:11:19:45:06:026:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=102|elementType=2|value=2
+2012:11:11:19:45:06:026:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe traded 1 wood for 2 ore from raefbrisbin.
+2012:11:11:19:45:06:027:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:45:06:027:+0000:SOCAcceptOffer:game=L5 practicegame|accepting=2|offering=3
+2012:11:11:19:45:07:515:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=3|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=ok did you get the trade?]
+2012:11:11:19:45:07:515:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:45:07:515:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok did you get the trade?
+
+2012:11:11:19:45:17:127:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=1|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=ya]
+2012:11:11:19:45:17:128:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:45:17:128:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=ya
+
+2012:11:11:19:45:50:532:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=3|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=ok how does one buy something?]
+2012:11:11:19:45:50:532:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:45:50:532:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok how does one buy something?
+
+2012:11:11:19:45:55:642:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=3|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[84,135]|cities=[]|dev-cards=0|text=(sorry thisis taking a long time)]
+2012:11:11:19:45:55:642:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:45:55:642:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=(sorry thisis taking a long time)
+
+2012:11:11:19:46:00:121:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=3|sheep=2|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=trade with bank i think]
+2012:11:11:19:46:00:121:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:46:00:121:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=trade with bank i think
+
+2012:11:11:19:46:07:266:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=2|wheat=2|wood=3|unknown=0|knights=0|roads=[69,99]|settlements=[86,116]|cities=[]|dev-cards=0|text=trade w/ bank/port button]
+2012:11:11:19:46:07:267:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:46:07:267:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=trade w/ bank/port button
+
+2012:11:11:19:46:11:108:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=3|sheep=2|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=that's ok. we're still all figuring it out too]
+2012:11:11:19:46:11:108:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:46:11:108:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=that's ok. we're still all figuring it out too
+
+2012:11:11:19:46:19:949:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=3
+2012:11:11:19:46:19:950:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=3
+2012:11:11:19:46:19:950:+0000:SOCClearTradeMsg:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:46:20:122:+0000:SOCBankTrade:game=L5 practicegame|give=clay=0|ore=3|sheep=0|wheat=2|wood=0|unknown=0|get=clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0
+2012:11:11:19:46:20:122:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=You can't make that trade.
+2012:11:11:19:46:29:215:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=1|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=not buttons beside the buildings?]
+2012:11:11:19:46:29:215:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:46:29:215:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=not buttons beside the buildings?
+
+2012:11:11:19:46:42:432:+0000:SOCBuildRequest:game=L5 practicegame|pieceType=2
+2012:11:11:19:46:42:432:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=2|value=3
+2012:11:11:19:46:42:432:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=4|value=2
+2012:11:11:19:46:42:432:+0000:SOCGameState:game=L5 practicegame|state=32
+2012:11:11:19:46:42:996:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=2|coord=54
+2012:11:11:19:46:42:996:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe built a city.
+2012:11:11:19:46:42:996:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=2|coord=54
+2012:11:11:19:46:42:996:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:46:48:793:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=1|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=ok it worked]
+2012:11:11:19:46:48:794:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:46:48:794:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok it worked
+
+2012:11:11:19:46:51:881:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=1|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=do the trade with bank]
+2012:11:11:19:46:51:881:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:46:51:881:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=do the trade with bank
+
+2012:11:11:19:47:00:545:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=1|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=and then right click on the settllement you want to upgrade to a city]
+2012:11:11:19:47:00:545:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:47:00:545:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=and then right click on the settllement you want to upgrade to a city
+
+2012:11:11:19:47:03:365:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:47:03:365:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:47:03:365:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:47:03:365:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to roll the dice.
+2012:11:11:19:47:03:365:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:47:03:365:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=0|playedDevCard=false
+2012:11:11:19:47:03:365:+0000:SOCTurn:game=L5 practicegame|playerNumber=0
+2012:11:11:19:47:03:365:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=0
+2012:11:11:19:47:06:535:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:47:06:536:+0000:SOCDiceResult:game=L5 practicegame|param=6
+2012:11:11:19:47:06:536:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette rolled a 2 and a 4.
+2012:11:11:19:47:06:536:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=1|value=1
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=1
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=2
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:47:06:536:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=8
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=1|value=1
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=1
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=3
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=2
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:47:06:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:47:06:537:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=6
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=1|value=1
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=1
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=2
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=1
+2012:11:11:19:47:06:537:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=5
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=1
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=1
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=1
+2012:11:11:19:47:06:537:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=1
+2012:11:11:19:47:06:537:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=4
+2012:11:11:19:47:06:537:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 clay. zorburt gets 1 clay. raefbrisbin gets 1 clay.
+2012:11:11:19:47:09:081:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=1|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=goodthing we are doing this practice round]
+2012:11:11:19:47:09:081:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:47:09:081:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=goodthing we are doing this practice round
+
+2012:11:11:19:48:27:359:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=0
+2012:11:11:19:48:27:359:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=0
+2012:11:11:19:48:27:359:+0000:SOCClearTradeMsg:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:48:27:463:+0000:SOCBankTrade:game=L5 practicegame|give=clay=1|ore=0|sheep=1|wheat=0|wood=0|unknown=0|get=clay=0|ore=0|sheep=0|wheat=0|wood=0|unknown=0
+2012:11:11:19:48:27:463:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=You can't make that trade.
+2012:11:11:19:48:43:149:+0000:SOCBuildRequest:game=L5 practicegame|pieceType=0
+2012:11:11:19:48:43:150:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=102|elementType=1|value=1
+2012:11:11:19:48:43:150:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=102|elementType=5|value=1
+2012:11:11:19:48:43:150:+0000:SOCGameState:game=L5 practicegame|state=30
+2012:11:11:19:48:43:368:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=0|coord=62
+2012:11:11:19:48:43:369:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette built a road.
+2012:11:11:19:48:43:369:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=0|pieceType=0|coord=62
+2012:11:11:19:48:43:369:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:48:47:131:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:48:47:131:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:48:47:131:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:48:47:131:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to roll the dice.
+2012:11:11:19:48:47:131:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:48:47:131:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=1|playedDevCard=false
+2012:11:11:19:48:47:132:+0000:SOCTurn:game=L5 practicegame|playerNumber=1
+2012:11:11:19:48:47:132:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=1
+2012:11:11:19:48:51:741:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:48:51:741:+0000:SOCDiceResult:game=L5 practicegame|param=10
+2012:11:11:19:48:51:741:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt rolled a 5 and a 5.
+2012:11:11:19:48:51:741:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:48:51:741:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=3|value=1
+2012:11:11:19:48:51:741:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:48:51:741:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:48:51:741:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=3
+2012:11:11:19:48:51:741:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:11:19:48:51:741:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=2
+2012:11:11:19:48:51:741:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=7
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=3|value=1
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=1
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=3
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=3
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:48:51:742:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=7
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=1
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=2
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=1
+2012:11:11:19:48:51:742:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=5
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=3|value=2
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=1
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=3
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=1
+2012:11:11:19:48:51:742:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=1
+2012:11:11:19:48:51:742:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=6
+2012:11:11:19:48:51:742:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 sheep. zorburt gets 1 sheep. catanstrophe gets 2 sheep.
+2012:11:11:19:49:05:565:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=3|sheep=3|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=trade a sheep or ore for a clay?]
+2012:11:11:19:49:05:565:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:05:565:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=trade a sheep or ore for a clay?
+
+2012:11:11:19:49:07:365:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=3|sheep=3|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=anyone?]
+2012:11:11:19:49:07:365:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:07:365:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=anyone?
+
+2012:11:11:19:49:15:303:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=3|sheep=3|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=sorry not clay. wood.]
+2012:11:11:19:49:15:303:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:15:304:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=sorry not clay. wood.
+
+2012:11:11:19:49:15:683:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=1|ore=2|sheep=1|wheat=0|wood=1|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=nay]
+2012:11:11:19:49:15:684:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:15:684:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=nay
+
+2012:11:11:19:49:32:850:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=3|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=no i am looking for clay as well]
+2012:11:11:19:49:32:850:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:32:850:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=no i am looking for clay as well
+
+2012:11:11:19:49:43:989:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=1|ore=2|sheep=1|wheat=0|wood=1|unknown=0|knights=0|roads=[105,36]|settlements=[105,52]|cities=[]|dev-cards=0|text=same old story :)]
+2012:11:11:19:49:43:989:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:43:989:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=same old story :)
+
+2012:11:11:19:49:46:135:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=3|sheep=3|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=sorry, essentially i need wood. i mistyped.]
+2012:11:11:19:49:46:135:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:46:135:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=sorry, essentially i need wood. i mistyped.
+
+2012:11:11:19:49:55:697:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=1|sheep=3|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=ok i have one to trade for one clay]
+2012:11:11:19:49:55:697:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:49:55:697:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok i have one to trade for one clay
+
+2012:11:11:19:50:06:928:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=3|sheep=3|wheat=0|wood=0|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=bah i need my clay.  thanks tho]
+2012:11:11:19:50:06:929:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:50:06:929:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=bah i need my clay.  thanks tho
+
+2012:11:11:19:50:22:856:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:50:22:856:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:50:22:856:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:50:22:856:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to roll the dice.
+2012:11:11:19:50:22:856:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:50:22:857:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=2|playedDevCard=false
+2012:11:11:19:50:22:857:+0000:SOCTurn:game=L5 practicegame|playerNumber=2
+2012:11:11:19:50:22:857:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=2
+2012:11:11:19:50:28:127:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:50:28:127:+0000:SOCDiceResult:game=L5 practicegame|param=8
+2012:11:11:19:50:28:127:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin rolled a 6 and a 2.
+2012:11:11:19:50:28:127:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:50:28:127:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:50:28:127:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:50:28:127:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=3
+2012:11:11:19:50:28:127:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:11:19:50:28:127:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=2
+2012:11:11:19:50:28:127:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=7
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=1
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=4
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=3
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=0
+2012:11:11:19:50:28:128:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=8
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=2|value=1
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=1
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=1
+2012:11:11:19:50:28:128:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=6
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=2|value=2
+2012:11:11:19:50:28:128:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:50:28:129:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=3
+2012:11:11:19:50:28:129:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=3
+2012:11:11:19:50:28:129:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=1
+2012:11:11:19:50:28:129:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=1
+2012:11:11:19:50:28:129:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=8
+2012:11:11:19:50:28:129:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt gets 1 ore. raefbrisbin gets 1 ore. catanstrophe gets 2 ore.
+2012:11:11:19:50:37:582:+0000:SOCBuildRequest:game=L5 practicegame|pieceType=0
+2012:11:11:19:50:37:582:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=102|elementType=1|value=1
+2012:11:11:19:50:37:582:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=102|elementType=5|value=1
+2012:11:11:19:50:37:582:+0000:SOCGameState:game=L5 practicegame|state=30
+2012:11:11:19:50:37:912:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=0|coord=7a
+2012:11:11:19:50:37:912:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin built a road.
+2012:11:11:19:50:37:912:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=2|pieceType=0|coord=7a
+2012:11:11:19:50:37:912:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:50:43:144:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:50:43:144:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:50:43:144:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:50:43:144:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to roll the dice.
+2012:11:11:19:50:43:144:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:50:43:145:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:50:43:145:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
+2012:11:11:19:50:43:145:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=3
+2012:11:11:19:50:47:639:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:50:47:640:+0000:SOCDiceResult:game=L5 practicegame|param=4
+2012:11:11:19:50:47:640:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe rolled a 1 and a 3.
+2012:11:11:19:50:47:640:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=2|value=1
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=1
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=3
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=2
+2012:11:11:19:50:47:640:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=8
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=5|value=1
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=1
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=4
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=3
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=1
+2012:11:11:19:50:47:640:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=9
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=101|elementType=2|value=1
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=4
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:50:47:640:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:50:47:641:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=5
+2012:11:11:19:50:47:641:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=5|value=1
+2012:11:11:19:50:47:641:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:50:47:642:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=3
+2012:11:11:19:50:47:642:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=3
+2012:11:11:19:50:47:642:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=1
+2012:11:11:19:50:47:642:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=2
+2012:11:11:19:50:47:642:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=9
+2012:11:11:19:50:47:642:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 ore. zorburt gets 1 wood. raefbrisbin gets 1 ore. catanstrophe gets 1 wood.
+2012:11:11:19:51:03:685:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=i am looking for grain.  can trade sheep or wood]
+2012:11:11:19:51:03:685:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:51:03:685:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=i am looking for grain.  can trade sheep or wood
+
+2012:11:11:19:51:13:833:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36,122]|settlements=[105,52]|cities=[]|dev-cards=0|text=none]
+2012:11:11:19:51:13:833:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:51:13:833:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=none
+
+2012:11:11:19:51:16:270:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=4|sheep=3|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=none.]
+2012:11:11:19:51:16:270:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:51:16:270:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=none.
+
+2012:11:11:19:51:25:432:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=hmm]
+2012:11:11:19:51:25:432:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:51:25:432:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=hmm
+
+2012:11:11:19:51:32:321:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=does anyone have sheep?]
+2012:11:11:19:51:32:321:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:51:32:321:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=does anyone have sheep?
+
+2012:11:11:19:51:53:508:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=1|sheep=3|wheat=2|wood=2|unknown=0|knights=0|roads=[69,99,98]|settlements=[86,116]|cities=[]|dev-cards=0|text=have sheep for ore or brick]
+2012:11:11:19:51:53:508:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:51:53:508:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=have sheep for ore or brick
+
+2012:11:11:19:52:00:441:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=4|sheep=3|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=i'll trade a sheep for brick.]
+2012:11:11:19:52:00:441:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:52:00:441:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=i'll trade a sheep for brick.
+
+2012:11:11:19:52:33:393:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=1|sheep=3|wheat=2|wood=2|unknown=0|knights=0|roads=[69,99,98]|settlements=[86,116]|cities=[]|dev-cards=0|text=ok]
+2012:11:11:19:52:33:394:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:52:33:394:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=ok
+
+2012:11:11:19:52:33:885:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=i can give one wood for one sheep?]
+2012:11:11:19:52:33:885:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:52:33:885:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=i can give one wood for one sheep?
+
+2012:11:11:19:52:43:395:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=sorry meant period]
+2012:11:11:19:52:43:395:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:52:43:395:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=sorry meant period
+
+2012:11:11:19:52:57:223:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=1|sheep=3|wheat=2|wood=2|unknown=0|knights=0|roads=[69,99,98]|settlements=[86,116]|cities=[]|dev-cards=0|text=oops sorry i'm confused :)]
+2012:11:11:19:52:57:224:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:52:57:224:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=oops sorry i'm confused :)
+
+2012:11:11:19:52:58:121:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=4|sheep=3|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=yeah i can do that. sorry i got cofused earlier with ghettoette.]
+2012:11:11:19:52:58:121:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:52:58:121:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=yeah i can do that. sorry i got cofused earlier with ghettoette.
+
+2012:11:11:19:53:28:699:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=4|sheep=3|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=catanstrophe: i can give you a sheep for your wood.]
+2012:11:11:19:53:28:699:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:53:28:699:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=catanstrophe: i can give you a sheep for your wood.
+
+2012:11:11:19:53:30:662:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=ok zorburt i will gie you one wood for one sheep]
+2012:11:11:19:53:30:662:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:53:30:662:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok zorburt i will gie you one wood for one sheep
+
+2012:11:11:19:53:35:470:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=4|sheep=3|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=excellent.]
+2012:11:11:19:53:35:470:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:53:35:470:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=excellent.
+
+2012:11:11:19:53:37:761:+0000:SOCPlayerStartsTrading:game=L5 practicegame|param=catanstrophe
+2012:11:11:19:53:37:761:+0000:SOCPlayerStartsTrading:game=L5 practicegame|param=catanstrophe
+2012:11:11:19:53:49:501:+0000:SOCMakeOffer:game=L5 practicegame|offer=game=L5 practicegame|from=3|to=false,true,false,false|give=clay=0|ore=0|sheep=0|wheat=0|wood=1|unknown=0|get=clay=0|ore=0|sheep=1|wheat=0|wood=0|unknown=0
+2012:11:11:19:53:49:501:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe made an offer to trade 1 wood for 1 sheep.
+2012:11:11:19:53:49:503:+0000:SOCMakeOffer:game=L5 practicegame|offer=game=L5 practicegame|from=3|to=false,true,false,false|give=clay=0|ore=0|sheep=0|wheat=0|wood=1|unknown=0|get=clay=0|ore=0|sheep=1|wheat=0|wood=0|unknown=0
+2012:11:11:19:53:49:503:+0000:SOCClearTradeMsg:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:53:57:176:+0000:SOCAcceptOffer:game=L5 practicegame|accepting=1|offering=3
+2012:11:11:19:53:57:176:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=5|value=1
+2012:11:11:19:53:57:176:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=5|value=1
+2012:11:11:19:53:57:176:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=3|value=1
+2012:11:11:19:53:57:176:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=102|elementType=3|value=1
+2012:11:11:19:53:57:176:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe traded 1 wood for 1 sheep from zorburt.
+2012:11:11:19:53:57:176:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:53:57:176:+0000:SOCAcceptOffer:game=L5 practicegame|accepting=1|offering=3
+2012:11:11:19:54:00:345:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=3|sheep=4|wheat=1|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[135]|cities=[84]|dev-cards=0|text=sent the trade]
+2012:11:11:19:54:00:346:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:54:00:346:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=sent the trade
+
+2012:11:11:19:54:03:305:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=4|sheep=2|wheat=0|wood=2|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=done.]
+2012:11:11:19:54:03:305:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:54:03:305:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=done.
+
+2012:11:11:19:54:20:470:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=3
+2012:11:11:19:54:20:471:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=3
+2012:11:11:19:54:20:471:+0000:SOCClearTradeMsg:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:54:25:412:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=3
+2012:11:11:19:54:25:412:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=3
+2012:11:11:19:54:25:412:+0000:SOCClearTradeMsg:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:54:25:584:+0000:SOCBankTrade:game=L5 practicegame|give=clay=0|ore=0|sheep=4|wheat=0|wood=0|unknown=0|get=clay=0|ore=0|sheep=0|wheat=1|wood=0|unknown=0
+2012:11:11:19:54:25:585:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=3|value=4
+2012:11:11:19:54:25:585:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=4|value=1
+2012:11:11:19:54:25:585:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe traded 4 sheep for 1 wheat from the bank.
+2012:11:11:19:54:44:529:+0000:SOCBuildRequest:game=L5 practicegame|pieceType=2
+2012:11:11:19:54:44:529:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=2|value=3
+2012:11:11:19:54:44:529:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=102|elementType=4|value=2
+2012:11:11:19:54:44:529:+0000:SOCGameState:game=L5 practicegame|state=32
+2012:11:11:19:54:45:078:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=2|coord=87
+2012:11:11:19:54:45:078:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe built a city.
+2012:11:11:19:54:45:078:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=3|pieceType=2|coord=87
+2012:11:11:19:54:45:078:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:54:47:370:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:54:47:370:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:54:47:370:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:54:47:370:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's Ghettoette's turn to roll the dice.
+2012:11:11:19:54:47:371:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:54:47:371:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=0|playedDevCard=false
+2012:11:11:19:54:47:371:+0000:SOCTurn:game=L5 practicegame|playerNumber=0
+2012:11:11:19:54:47:371:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=0
+2012:11:11:19:54:50:201:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:54:50:201:+0000:SOCDiceResult:game=L5 practicegame|param=10
+2012:11:11:19:54:50:202:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette rolled a 6 and a 4.
+2012:11:11:19:54:50:202:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=3|value=1
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=1
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=4
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=2
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=2
+2012:11:11:19:54:50:202:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=9
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=3|value=1
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=1
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=4
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=3
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=2
+2012:11:11:19:54:50:202:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=10
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=4
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:54:50:202:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=5
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=3|value=2
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=0
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=2
+2012:11:11:19:54:50:202:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:11:19:54:50:203:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=1
+2012:11:11:19:54:50:203:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=3
+2012:11:11:19:54:50:203:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 sheep. zorburt gets 1 sheep. catanstrophe gets 2 sheep.
+2012:11:11:19:55:48:979:+0000:SOCBuyCardRequest:game=L5 practicegame
+2012:11:11:19:55:48:979:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=102|elementType=2|value=1
+2012:11:11:19:55:48:980:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=102|elementType=3|value=1
+2012:11:11:19:55:48:980:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=102|elementType=4|value=1
+2012:11:11:19:55:48:980:+0000:SOCDevCardCount:game=L5 practicegame|numDevCards=24
+2012:11:11:19:55:48:980:+0000:SOCDevCard:game=L5 practicegame|playerNum=0|actionType=0|cardType=7
+2012:11:11:19:55:48:981:+0000:SOCDevCard:game=L5 practicegame|playerNum=0|actionType=0|cardType=9
+2012:11:11:19:55:48:981:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette bought a development card.
+2012:11:11:19:55:48:981:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=There are 24 cards left.
+2012:11:11:19:55:48:981:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:55:54:085:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:55:54:085:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:55:54:085:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:55:54:085:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's zorburt's turn to roll the dice.
+2012:11:11:19:55:54:085:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:55:54:085:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=1|playedDevCard=false
+2012:11:11:19:55:54:085:+0000:SOCTurn:game=L5 practicegame|playerNumber=1
+2012:11:11:19:55:54:085:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=1
+2012:11:11:19:55:57:531:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:55:57:531:+0000:SOCDiceResult:game=L5 practicegame|param=7
+2012:11:11:19:55:57:531:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt rolled a 2 and a 5.
+2012:11:11:19:55:57:531:+0000:SOCGameState:game=L5 practicegame|state=50
+2012:11:11:19:55:57:531:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt needs to discard.
+2012:11:11:19:56:10:073:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36,122]|settlements=[105,52]|cities=[]|dev-cards=0|text=Once we all have the idea can we start the real one or are we playing this out entirely?]
+2012:11:11:19:56:10:073:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:10:073:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=Once we all have the idea can we start the real one or are we playing this out entirely?
+
+2012:11:11:19:56:19:861:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=0|sheep=2|wheat=0|wood=1|unknown=0|knights=0|roads=[67,135]|settlements=[]|cities=[84,135]|dev-cards=0|text=i am fine with going on to the real one]
+2012:11:11:19:56:19:863:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:19:863:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=i am fine with going on to the real one
+
+2012:11:11:19:56:22:612:+0000:SOCDiscard:game=L5 practicegame|resources=clay=0|ore=3|sheep=2|wheat=0|wood=0|unknown=0
+2012:11:11:19:56:22:612:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=102|elementType=2|value=3
+2012:11:11:19:56:22:612:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=102|elementType=3|value=2
+2012:11:11:19:56:22:612:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=102|elementType=6|value=5
+2012:11:11:19:56:22:613:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt discarded 5 resources.
+2012:11:11:19:56:22:613:+0000:SOCGameState:game=L5 practicegame|state=33
+2012:11:11:19:56:22:613:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt will move the robber.
+2012:11:11:19:56:32:299:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=1|sheep=1|wheat=0|wood=2|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=oh MAN.]
+2012:11:11:19:56:32:299:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:32:300:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=oh MAN.
+
+2012:11:11:19:56:35:770:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=1|sheep=1|wheat=0|wood=2|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=yeah that's fine with me.]
+2012:11:11:19:56:35:770:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:35:770:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=yeah that's fine with me.
+
+2012:11:11:19:56:41:558:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[69,99,98]|settlements=[86,116]|cities=[]|dev-cards=1|text=me too]
+2012:11:11:19:56:41:558:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:41:559:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=me too
+
+2012:11:11:19:56:42:649:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=1|sheep=1|wheat=0|wood=2|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=esp cuz i just lost 5 cards haha]
+2012:11:11:19:56:42:649:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:42:649:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=esp cuz i just lost 5 cards haha
+
+2012:11:11:19:56:50:874:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=1|sheep=1|wheat=0|wood=2|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=wait i want to practice buildign something.]
+2012:11:11:19:56:50:874:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:50:874:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=wait i want to practice buildign something.
+
+2012:11:11:19:56:54:321:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=4|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36,122]|settlements=[105,52]|cities=[]|dev-cards=0|text=plus it will take hours :)]
+2012:11:11:19:56:54:321:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:56:54:321:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=plus it will take hours :)
+
+2012:11:11:19:57:03:217:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=1|ore=1|sheep=1|wheat=0|wood=2|unknown=0|knights=0|roads=[166,171]|settlements=[167,171]|cities=[]|dev-cards=0|text=oh i can't i dunno why.]
+2012:11:11:19:57:03:217:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:57:03:217:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=oh i can't i dunno why.
+
+2012:11:11:19:57:22:239:+0000:SOCMoveRobber:game=L5 practicegame|playerNumber=1|coord=57
+2012:11:11:19:57:22:240:+0000:SOCMoveRobber:game=L5 practicegame|playerNumber=1|coord=57
+2012:11:11:19:57:22:240:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt moved the robber, must choose a victim.
+2012:11:11:19:57:22:240:+0000:SOCGameState:game=L5 practicegame|state=51
+2012:11:11:19:57:24:822:+0000:SOCChoosePlayer:game=L5 practicegame|choice=2
+2012:11:11:19:57:24:822:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:11:19:57:24:822:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=102|elementType=2|value=1
+2012:11:11:19:57:24:822:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=2|value=1
+2012:11:11:19:57:24:822:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=102|elementType=2|value=1
+2012:11:11:19:57:24:822:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=101|elementType=6|value=1
+2012:11:11:19:57:24:822:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=102|elementType=6|value=1
+2012:11:11:19:57:24:822:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=You stole an ore resource from raefbrisbin.
+2012:11:11:19:57:24:823:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt stole an ore resource from you.
+2012:11:11:19:57:24:823:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt stole a resource from raefbrisbin
+2012:11:11:19:57:24:823:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:57:26:767:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36,122]|settlements=[105,52]|cities=[]|dev-cards=0|text=I know for roads it will show on the map when you scroll over when you're capable of building]
+2012:11:11:19:57:26:767:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:57:26:767:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=I know for roads it will show on the map when you scroll over when you're capable of building
+
+2012:11:11:19:57:30:529:+0000:SOCBuildRequest:game=L5 practicegame|pieceType=0
+2012:11:11:19:57:30:529:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=102|elementType=1|value=1
+2012:11:11:19:57:30:529:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=102|elementType=5|value=1
+2012:11:11:19:57:30:529:+0000:SOCGameState:game=L5 practicegame|state=30
+2012:11:11:19:57:31:323:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=3|wheat=1|wood=2|unknown=0|knights=0|roads=[69,99,98]|settlements=[86,116]|cities=[]|dev-cards=1|text=i just realized you click at the bottom in the green box- it shows what is available]
+2012:11:11:19:57:31:323:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:57:31:323:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=i just realized you click at the bottom in the green box- it shows what is available
+
+2012:11:11:19:57:31:943:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=0|coord=ac
+2012:11:11:19:57:31:943:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt built a road.
+2012:11:11:19:57:31:943:+0000:SOCPutPiece:game=L5 practicegame|playerNumber=1|pieceType=0|coord=ac
+2012:11:11:19:57:31:943:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:57:58:490:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171,172]|settlements=[167,171]|cities=[]|dev-cards=0|text=yeah.  just build a road.]
+2012:11:11:19:57:58:490:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:57:58:490:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=yeah.  just build a road.
+
+2012:11:11:19:58:00:226:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:58:00:226:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:58:00:226:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:58:00:226:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's raefbrisbin's turn to roll the dice.
+2012:11:11:19:58:00:226:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:58:00:226:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=2|playedDevCard=false
+2012:11:11:19:58:00:227:+0000:SOCTurn:game=L5 practicegame|playerNumber=2
+2012:11:11:19:58:00:227:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=2
+2012:11:11:19:58:05:534:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:58:05:535:+0000:SOCDiceResult:game=L5 practicegame|param=9
+2012:11:11:19:58:05:535:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin rolled a 5 and a 4.
+2012:11:11:19:58:05:535:+0000:SOCGameState:game=L5 practicegame|state=20
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=101|elementType=5|value=1
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=1|value=0
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=2|value=0
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=3|value=3
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=4|value=1
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=0|actionType=100|elementType=5|value=3
+2012:11:11:19:58:05:535:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=0|count=7
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=1|value=0
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=2|value=2
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=3|value=1
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=4|value=0
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=1|actionType=100|elementType=5|value=1
+2012:11:11:19:58:05:535:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=1|count=4
+2012:11:11:19:58:05:535:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=1|value=0
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=2|value=3
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=3|value=1
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=4|value=0
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=2|actionType=100|elementType=5|value=0
+2012:11:11:19:58:05:536:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=2|count=4
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=101|elementType=5|value=2
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=1|value=0
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=2|value=0
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=3|value=2
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=4|value=0
+2012:11:11:19:58:05:536:+0000:SOCPlayerElement:game=L5 practicegame|playerNum=3|actionType=100|elementType=5|value=3
+2012:11:11:19:58:05:536:+0000:SOCResourceCount:game=L5 practicegame|playerNumber=3|count=5
+2012:11:11:19:58:05:536:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette gets 1 wood. catanstrophe gets 2 wood.
+2012:11:11:19:58:13:324:+0000:SOCEndTurn:game=L5 practicegame
+2012:11:11:19:58:13:324:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:58:13:324:+0000:SOCGameState:game=L5 practicegame|state=15
+2012:11:11:19:58:13:324:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=It's catanstrophe's turn to roll the dice.
+2012:11:11:19:58:13:324:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:58:13:324:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:58:13:325:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
+2012:11:11:19:58:13:325:+0000:SOCRollDicePrompt:game=L5 practicegame|playerNumber=3
+2012:11:11:19:58:16:102:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=zorburt|speaking-queue=[]|clay=0|ore=2|sheep=1|wheat=0|wood=1|unknown=0|knights=0|roads=[166,171,172]|settlements=[167,171]|cities=[]|dev-cards=0|text=ok cool. if we're all good we can start a new game.]
+2012:11:11:19:58:16:102:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:58:16:102:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=zorburt|text=ok cool. if we're all good we can start a new game.
+
+2012:11:11:19:58:18:965:+0000:SOCRollDice:game=L5 practicegame
+2012:11:11:19:58:18:965:+0000:SOCDiceResult:game=L5 practicegame|param=7
+2012:11:11:19:58:18:966:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe rolled a 2 and a 5.
+2012:11:11:19:58:18:966:+0000:SOCGameState:game=L5 practicegame|state=33
+2012:11:11:19:58:18:966:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe will move the robber.
+2012:11:11:19:58:23:302:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36,122]|settlements=[105,52]|cities=[]|dev-cards=0|text=I'm good]
+2012:11:11:19:58:23:303:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:58:23:303:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=I'm good
+
+2012:11:11:19:58:30:097:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=Ghettoette|speaking-queue=[]|clay=0|ore=0|sheep=3|wheat=1|wood=3|unknown=0|knights=0|roads=[69,99,98]|settlements=[86,116]|cities=[]|dev-cards=1|text=me too]
+2012:11:11:19:58:30:097:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:58:30:097:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Ghettoette|text=me too
+
+2012:11:11:19:58:37:801:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=raefbrisbin|speaking-queue=[]|clay=0|ore=3|sheep=1|wheat=0|wood=0|unknown=0|knights=0|roads=[105,36,122]|settlements=[105,52]|cities=[]|dev-cards=0|text=k]
+2012:11:11:19:58:37:801:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:58:37:801:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=raefbrisbin|text=k
+
+2012:11:11:19:58:40:511:+0000:GAME-TEXT-MESSAGE:[game=L5 practicegame|player=catanstrophe|speaking-queue=[]|clay=0|ore=0|sheep=2|wheat=0|wood=3|unknown=0|knights=0|roads=[67,135]|settlements=[]|cities=[84,135]|dev-cards=0|text=ok let's kill it]
+2012:11:11:19:58:40:511:+0000:SOCSpeakingQueueChanged:game=L5 practicegame|param=[]
+2012:11:11:19:58:40:512:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=catanstrophe|text=ok let's kill it
+
+2012:11:11:19:58:43:986:+0000:SOCLeaveGame:nickname=zorburt|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:58:43:986:+0000:SOCLeaveGame:nickname=zorburt|host=cpc4-camd13-2-0-cust300.hari.cable.virginmedia.com|game=L5 practicegame
+2012:11:11:19:58:43:986:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=zorburt left the game
+2012:11:11:19:58:43:986:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Fetching a robot player...
+2012:11:11:19:58:43:986:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Sorry, no robots on this server.
+2012:11:11:19:58:45:765:+0000:SOCLeaveGame:nickname=raefbrisbin|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:58:45:765:+0000:SOCLeaveGame:nickname=raefbrisbin|host=64.231.177.69|game=L5 practicegame
+2012:11:11:19:58:45:766:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=raefbrisbin left the game
+2012:11:11:19:58:45:766:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Fetching a robot player...
+2012:11:11:19:58:45:766:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Sorry, no robots on this server.
+2012:11:11:19:58:46:238:+0000:SOCLeaveGame:nickname=Ghettoette|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:58:46:238:+0000:SOCLeaveGame:nickname=Ghettoette|host=pool-108-18-192-67.washdc.fios.verizon.net|game=L5 practicegame
+2012:11:11:19:58:46:238:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Ghettoette left the game
+2012:11:11:19:58:46:238:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Fetching a robot player...
+2012:11:11:19:58:46:238:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Sorry, no robots on this server.
+2012:11:11:19:58:49:771:+0000:SOCJoinGame:nickname=Ghettoette|password=***|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:58:49:772:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=0|state=false
+2012:11:11:19:58:49:773:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=1|state=false
+2012:11:11:19:58:49:773:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=2|state=false
+2012:11:11:19:58:49:773:+0000:SOCSetSeatLock:game=L5 practicegame|playerNumber=3|state=false
+2012:11:11:19:58:49:773:+0000:SOCJoinGame:nickname=Ghettoette|password=***|host=dummyhost|game=L5 practicegame
+2012:11:11:19:58:50:199:+0000:SOCLeaveGame:nickname=catanstrophe|host=129.215.197.165|game=L5 practicegame
+2012:11:11:19:58:50:199:+0000:SOCLeaveGame:nickname=catanstrophe|host=76.14.69.141|game=L5 practicegame
+2012:11:11:19:58:50:199:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=catanstrophe left the game
+2012:11:11:19:58:50:199:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Fetching a robot player...
+2012:11:11:19:58:50:199:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=Sorry, no robots on this server.
+2012:11:11:19:58:50:200:+0000:SOCClearGameHistory:game=L5 practicegame
+2012:11:11:19:58:50:200:+0000:SOCSetTurn:game=L5 practicegame|param=3
+2012:11:11:19:58:50:200:+0000:SOCGameState:game=L5 practicegame|state=1000
+2012:11:11:19:58:50:200:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=>>> null has won the game with 4 points.
+2012:11:11:19:58:50:200:+0000:SOCGameStats:game=L5 practicegame|3|2|2|4|false|false|false|false
+2012:11:11:19:58:50:201:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=null has a Temple (+1VP)
+2012:11:11:19:58:50:201:+0000:SOCGameTextMsg:game=L5 practicegame|nickname=Server|text=This game was 4 rounds, and took 32 minutes 14 seconds.
+2012:11:11:19:58:50:203:+0000:SOCClearOffer:game=L5 practicegame|playerNumber=-1
+2012:11:11:19:58:50:203:+0000:SOCSetPlayedDevCard:game=L5 practicegame|playerNumber=3|playedDevCard=false
+2012:11:11:19:58:50:203:+0000:SOCTurn:game=L5 practicegame|playerNumber=3
