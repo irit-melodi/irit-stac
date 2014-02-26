@@ -20,7 +20,7 @@ fi
 
 T=$(mktemp -d -t stac.XXXX)
 pushd "$T" > /dev/null
-for dset in "all $DATASETS"; do
+for dset in all "$DATASETS"; do
     echo >&2 "[build model] learning models for dataset $dset"
     attelo learn -C "$ATTELO_CONFIG" -l "$ATTELO_LEARNER"\
         "$SNAPSHOT/$dset.edu-pairs.csv"\
