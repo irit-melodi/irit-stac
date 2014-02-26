@@ -8,6 +8,15 @@ SCRIPT_DIR=$PWD
 popd > /dev/null
 cd $SCRIPT_DIR/../..
 
+die () {
+    errcode=$?
+    echo "ARGH! Something went wrong building the model"
+    exit $errcode
+}
+trap die ERR
+
+
+
 SNAPSHOT=$PWD/data/SNAPSHOTS/latest
 ATTELO_LEARNERS="bayes maxent"
 ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
