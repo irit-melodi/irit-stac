@@ -6,10 +6,34 @@ This is the STAC codebase.
 2. pip (see educe README if you do not)
 3. git (to keep up with educe/attelo changes)
 4. graphviz (for visualising graphs)
+5. [optional] Anacoda (`conda --version` should say 2.2.6 or higher)
+
+## Sandboxing
 
 If you are attempting to use the development version of this code
-(ie. from SVN), I highly recommend using virtualenv to create a
-Python sandbox where all things STAC will be installed
+(ie. from SVN), I highly recommend using a sandbox environment.
+We have two versions below, one for Anaconda users (on Mac),
+and one for standard Python users via virtualenv.
+
+### For Anaconda users
+
+Anaconda users get slightly different instructions because virtualenv
+doesn't yet seem to work well with it (at least with the versions we've
+tried). Instead of using virtualenv, you could try something like this
+
+    conda create -n stac --clone $HOME/anaconda
+
+If that doesn't work, make sure your anaconda version is up to date,
+and try `/anaconda` instead of `$HOME/anaconda`.
+
+Note that whenever you want to use STAC things, you would need to run
+this command
+
+    source activate
+
+### For standard Python users
+
+The virtualenv equivalent works a bit more like the follow:
 
     mkdir $HOME/.virtualenvs
     virtualenv $HOME/.virtualenvs/stac --no-site-packages
@@ -42,17 +66,29 @@ processed by pip
 
        source $HOME/.virtualenvs/stac/bin/activate
 
-3. Install educe and attelo in development mode. Development mode
-   simply puts the link to the current version of educe/attelo into
-   your environment
+3. Install educe and attelo prerequisites.
 
        cd educe
-       pip install -r requirements.txt
-       python setup.py develop
+       pip install -r requirements.txt\
+          --allow-unverified pydot\
+          --allow-unverified python-graph-core\
+          --allow-unverified python-graph-dot
        cd ..
 
        cd attelo
        pip install -r requirements.txt
+       cd ..
+
+
+4. Install educe and attelo in development mode. Development mode
+   simply puts the link to the current version of educe/attelo into
+   your environment
+
+       cd educe
+       python setup.py develop
+       cd ..
+
+       cd attelo
        python setup.py develop
        cd ..
 
@@ -60,11 +96,11 @@ processed by pip
    possible to just go into the respective directories and
    issue a `git pull`. No further installation will be needed.
 
-4. Install the STAC code in development mode
+5. Install the STAC code in development mode
 
        cd Stac/code
        pip install -r requirements.txt
-       python setup.py development
+       python setup.py develop
 
    Likewise, if somebody tells you to update the STAC code, it
    should be possible to just `svn update`.  No further
