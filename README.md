@@ -105,3 +105,26 @@ processed by pip
    Likewise, if somebody tells you to update the STAC code, it
    should be possible to just `svn update`.  No further
    installation will be needed
+
+## Parser infrastructure
+
+Now that you have everything installed, there are a handful of parser
+infrastructure scripts which run the feature extraction process, build
+the attachment/labeling models, and run the decoder on sample data.
+
+code/parser/gather-features
+~ do feature extraction from annotated data, along with pre-saved
+  pos-tagging and and parser output, and some lexical resources
+
+code/parser/build-model
+~ from the extracted features (see gather-features), build the
+  attachment and labeling models needed to run the parser
+
+code/parser/stac-parser.sh
+~ given a model (see build-model), and a STAC soclog file, run the
+  parser and display a graph of the output (needs third party
+  tools, see script for details)
+
+code/parser/harness.sh
+~ given extracted features (see gather-features), run experiments on
+  STAC data
