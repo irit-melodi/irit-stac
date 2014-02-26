@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Note: you should have run build-model to gather the data for this
+# (it also builds a model, which we don't really use here)
+
 pushd $(dirname $0) > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
@@ -11,6 +15,13 @@ DATA_DIR=$SCRIPT_DIR/../../data/SNAPSHOTS/latest
 DATA_EXT=.csv # .2.csv
 DECODE_FLAGS="-C $SCRIPT_DIR/stac-features.config"
 DECODER=attelo
+
+if [ ! -d "$DATA_DIR" ]; then
+    echo >&2 "No data to run experiments on"
+    echo >&2 "Please run $SCRIPT_DIR/gather-features"
+    exit 1
+fi
+
 
 T=$(mktemp -d -t stac.XXXX)
 cd $T

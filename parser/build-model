@@ -1,59 +1,32 @@
 #!/bin/bash
 
+# Build models from extracted features.
+# You should run gather-features first
+
 pushd $(dirname $0) > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
 cd $SCRIPT_DIR/../..
 
-TODAY=$(date +%Y-%m-%d)
-SNAPSHOT=$PWD/data/SNAPSHOTS/$TODAY
-LEX_DIR=data/resources/lexicon
-ANNO='bronze|Bronze|silver|SILVER|GOLD'
-
+SNAPSHOT=$PWD/data/SNAPSHOTS/latest
 ATTELO_LEARNER=bayes
 ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
 DATASETS="socl-season1 pilot"
 
-mkdir -p $SNAPSHOT/tmp
+if [ ! -d "$SNAPSHOT" ]; then
+    echo >&2 "No data snapshot detected; please run $SCRIPT_DIR/gather-features"
+    exit 1
+fi
 
-die () {
-    errcode=$?
-    echo "ARGH! Something went wrong; check the log files in $SNAPSHOT/tmp"
-    exit $errcode
-}
-trap die ERR
-
-for dset in $DATASETS; do
-    echo >&2 "[build model] gathering features for $dset"
-    code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT/tmp"\
-        --experimental\
-        --anno $ANNO\
-        2> "$SNAPSHOT/tmp/$dset.features.log"
-done
-
-head -n 1 "$SNAPSHOT/tmp/pilot.edu-pairs.csv"\
-    > "$SNAPSHOT/all.edu-pairs.csv"
-head -n 1 "$SNAPSHOT/tmp/pilot.relations.csv"\
-    > "$SNAPSHOT/all.relations.csv"
-for dset in $DATASETS; do
-    tail -n +2 "$SNAPSHOT/tmp/$dset.edu-pairs.csv"\
-        >> "$SNAPSHOT/all.edu-pairs.csv"
-    tail -n +2 "$SNAPSHOT/tmp/$dset.relations.csv"\
-        >> "$SNAPSHOT/all.relations.csv"
-done
-
-
-echo >&2 "[build model] learning combined models"
 T=$(mktemp -d -t stac.XXXX)
 pushd "$T" > /dev/null
-attelo learn -C "$ATTELO_CONFIG" -l "$ATTELO_LEARNER"\
-    "$SNAPSHOT/all.edu-pairs.csv"\
-    "$SNAPSHOT/all.relations.csv"
-mv "$T/"*.model "$SNAPSHOT"
-popd > /dev/null
-
-# symlink this as the latest snapshot we have
-pushd data/SNAPSHOTS > /dev/null
-rm -f latest
-ln -s $TODAY latest
+for dset in "all $DATASETS"; do
+    echo >&2 "[build model] learning models for dataset $dset"
+    attelo learn -C "$ATTELO_CONFIG" -l "$ATTELO_LEARNER"\
+        "$SNAPSHOT/$dset.edu-pairs.csv"\
+        "$SNAPSHOT/$dset.relations.csv"
+    for m in "$T"/*.model; do
+        mv $m "$SNAPSHOT"/$(basename $m)-$dset.model
+    done
+done
 popd > /dev/null
