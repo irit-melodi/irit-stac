@@ -99,8 +99,9 @@ decode() {
     decoder=$1
     learner=$2
     dset=$3
+    learner_file_name=$(echo $learner | sed -e 's/:/-/')
 
-    MODEL_INFO="$dset-$learner"
+    MODEL_INFO="$dset-$learner_file_name"
     PARSED="parsed-$MODEL_INFO-$decoder"
     mkdir $T/$PARSED
     pushd $T/$PARSED > /dev/null

@@ -26,6 +26,7 @@ fi
 T=$(mktemp -d -t stac.XXXX)
 cd $T
 
+# NB: use a colon if you want a separate learner for relations
 LEARNERS="bayes maxent"
 DECODERS="local mst locallyGreedy"
 DATASETS="all pilot socl-season1"
@@ -35,10 +36,12 @@ for dataset in $DATASETS; do
     touch scores-$dataset
     for learner in $LEARNERS; do
         for decoder in $DECODERS; do
+            LEARNER_FLAGS="-l"$(echo $learner | sed -e 's/:/ --relation-learner /')
             $DECODER evaluate $DECODE_FLAGS\
                 $DATA_DIR/$dataset.edu-pairs$DATA_EXT\
                 $DATA_DIR/$dataset.relations$DATA_EXT\
-                -l $learner -d $decoder >> scores-$dataset
+                $LEARNER_FLAGS\
+                -d $decoder >> $EVAL_DIR/scores-$dataset
         done
     done
 
