@@ -19,10 +19,13 @@ from attelo.fileNfold import\
 from attelo.report import Report
 import educe.stac
 import Orange
+import Orange.data
+import Orange.data.io
 import Orange.feature
 
 import stac.csv
 import stac.features
+from stac.util.output import save_document
 
 LEARNER = Orange.classification.bayes.NaiveLearner(adjust_threshold=True)
 
@@ -30,6 +33,9 @@ LEARNER = Orange.classification.bayes.NaiveLearner(adjust_threshold=True)
 # utilities
 # ---------------------------------------------------------------------
 
+class DialogueActException(Exception):
+    def __init__(self, msg):
+        super(DialogueActException, self).__init__(msg)
 
 def _subtable_in_grouping(features, grouping, table):
     """Return the entries in the table that belong in the given
@@ -197,7 +203,7 @@ def command_save_models(args):
     """
     data = args_to_data(args)
     model = LEARNER(data)
-    model_file = os.path.join(args.output, "dialogue-act.model")
+    model_file = os.path.join(args.output, "dialogue-acts.model")
     save_model(model_file, model)
 
 
@@ -231,6 +237,84 @@ def mk_csv_string(header, vec):
     return csvfile
 
 
+def extracted_name(domain, feat):
+    """
+    Reconstruct the feature name our feature extraction code would
+    have used for the given Orange feature
+
+    """
+    if feat in domain.get_metas().values():
+        tycode = "m"
+    elif feat == domain.class_var:
+        tycode = "c"
+    elif isinstance(feat, Orange.feature.Discrete):
+        tycode = "D"
+    elif isinstance(feat, Orange.feature.Continuous):
+        tycode = "C"
+    else:
+        raise ValueError("I only know about discrete or "
+                         "continuous features (got [%s] %s)"
+                         % (type(feat), feat))
+
+    return tycode + "#" + feat.name
+
+
+def mk_instance(domain, vec):
+    """
+    Build an Orange instance from an extracted feature vector
+    """
+
+    def get_val(feat):
+        val_ = vec[extracted_name(domain, feat)]
+        val = val_.encode('utf-8') if isinstance(val_, unicode) else val_
+        if isinstance(feat, Orange.feature.Continuous):
+            return val
+        elif isinstance(feat, Orange.feature.Discrete):
+            if str(val) in feat.values:
+                return str(val)
+            else:
+                return '?'
+        else:
+            return val
+
+    inst = Orange.data.Instance(domain, map(get_val, domain))
+    for meta in domain.get_metas().values():
+        inst[meta] = get_val(meta)
+
+    return inst
+
+
+def glozz_to_orange(inputs, model):
+    """
+    Convert a STAC test corpus to an Orange table, assuming it shares the
+    given model
+    """
+    people = stac.features.get_players(inputs)
+    csvheader = stac.features.mk_csv_header_single(inputs, [])
+
+    # no class variable - we don't know it yet
+    domain = Orange.data.Domain(model.domain.features, False)
+    for i, meta in model.domain.get_metas().items():
+        # coerce meta type to string because for some odd reason
+        # Orange seems to learn the dialogues as discrete
+        str_meta = Orange.feature.String(meta.name)
+        domain.add_meta(i, str_meta)
+
+    data = Orange.data.Table(domain)
+    for k in inputs.corpus:
+        current = stac.features.mk_current(inputs, people, k)
+        doc = current.doc
+        edus = [unit for unit in doc.units if educe.stac.is_edu(unit)]
+        for edu in edus:
+            vec = stac.features.single_edu_features(inputs, current, edu)
+            dia_span = current.contexts[edu].dialogue.text_span()
+            vec[stac.features.K_DIALOGUE] =\
+                stac.features.friendly_dialogue_id(current.key, dia_span)
+            instance = mk_instance(domain, vec)
+            data.append(instance)
+    return data
+
+
 def command_annotate(args):
     """
     Top-level command: given a dialogue act model, and a corpus with some
@@ -244,23 +328,29 @@ def command_annotate(args):
     args.ignore_cdus = False
     args.debug = False
     model = load_model(args.model)
-    inputs = stac.features.read_live_inputs(args)
-    people = stac.features.get_players(inputs)
-    csvheader = stac.features.mk_csv_header_single(inputs, [])
+
+    if args.live:
+        inputs = stac.features.read_live_inputs(args)
+    else:
+        inputs = stac.features.read_corpus_inputs(args, 'unannotated')
+    data = glozz_to_orange(inputs, model)
+
+    # now make our predictions
+    features = args_to_features(args)
+    predicted = predict_dialogue_acts(features, model, data)
+
+    # save the output
     for k in inputs.corpus:
-        current = stac.features.mk_current(inputs, people, k)
-        doc = current.doc
+        doc = inputs.corpus[k]
         edus = [unit for unit in doc.units if educe.stac.is_edu(unit)]
         for edu in edus:
-            vec = stac.features.single_edu_features(inputs, current, edu)
-            dia_span = current.contexts[edu].dialogue.text_span()
-            vec[stac.features.K_DIALOGUE] =\
-                stac.features.friendly_dialogue_id(current.key, dia_span)
-            csvfile = mk_csv_string(csvheader, vec)
-            with open("/tmp/blaah.csv","w") as ostream:
-                print >> ostream, csvfile.getvalue().rstrip()
-            table = Orange.data.Table("/tmp/blaah.csv")
-            print table.domain
+            edu_id = edu.identifier()
+            edu.type = str(predicted[edu_id])
+        k2 = copy.copy(k)
+        k2.doc
+        k2.stage = 'units'
+        k2.annotator = 'simple-da'
+        save_document(args.output, k2, doc)
 
 
 def command_nfold_eval(args):
@@ -351,11 +441,12 @@ def main():
                           help="corpus to annotate (live mode assumed)")
     cmd_anno.add_argument('resources', metavar='DIR',
                           help='Resource dir (eg. data/resources/lexicon)')
+    cmd_anno.add_argument("--live", action='store_true',
+                          help="Standalone annotations")
     cmd_anno.add_argument("--model", default=None,
                           help="provide saved model for prediction of "
                           "dialogue acts")
     cmd_anno.set_defaults(func=command_annotate)
-
 
     # scoring profs
     cmd_eval = subparsers.add_parser('evaluate',
