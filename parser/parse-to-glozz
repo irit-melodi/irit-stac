@@ -123,7 +123,7 @@ with codecs.open(args.parse, 'r,', 'utf-8') as f:
         dialogue = row[k_dialogue]
         if dialogue in key_for_dialogue:
             k = key_for_dialogue[dialogue]
-            if row[k_label] != "UNRELATED":
+            if row[k_label] not in ["UNRELATED", "UNRELATED2"]:
                 rel = mk_relation(corpus[k], row, counter)
                 relations[k].append(rel)
         else:
