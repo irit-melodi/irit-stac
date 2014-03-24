@@ -66,7 +66,11 @@ processed by pip
 
        source $HOME/.virtualenvs/stac/bin/activate
 
-3. Install educe and attelo prerequisites.
+3. Install megam (for attelo).
+   This might be tricky if you're on a Mac.
+   Ask Eric.
+
+4. Install educe and attelo prerequisites.
 
        cd educe
        pip install -r requirements.txt\
@@ -80,7 +84,7 @@ processed by pip
        cd ..
 
 
-4. Install educe and attelo in development mode. Development mode
+5. Install educe and attelo in development mode. Development mode
    simply puts the link to the current version of educe/attelo into
    your environment
 
@@ -96,7 +100,7 @@ processed by pip
    possible to just go into the respective directories and
    issue a `git pull`. No further installation will be needed.
 
-5. Install the STAC code in development mode
+6. Install the STAC code in development mode
 
        cd Stac/code
        pip install -r requirements.txt
