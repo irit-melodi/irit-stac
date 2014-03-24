@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo >&2 "Need a csv file"
+    exit 1
+fi
+
+T=`mktemp -t stac.textql.XXXX`
+sed -e '1 s/.#//g' -e '1 s/\*/star/g' -e '1 s/\?//g' $1 > $T
+textql -header -console -source=$T
+rm $T
