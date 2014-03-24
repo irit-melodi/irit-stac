@@ -3,7 +3,7 @@
 # Note: you should have run build-model to gather the data for this
 # (it also builds a model, which we don't really use here)
 
-pushd $(dirname $0) > /dev/null
+pushd "$(dirname $0)" > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
 
@@ -22,20 +22,27 @@ if [ ! -d "$DATA_DIR" ]; then
     exit 1
 fi
 
+TODAY=$(date +%Y-%m-%d)
+EVAL_DIR=$DATA_DIR/eval-$TODAY
+mkdir -p $EVAL_DIR
 
 T=$(mktemp -d -t stac.XXXX)
 cd $T
 
 # NB: use a colon if you want a separate learner for relations
 LEARNERS="bayes maxent"
-DECODERS="local mst locallyGreedy"
+DECODERS="last local locallyGreedy mst"
 DATASETS="all pilot socl-season1"
 
 for dataset in $DATASETS; do
+    echo > $EVAL_DIR/scores-$dataset
     # try x-fold validation with various algos
-    touch scores-$dataset
     for learner in $LEARNERS; do
         for decoder in $DECODERS; do
+            echo >&2 "=============================================================="
+            echo >&2 "$dataset $decoder $learner"
+            echo >&2 "=============================================================="
+            echo >&2 ""
             LEARNER_FLAGS="-l"$(echo $learner | sed -e 's/:/ --relation-learner /')
             $DECODER evaluate $DECODE_FLAGS\
                 $DATA_DIR/$dataset.edu-pairs$DATA_EXT\
@@ -44,7 +51,13 @@ for dataset in $DATASETS; do
                 -d $decoder >> $EVAL_DIR/scores-$dataset
         done
     done
+done
 
+cd $EVAL_DIR
+# This isn't part of the evalution proper.
+# It seems to just be here to try training a model on the data
+# and seeing what happens when we decode on the very same data
+for dataset in $DATASETS; do
     # test stand-alone parser for stac
     # 1) train and save attachment model
     # -i
@@ -74,13 +87,3 @@ for dataset in $DATASETS; do
         -d mst
 done
 echo $T >&2
-
-# results
-#socl
-#FINAL EVAL: relations full: 	 locallyGreedy+bayes, h=average, unlabelled=False,post=False,rfc=full 	 Prec=0.229, Recall=0.217, F1=0.223 +/- 0.015 (0.239 +- 0.029)
-#FINAL EVAL: relations full: 	 local+maxent, h=average, unlabelled=False,post=False,rfc=full 	         Prec=0.678, Recall=0.151, F1=0.247 +/- 0.017 (0.243 +- 0.034)
-#FINAL EVAL: relations full: 	 local+bayes, h=average, unlabelled=False,post=False,rfc=full 	                 Prec=0.261, Recall=0.249, F1=0.255 +/- 0.015 (0.264 +- 0.031)
-#FINAL EVAL: relations full: 	 locallyGreedy+maxent, h=average, unlabelled=False,post=False,rfc=full 	 Prec=0.281, Recall=0.257, F1=0.269 +/- 0.015 (0.277 +- 0.030)
-
-#pilot
-#FINAL EVAL: relations full  : 	 locallyGreedy+maxent, h=average, unlabelled=False,post=False,rfc=full 	 Prec=0.341, Recall=0.244, F1=0.284 +/- 0.015 (0.279 +- 0.029)
