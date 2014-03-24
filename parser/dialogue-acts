@@ -1,0 +1,329 @@
+"""
+Learn and predict dialogue acts from EDU feature vectors
+"""
+
+from ConfigParser import ConfigParser
+from collections import namedtuple
+import argparse
+import copy
+import cPickle
+import csv
+import os
+import sys
+
+from Orange.classification import Classifier
+from attelo.fileNfold import\
+    make_n_fold, makeFoldByFileIndex
+from attelo.report import Report
+import Orange
+import Orange.feature
+
+LEARNER = Orange.classification.bayes.NaiveLearner(adjust_threshold=True)
+
+# ---------------------------------------------------------------------
+# utilities
+# ---------------------------------------------------------------------
+
+
+def _subtable_in_grouping(features, grouping, table):
+    """Return the entries in the table that belong in the given
+    group
+    """
+    return table.filter_ref({features.grouping: grouping})
+
+
+def select_data_in_grouping(features, grouping, data):
+    """Return only the data that belong in the given group
+    """
+    return _subtable_in_grouping(features, grouping, data)
+
+# ---------------------------------------------------------------------
+#
+# ---------------------------------------------------------------------
+
+
+# TODO: describe model type
+def load_model(filename):
+    """
+    Load model into memory from file
+    """
+    with open(filename, "rb") as fstream:
+        return cPickle.load(fstream)
+
+
+def save_model(filename, model):
+    """
+    Dump model into a file
+    """
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    with open(filename, "wb") as fstream:
+        cPickle.dump(model, fstream)
+
+# ---------------------------------------------------------------------
+#
+# ---------------------------------------------------------------------
+
+
+def dialogue_act_eval(features, predicted, reference, debug=False):
+    """basic eval: counting correct predicted edges (labelled or not)
+    data contains the reference attachments
+    labels the corresponding relations
+    """
+    #print "REF:", reference
+    #print "PRED:", predicted
+    score = 0
+    if debug:
+        print predicted
+    for one in reference:
+        edu = one[features.source].value
+        ref_label = one[features.label]
+        if debug:
+            print >> sys.stderr, edu, predicted.get(edu, None)
+        if edu in predicted and predicted[edu] == ref_label:
+            score += 1
+            if debug:
+                print >> sys.stderr, "correct"
+    total_ref = len(reference)
+    total_pred = len(predicted)
+    return score, total_pred, total_ref
+
+
+# TODO: should just pass through the whole csv file plus
+# the new class prediction
+def export_csv(features, predicted, instances, folder):
+    """
+    Save dialogue act predictions to a minimal CSV file
+    """
+    def header_str(hdr):
+        "Orange-compatible string representation of header"
+        _ty_dict = {Orange.feature.Descriptor.Discrete: 'D#',
+                    Orange.feature.Descriptor.Other: 'm#',
+                    Orange.feature.Descriptor.Continuous: 'C#'}
+        return _ty_dict[hdr.var_type] + hdr.name
+
+    fname = os.path.join(folder, "dialogue-acts.csv")
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    metas = sorted(instances.domain.get_metas().values())
+    domain = instances.domain
+
+    with open(fname, 'wb') as fstream:
+        writer = csv.writer(fstream)
+        writer.writerow(["c#" + features.label] +
+                        ["m#" + meta.name for meta in metas] +
+                        [header_str(hdr) for hdr in domain])
+        for inst in instances:
+            edu = inst[features.source].value
+            label = predicted.get(edu, "NOPREDICTION")
+            writer.writerow([label] +
+                            [inst[feat] for feat in metas] +
+                            [str(inst[feat]) for feat in domain])
+
+# ---------------------------------------------------------------------
+# evaluation
+# ---------------------------------------------------------------------
+
+
+def prepare_folds(features, num_folds, table, shuffle=True):
+    """Return an N-fold validation setup respecting a property where
+    examples in the same grouping stay in the same fold.
+    """
+    import random
+    if shuffle:
+        random.seed()
+    else:
+        random.seed("just an illusion")
+
+    fold_struct = make_n_fold(table,
+                              folds=num_folds,
+                              meta_index=features.grouping)
+    selection = makeFoldByFileIndex(table,
+                                    fold_struct,
+                                    meta_index=features.grouping)
+    return fold_struct, selection
+
+# ---------------------------------------------------------------------
+# arguments and main
+# ---------------------------------------------------------------------
+
+Features = namedtuple('Features', 'grouping label source')
+
+
+def args_to_features(args):
+    """
+    Given the (parsed) command line arguments, return the set of
+    core feature labels for our incoming dataset.
+    """
+    config = ConfigParser()
+    # cancels case-insensitive reading of variables.
+    config.optionxform = lambda option: option
+    with open(args.config) as config_file:
+        config.readfp(config_file)
+        metacfg = dict(config.items("Dialogue acts"))
+        return Features(grouping=metacfg["Grouping"],
+                        label=metacfg["Label"],
+                        source=metacfg["Source"])
+
+
+def args_to_data(args):
+    """
+    Given the (parsed) command line arguments, return the data in
+    table form
+    """
+    return Orange.data.Table(args.data)
+
+
+def predict_dialogue_acts(features, model, vectors):
+    """
+    Return a dictionary from unique identifiers to dialogue acts
+    (the identifiers come from the meta attributes in `features`)
+    """
+    return {vec[features.source].value: model(vec, Classifier.GetValue)
+            for vec in vectors}
+
+
+def command_save_models(args):
+    """
+    Top-level command: build a model using all the input data and
+    dump it to disk
+    """
+    data = args_to_data(args)
+    model = LEARNER(data)
+    model_file = os.path.join(args.output, "dialogue-act.model")
+    save_model(model_file, model)
+
+
+def command_test_only(args):
+    """
+    Top-level command: given a model and some unlabelled data,
+    label everything and dump the results to disk
+    """
+    data = args_to_data(args)
+    features = args_to_features(args)
+
+    if not args.model:
+        sys.exit("ERROR: [test mode] model must be provided ")
+
+    model = load_model(args.model)
+    predicted = predict_dialogue_acts(features, model, data)
+    export_csv(features, predicted, data, args.output)
+
+
+def command_nfold_eval(args):
+    """
+    Top-level command: build a model using all the input data and
+    dump it to disk
+    """
+    features = args_to_features(args)
+    data = args_to_data(args)
+
+    fold_struct, selection = prepare_folds(features, args.nfold, data,
+                                           shuffle=args.shuffle)
+
+    all_evals = []
+    # --- fold level -- to be refactored
+    for test_fold in range(args.nfold):
+        print >> sys.stderr, ">>> doing fold ", test_fold + 1
+        print >> sys.stderr, ">>> training ... "
+
+        train_data = data.select_ref(selection, test_fold, negate=1)
+        # train model
+        model = LEARNER(train_data)
+        # -- file level --
+        fold_evals = []
+        for onedoc in fold_struct:
+            if fold_struct[onedoc] == test_fold:
+                print >> sys.stderr, "decoding on file : ", onedoc
+
+                instances = select_data_in_grouping(features, onedoc, data)
+                predicted = predict_dialogue_acts(features, model, instances)
+                reference = instances
+                scores = dialogue_act_eval(features, predicted, reference)
+                fold_evals.append(scores)
+        all_evals.extend(fold_evals)
+        fold_report = Report(fold_evals, params=args)
+        print "\t Prec=%1.3f, Recall=%1.3f, F1=%1.3f" %\
+            (fold_report.prec, fold_report.recall, fold_report.f1)
+
+
+        # --end of file level
+       # --- end of fold level
+    # end of test for a set of parameter
+    # report: summing
+    all_report = Report(all_evals, params=args)
+    print "FINAL Prec=%1.3f, Recall=%1.3f, F1=%1.3f" %\
+            (all_report.prec, all_report.recall, all_report.f1)
+
+
+
+
+def main():
+    usage = "%(prog)s [options] data_file"
+    parser = argparse.ArgumentParser(usage=usage)
+    subparsers = parser.add_subparsers()
+
+    common_args = argparse.ArgumentParser(add_help=False)
+
+    common_args.add_argument("data", metavar="FILE",
+                             help="csv file, one EDU per row")
+    common_args.add_argument("--config", "-C", metavar="FILE",
+                             default=None,
+                             required=True,
+                             help="corpus specificities config file")
+    common_args.add_argument("--output", "-o", metavar="DIR",
+                             default=None,
+                             required=True,
+                             help="output directory")
+
+    # learn command
+    cmd_learn = subparsers.add_parser('learn',
+                                      parents=[common_args])
+    cmd_learn.set_defaults(func=command_save_models)
+
+    # decode command
+    cmd_decode = subparsers.add_parser('decode',
+                                       parents=[common_args])
+    cmd_decode.add_argument("--model", default=None,
+                            help="provide saved model for prediction of "
+                            "dialogue acts")
+    cmd_decode.add_argument("--paired", action='store_true',
+                            help="data contains edu pairs")
+    cmd_decode.set_defaults(func=command_test_only)
+
+    # annotate command
+    cmd_decode = subparsers.add_parser('annotate',
+                                       parents=[common_args])
+    cmd_decode.add_argument("livecorpus", default=None, metavar="DIR",
+                            help="corpus to annotate (live mode assumed)")
+    cmd_decode.add_argument("--model", default=None,
+                            help="provide saved model for prediction of "
+                            "dialogue acts")
+
+    cmd_decode.set_defaults(func=command_test_only)
+
+
+    # scoring profs
+    cmd_eval = subparsers.add_parser('evaluate',
+                                     parents=[common_args])
+    cmd_eval.set_defaults(func=command_nfold_eval)
+    cmd_eval.add_argument("--nfold", "-n",
+                          default=10, type=int,
+                          help="nfold cross-validation number (default 10)")
+    cmd_eval.add_argument("--accuracy", "-a",
+                          default=False, action="store_true",
+                          help="provide accuracy scores for classifiers used")
+    cmd_eval.add_argument("-s", "--shuffle",
+                          default=False, action="store_true",
+                          help="if set, ensure a different cross-validation "
+                          "of files is done, otherwise, the same file "
+                          "splitting is done everytime")
+
+    args = parser.parse_args()
+    args.func(args)
+
+if __name__ == "__main__":
+    main()
+
+# vim:filetype=python:
