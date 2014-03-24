@@ -29,7 +29,7 @@ and try `/anaconda` instead of `$HOME/anaconda`.
 Note that whenever you want to use STAC things, you would need to run
 this command
 
-    source activate
+    source activate stac
 
 ### For standard Python users
 
