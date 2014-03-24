@@ -886,11 +886,11 @@ def read_live_inputs(args):
     return read_common_inputs(args, corpus)
 
 
-def read_corpus_inputs(args):
+def read_corpus_inputs(args, stage=None):
     """
     Read and filter the part of the corpus we want features for
     """
-    args.stage = 'discourse|units'
+    args.stage = stage or 'discourse|units'
     is_interesting = educe.util.mk_is_interesting(args)
     reader = educe.stac.Reader(args.corpus)
     anno_files = reader.filter(reader.files(), is_interesting)

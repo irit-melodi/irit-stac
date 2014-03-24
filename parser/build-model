@@ -44,4 +44,12 @@ for dset in all $DATASETS; do
         done
     done
 done
+
+# dialogue act models
+for dset in all $DATASETS; do
+    ${SCRIPT_DIR}/dialogue-acts learn -C "$ATTELO_CONFIG"\
+        "$SNAPSHOT/$dset.just-edus.csv"\
+        --output $T/dialogue-acts
+    mv $T/dialogue-acts/dialogue-acts.model "$SNAPSHOT/${dset}-dialogue-acts.model"
+done
 popd > /dev/null

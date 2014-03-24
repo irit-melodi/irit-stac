@@ -35,13 +35,12 @@ done
 mv $SNAPSHOT/tmp/*.csv $SNAPSHOT
 
 # combine the csv files into one megafile
-head -n 1 "$SNAPSHOT/pilot.edu-pairs.csv" > "$SNAPSHOT/all.edu-pairs.csv"
-head -n 1 "$SNAPSHOT/pilot.relations.csv" > "$SNAPSHOT/all.relations.csv"
-for dset in $DATASETS; do
-    tail -n +2 "$SNAPSHOT/$dset.edu-pairs.csv"\
-        >> "$SNAPSHOT/all.edu-pairs.csv"
-    tail -n +2 "$SNAPSHOT/$dset.relations.csv"\
-        >> "$SNAPSHOT/all.relations.csv"
+for ext in edu-pairs relations just-edus; do
+    head -n 1 "$SNAPSHOT/pilot.$ext.csv" > "$SNAPSHOT/all.$ext.csv"
+    for dset in $DATASETS; do
+        tail -n +2 "$SNAPSHOT/$dset.$ext.csv"\
+            >> "$SNAPSHOT/all.$ext.csv"
+    done
 done
 
 # symlink this as the latest snapshot we have

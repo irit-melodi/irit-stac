@@ -62,27 +62,31 @@ def friendly_dialogue_id(k, dialogue):
 # helpers
 # ----------------------------------------------------------------------
 
-def from_global_id(doc, x):
+
+def from_global_id(gid):
     """
     Given an educe.annotation global identifier, return its local equivalent
+    assumed to be the last two parts of an underscore delimited string
     """
-    # implementation of this function is somewhat evil
-    prefix_size = len(doc.global_id(''))
-    return x[prefix_size:]
+    # implementation of this function is somewhat evil,
+    # take the last two components
+    parts = gid.split("_")
+    return "_".join(parts[-2:])
+
 
 def mk_relation(doc, row, counter):
     """
     Note that this relies on global state
     """
-    t1       = from_global_id(doc, row[k_id_du1])
-    t2       = from_global_id(doc, row[k_id_du2])
-    span     = RelSpan(t1, t2)
-    label    = row[k_label]
+    t1 = from_global_id(row[k_id_du1])
+    t2 = from_global_id(row[k_id_du2])
+    span = RelSpan(t1, t2)
+    label = row[k_label]
     annotator = 'stacparser'
-    rel_id    = annotator + '_' + str(counter)
+    rel_id = annotator + '_' + str(counter)
     features = {}
-    metadata                  = {}
-    metadata['author']        = annotator
+    metadata = {}
+    metadata['author'] = annotator
     metadata['creation-date'] = str(counter)
     return Relation(rel_id=rel_id, span=span, type=label, features=features, metadata=metadata)
 
@@ -94,7 +98,7 @@ arg_parser = argparse.ArgumentParser(description='Display features related to re
 arg_parser.add_argument('input', metavar='DIR',
                         help='Glozz files (flat structure)')
 arg_parser.add_argument('parse', metavar='FILE',
-                        help='Resource dir (eg. data/resource)')
+                        help='Attelo output (.csv file)')
 arg_parser.add_argument('output', metavar='DIR',
                         help='Output directory')
 args=arg_parser.parse_args()
