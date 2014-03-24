@@ -26,6 +26,11 @@ for dset in $DATASETS; do
         --experimental\
         --anno $ANNO\
         2> "$SNAPSHOT/tmp/$dset.features.log"
+    code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT/tmp"\
+        --experimental\
+        --single\
+        --anno $ANNO\
+        2>> "$SNAPSHOT/tmp/$dset.features.log"
 done
 mv $SNAPSHOT/tmp/*.csv $SNAPSHOT
 
