@@ -1,6 +1,13 @@
 #!/bin/bash
 shopt -s nullglob
-set -e
+
+die () {
+    errcode=$?
+    echo "ARGH! Something went wrong..."
+    exit $errcode
+}
+trap die ERR
+
 
 pushd `dirname $0` > /dev/null
 SCRIPT_DIR=$PWD
@@ -16,8 +23,16 @@ SNAPSHOT_DIR="$DATA_DIR/SNAPSHOTS/latest"
 SHIPPED_TAGGER=ark-tweet-nlp-0.3.2.jar
 SHIPPED_PARSER=stanford-corenlp-full-2013-06-20
 
+# how the model was built
+ATTELO_LEARNERS="maxent bayes"
+ATTELO_DECODERS="mst locallyGreedy local"
 ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
-ATTELO_DECODER=mst
+
+# which datasets the models were built on
+# at some point in the future, we could probably just have one
+# but for development, it can be useful to get some insight into
+# how much the dataset influences things
+DATASETS="all socl-season1 pilot"
 
 if [ -e $STAC_DIR/lib/$SHIPPED_TAGGER ]; then
     TAGGER_JAR=$STAC_DIR/lib/$SHIPPED_TAGGER
@@ -80,28 +95,55 @@ python $CODE_DIR/queries/rel-info\
     $T $DATA_DIR/resources/lexicon $T
 
 
+decode() {
+    decoder=$1
+    learner=$2
+    dset=$3
+
+    MODEL_INFO="$dset-$learner"
+    PARSED="parsed-$MODEL_INFO-$decoder"
+    mkdir $T/$PARSED
+    pushd $T/$PARSED > /dev/null
+    # TODO - not sure if we really need to feed different data for
+    # attachments ande relations here (right now just duplicating
+    attelo decode -C "$ATTELO_CONFIG"\
+        -A "$SNAPSHOT_DIR/attach-$MODEL_INFO.model"\
+        -R "$SNAPSHOT_DIR/relations-$MODEL_INFO.model"\
+        -d "$decoder"\
+        -o $T/$PARSED\
+        "$T/extracted-features.csv"\
+        "$T/extracted-features.csv"
+    popd > /dev/null
+
+    PARSED0=$(ls -1 $T/$PARSED/*.csv | head -n 1)
+    if [ ! -z "$PARSED0" ]; then
+        mkdir -p $OUTPUT_DIR
+        head -n 1 $PARSED0 > $OUTPUT_DIR/$PARSED.csv
+        for i in "$T/$PARSED/"*.csv; do
+            tail -n +2 "$i" >> $OUTPUT_DIR/$PARSED.csv
+        done
+    fi
+
+    $SCRIPT_DIR/parse-to-glozz $T $OUTPUT_DIR/$PARSED.csv $OUTPUT_DIR/$PARSED
+    stac-util graph --live $OUTPUT_DIR/$PARSED --output $OUTPUT_DIR/$PARSED
+    mv $OUTPUT_DIR/$PARSED/segmented/unannotated/segmented.svg $OUTPUT_DIR/$PARSED.svg
+}
+
 # run the decoder
-# TODO - not sure if we really need to feed different data for
-# attachments ande relations here (right now just duplicating
-mkdir $T/parsed
-pushd $T/parsed > /dev/null
-attelo decode -C "$ATTELO_CONFIG"\
-    -A "$SNAPSHOT_DIR/attach.model"\
-    -R "$SNAPSHOT_DIR/relations.model"\
-    -d "$ATTELO_DECODER"\
-    -o $T/parsed\
-    "$T/extracted-features.csv"\
-    "$T/extracted-features.csv"
-popd > /dev/null
-
-PARSED0=$(ls -1 $T/parsed/*.csv | head -n 1)
-if [ ! -z "$PARSED0" ]; then
-    mkdir -p $OUTPUT_DIR
-    head -n 1 $PARSED0 > $OUTPUT_DIR/parsed.csv
-    for i in "$T/parsed/"*.csv; do
-        tail -n +2 "$i" >> $OUTPUT_DIR/parsed.csv
+#
+# The reason we have a dataset loop is that the we have parts of the
+# corpus that are annotated at sufficiently different times, that we
+# can suspect there fundamental differences between them that could
+# make it a bad idea to mix them
+#
+# Running on individual sections plus the combined one helps us to
+# investigate this. If we want to use this in the real world, we would
+# probably just focus on a single dataset (eg. the combined one).
+for decoder in $ATTELO_DECODERS; do
+    for learner in $ATTELO_LEARNERS; do
+        for dset in $DATASETS; do
+            decode $decoder $learner $dset
+        done
     done
-fi
+done
 
-$SCRIPT_DIR/parse-to-glozz $T $OUTPUT_DIR/parsed.csv $OUTPUT_DIR/parsed
-stac-util graph --live $OUTPUT_DIR/parsed --output $OUTPUT_DIR/parsed

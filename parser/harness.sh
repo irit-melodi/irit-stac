@@ -26,10 +26,21 @@ fi
 T=$(mktemp -d -t stac.XXXX)
 cd $T
 
-for dataset in all; do
-    $DECODER evaluate $DECODE_FLAGS\
-        $DATA_DIR/$dataset.edu-pairs$DATA_EXT $DATA_DIR/$dataset.relations$DATA_EXT -l bayes -d mst\
-        > scores
+LEARNERS="bayes maxent"
+DECODERS="local mst locallyGreedy"
+DATASETS="all pilot socl-season1"
+
+for dataset in $DATASETS; do
+    # try x-fold validation with various algos
+    touch scores-$dataset
+    for learner in $LEARNERS; do
+        for decoder in $DECODERS; do
+            $DECODER evaluate $DECODE_FLAGS\
+                $DATA_DIR/$dataset.edu-pairs$DATA_EXT\
+                $DATA_DIR/$dataset.relations$DATA_EXT\
+                -l $learner -d $decoder >> scores-$dataset
+        done
+    done
 
     # test stand-alone parser for stac
     # 1) train and save attachment model
