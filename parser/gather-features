@@ -1,9 +1,10 @@
 #!/bin/bash
 
-pushd $(dirname $0) > /dev/null
+ZERODIR=$(dirname "$0")
+pushd "$ZERODIR" > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
-cd $SCRIPT_DIR/../..
+cd "$SCRIPT_DIR/../.."
 
 TODAY=$(date +%Y-%m-%d)
 SNAPSHOT=$PWD/data/SNAPSHOTS/$TODAY
@@ -11,7 +12,7 @@ LEX_DIR=data/resources/lexicon
 ANNO='bronze|Bronze|silver|SILVER|GOLD'
 DATASETS="socl-season1 pilot"
 
-mkdir -p $SNAPSHOT/tmp
+mkdir -p "$SNAPSHOT/tmp"
 
 die () {
     errcode=$?
@@ -22,17 +23,17 @@ trap die ERR
 
 for dset in $DATASETS; do
     echo >&2 "gathering features for $dset"
-    code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT/tmp"\
+    code/queries/rel-info "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --experimental\
-        --anno $ANNO\
+        --anno "$ANNO"\
         2> "$SNAPSHOT/tmp/$dset.features.log"
-    code/queries/rel-info data/$dset $LEX_DIR "$SNAPSHOT/tmp"\
+    code/queries/rel-info "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --experimental\
         --single\
-        --anno $ANNO\
+        --anno "$ANNO"\
         2>> "$SNAPSHOT/tmp/$dset.features.log"
 done
-mv $SNAPSHOT/tmp/*.csv $SNAPSHOT
+mv "$SNAPSHOT"/tmp/*.csv "$SNAPSHOT"
 
 # combine the csv files into one megafile
 for ext in edu-pairs relations just-edus; do
@@ -46,5 +47,5 @@ done
 # symlink this as the latest snapshot we have
 pushd data/SNAPSHOTS > /dev/null
 rm -f latest
-ln -s $TODAY latest
+ln -s "$TODAY" latest
 popd > /dev/null

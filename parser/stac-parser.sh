@@ -23,11 +23,12 @@ announce_end () {
 }
 
 
-pushd `dirname $0` > /dev/null
+ZERO_DIR=$(dirname "$0")
+pushd "$ZERO_DIR" > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
 
-pushd $SCRIPT_DIR/../.. > /dev/null
+pushd "$SCRIPT_DIR/../.." > /dev/null
 STAC_DIR=$PWD
 popd > /dev/null
 CODE_DIR=$STAC_DIR/code
@@ -48,7 +49,7 @@ ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
 # how much the dataset influences things
 DATASETS="all socl-season1 pilot"
 
-if [ -e $STAC_DIR/lib/$SHIPPED_TAGGER ]; then
+if [ -e "$STAC_DIR/lib/$SHIPPED_TAGGER" ]; then
     TAGGER_JAR=$STAC_DIR/lib/$SHIPPED_TAGGER
 else
     echo >&2 "Need $SHIPPED_TAGGER in $STAC_DIR/lib"
@@ -56,7 +57,7 @@ else
     exit 1
 fi
 
-if [ -e $STAC_DIR/lib/$SHIPPED_PARSER ]; then
+if [ -e "$STAC_DIR/lib/$SHIPPED_PARSER" ]; then
     CORENLP_DIR=$STAC_DIR/lib/$SHIPPED_PARSER
 else
     echo >&2 "Need $SHIPPED_PARSER in $STAC_DIR/lib"
@@ -73,11 +74,11 @@ fi
 INPUT_FILE=$1
 OUTPUT_DIR=$2
 T=$(mktemp -d -t stac.XXXX)
-mkdir $T/logs
+mkdir "$T/logs"
 
 # convenient path for inspection of the pipeline
 rm -rf /tmp/stac-parser-tmp
-ln -s $T /tmp/stac-parser-tmp
+ln -s "$T" /tmp/stac-parser-tmp
 
 TMP_STUB=$(basename "$INPUT_FILE" | tr _ -)
 TMP_STUB="${TMP_STUB%.*}"
@@ -92,18 +93,18 @@ TMP_DOC_DIR="$TMP_CORPUS_DIR/$TMP_STUB"
 # from soclog to csv (sorry)
 announce_start "Converting (soclog -> stac csv)"
 TURNS_FILE=$T/turns
-python $CODE_DIR/txt2csv/extract_turns.py "$INPUT_FILE" > $TURNS_FILE
-python $CODE_DIR/txt2csv/extract_annot.py $TURNS_FILE\
-    > $T/logs/0100-extract_annot.txt
+python "$CODE_DIR/txt2csv/extract_turns.py" "$INPUT_FILE" > "$TURNS_FILE"
+python "$CODE_DIR/txt2csv/extract_annot.py" "$TURNS_FILE"\
+    > "$T/logs/0100-extract_annot.txt"
 UNSEGMENTED=$T/unsegmented.csv
 SEGMENTED=$T/segmented.csv
-mv ${TURNS_FILE}csv $UNSEGMENTED
-rm ${TURNS_FILE}
+mv "${TURNS_FILE}csv" "$UNSEGMENTED"
+rm "${TURNS_FILE}"
 announce_end
 
 # run segmenter
 announce_start "Segmenting"
-python $CODE_DIR/segmentation/simple-segments --csv $UNSEGMENTED $SEGMENTED
+python "$CODE_DIR/segmentation/simple-segments" --csv "$UNSEGMENTED" "$SEGMENTED"
 announce_end
 
 announce_start "Converting (stac csv -> glozz)"
@@ -111,10 +112,10 @@ UNANNOTATED_DIR="$TMP_DOC_DIR/unannotated"
 UNANNOTATED_STUB="$UNANNOTATED_DIR/${TMP_STUB}_0"
 
 # convert to glozz format
-pushd $T > /dev/null
-python $CODE_DIR/csv2glozz/csvtoglozz.py -f segmented.csv\
-    2> $T/logs/0200-csv2glozz.txt
-mkdir -p $UNANNOTATED_DIR
+pushd "$T" > /dev/null
+python "$CODE_DIR/csv2glozz/csvtoglozz.py" -f segmented.csv\
+    2> "$T/logs/0200-csv2glozz.txt"
+mkdir -p "$UNANNOTATED_DIR"
 mv segmented.aa "$UNANNOTATED_STUB.aa"
 mv segmented.ac "$UNANNOTATED_STUB.ac"
 popd > /dev/null
@@ -122,31 +123,31 @@ announce_end
 
 # pos tag
 announce_start "POS taggging"
-python $CODE_DIR/run-3rd-party\
-    --ark-tweet-nlp $TAGGER_JAR\
+python "$CODE_DIR/run-3rd-party"\
+    --ark-tweet-nlp "$TAGGER_JAR"\
     "$TMP_CORPUS_DIR" "$TMP_CORPUS_DIR"\
-    2> $T/logs/0300-pos-tagging.txt
+    2> "$T/logs/0300-pos-tagging.txt"
 announce_end
 
 # parser
 announce_start "Parsing (NB: CoreNLP is slow to start; can remove)"
-python $CODE_DIR/run-3rd-party --corenlp $CORENLP_DIR\
+python "$CODE_DIR/run-3rd-party" --corenlp "$CORENLP_DIR"\
     "$TMP_CORPUS_DIR" "$TMP_CORPUS_DIR"\
-    2> $T/logs/0400-parsing.txt
+    2> "$T/logs/0400-parsing.txt"
 announce_end
 
 # annotate dialogue acts
 announce_start "Dialogue act annotation"
-python $CODE_DIR/parser/dialogue-acts annotate\
+python "$CODE_DIR/parser/dialogue-acts" annotate\
     -C "$ATTELO_CONFIG"\
     "$TMP_CORPUS_DIR"\
     "$DATA_DIR/resources/lexicon"\
     --model "$SNAPSHOT_DIR/all-dialogue-acts.model"\
     --output "$TMP_CORPUS_DIR"\
-    2> $T/logs/0500-dialogue-acts.txt
+    2> "$T/logs/0500-dialogue-acts.txt"
 announce_end
 
-TMP_DA_DIR=$(ls -d $TMP_DOC_DIR/units/*)
+TMP_DA_DIR=$(ls -d "$TMP_DOC_DIR"/units/*)
 if [ -z "$TMP_DA_DIR" ]; then
     echo >&2 "No dialogue annotation output found"
     exit 1
@@ -154,12 +155,12 @@ fi
 
 # extract features
 announce_start "Feature extraction"
-python $CODE_DIR/queries/rel-info --parsing\
+python "$CODE_DIR/queries/rel-info" --parsing\
     --experimental\
     "$TMP_CORPUS_DIR"\
-    $DATA_DIR/resources/lexicon\
-    $T\
-    2> $T/logs/0600-features.txt
+    "$DATA_DIR/resources/lexicon"\
+    "$T"\
+    2> "$T/logs/0600-features.txt"
 announce_end
 
 decode() {
@@ -167,7 +168,7 @@ decode() {
     decoder=$1
     learner=$2
     dset=$3
-    learner_file_name=$(echo $learner | sed -e 's/:/-/')
+    learner_file_name=$(echo "$learner" | sed -e 's/:/-/')
 
     MODEL_INFO="$dset-$learner_file_name"
     PARSED_STUB="$MODEL_INFO-$decoder"
@@ -183,26 +184,27 @@ decode() {
         -o .\
         "$T/extracted-features.csv"\
         "$T/extracted-features.csv"\
-        >> $T/logs/0700-decoding.txt 2>&1
+        >> "$T/logs/0700-decoding.txt" 2>&1
     popd > /dev/null
 
     PARSED_COMBINED="$T/parsed/$PARSED_STUB".csv
-    PARSED0=$(ls -1 $TMP_PARSED/*.csv | head -n 1)
+    csvs=( "$TMP_PARSED"/*.csv )
+    PARSED0=${csvs[0]}
     if [ ! -z "$PARSED0" ]; then
-        head -n 1 $PARSED0 > $PARSED_COMBINED
+        head -n 1 "$PARSED0" > "$PARSED_COMBINED"
         for i in "$TMP_PARSED/"*.csv; do
-            tail -n +2 "$i" >> $PARSED_COMBINED
+            tail -n +2 "$i" >> "$PARSED_COMBINED"
         done
     fi
 
     # symlink units so that we see dialogue acts in output graphs
     mkdir -p "$TMP_DOC_DIR/units/$PARSED_STUB"
-    ln $TMP_DA_DIR/* "$TMP_DOC_DIR/units/$PARSED_STUB"
+    ln "$TMP_DA_DIR"/* "$TMP_DOC_DIR/units/$PARSED_STUB"
 
     # parsed csv to glozz
-    $SCRIPT_DIR/parse-to-glozz "$UNANNOTATED_DIR" "$PARSED_COMBINED"\
+    "$SCRIPT_DIR/parse-to-glozz" "$UNANNOTATED_DIR" "$PARSED_COMBINED"\
         "$TMP_DOC_DIR/discourse/$PARSED_STUB"\
-        >> $T/logs/0700-decoding.txt 2>&1
+        >> "$T/logs/0700-decoding.txt" 2>&1
 }
 
 # run the decoder
@@ -215,12 +217,12 @@ decode() {
 # Running on individual sections plus the combined one helps us to
 # investigate this. If we want to use this in the real world, we would
 # probably just focus on a single dataset (eg. the combined one).
-touch $T/logs/0700-decoding.txt
+touch "$T/logs/0700-decoding.txt"
 for dset in $DATASETS; do
     for learner in $ATTELO_LEARNERS; do
         for decoder in $ATTELO_DECODERS; do
             announce_start "Decoding $dset (learner: $learner decoder: $decoder)"
-            decode $decoder $learner $dset
+            decode "$decoder" "$learner" "$dset"
             announce_end
         done
     done
@@ -228,12 +230,14 @@ done
 
 announce_start "Drawing graphs"
 stac-util graph "$TMP_CORPUS_DIR" --output "$TMP_CORPUS_DIR"\
-    2> $T/logs/0800-graphs.txt
+    2> "$T/logs/0800-graphs.txt"
 announce_end
 
-mkdir -p $OUTPUT_DIR/graphs
+mkdir -p "$OUTPUT_DIR/graphs"
 # copy just the interesting outputs over
-cp -R $T/parsed $OUTPUT_DIR/parsed
-for f in $(find $TMP_CORPUS_DIR -name '*.svg'); do
-    cp $f $OUTPUT_DIR/graphs/$(basename $(dirname $f)).svg
+cp -R "$T/parsed" "$OUTPUT_DIR/parsed"
+for f in $(find "$TMP_CORPUS_DIR" -name '*.svg'); do
+    df=$(dirname "$f")
+    bdf=$(basename "$df")
+    cp "$f" "$OUTPUT_DIR/graphs/$bdf.svg"
 done

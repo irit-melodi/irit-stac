@@ -3,10 +3,11 @@
 # Build models from extracted features.
 # You should run gather-features first
 
-pushd $(dirname $0) > /dev/null
+ZERO_DIR=$(dirname "$0")
+pushd "$ZERO_DIR" > /dev/null
 SCRIPT_DIR=$PWD
 popd > /dev/null
-cd $SCRIPT_DIR/../..
+cd "$SCRIPT_DIR/../.."
 
 die () {
     errcode=$?
@@ -16,12 +17,13 @@ die () {
 trap die ERR
 
 
-
 SNAPSHOT=$PWD/data/SNAPSHOTS/latest
 # NB: use a colon if you want a separate relation learner, eg. perc:bayes
 ATTELO_LEARNERS="bayes maxent"
 ATTELO_CONFIG="$SCRIPT_DIR/stac-features.config"
 DATASETS="socl-season1 pilot"
+
+DIALOGUE_ACTS_LEARNER=${SCRIPT_DIR}/dialogue-acts
 
 if [ ! -d "$SNAPSHOT" ]; then
     echo >&2 "No data snapshot detected; please run $SCRIPT_DIR/gather-features"
@@ -33,23 +35,24 @@ pushd "$T" > /dev/null
 for dset in all $DATASETS; do
     for learner in $ATTELO_LEARNERS; do
         echo >&2 "[build model] learning $learner models for dataset $dset"
-        LEARNER_FLAGS="-l"$(echo $learner | sed -e 's/:/ --relation-learner /')
+        LEARNER_FLAGS="-l"$(echo "$learner" | sed -e 's/:/ --relation-learner /')
         attelo learn -C "$ATTELO_CONFIG"\
             $LEARNER_FLAGS\
             "$SNAPSHOT/$dset.edu-pairs.csv"\
             "$SNAPSHOT/$dset.relations.csv"
-        learner_file_name=$(echo $learner | sed -e 's/:/-/')
+        learner_file_name=$(echo "$learner" | sed -e 's/:/-/')
         for m in "$T"/*.model; do
-            mv $m "$SNAPSHOT"/"$(basename $m .model)-$dset-$learner_file_name".model
+            mstub=$(basename "$m" .model)
+            mv "$m" "$SNAPSHOT"/"$mstub-$dset-$learner_file_name".model
         done
     done
 done
 
 # dialogue act models
 for dset in all $DATASETS; do
-    ${SCRIPT_DIR}/dialogue-acts learn -C "$ATTELO_CONFIG"\
+    "${DIALOGUE_ACTS_LEARNER}" learn -C "$ATTELO_CONFIG"\
         "$SNAPSHOT/$dset.just-edus.csv"\
-        --output $T/dialogue-acts
-    mv $T/dialogue-acts/dialogue-acts.model "$SNAPSHOT/${dset}-dialogue-acts.model"
+        --output "$T/dialogue-acts"
+    mv "$T/dialogue-acts/dialogue-acts.model" "$SNAPSHOT/${dset}-dialogue-acts.model"
 done
 popd > /dev/null
