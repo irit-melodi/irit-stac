@@ -16,7 +16,7 @@ from rst_dt.cmd import SUBCOMMANDS
 def main():
     "rst-util main"
 
-    arg_parser = argparse.ArgumentParser(description='STAC Swiss Army Knife')
+    arg_parser = argparse.ArgumentParser(description='RST-DT Swiss Army Knife')
     subparsers = arg_parser.add_subparsers(help='sub-command help')
 
     for module in SUBCOMMANDS:
