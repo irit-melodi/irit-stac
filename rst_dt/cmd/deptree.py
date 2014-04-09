@@ -13,7 +13,7 @@ from educe.rst_dt import deptree
 
 from ..args import\
     add_usual_input_args, add_usual_output_args,\
-    read_corpus, get_output_dir
+    read_corpus, get_output_dir, announce_output_dir
 from .reltypes import\
     empty_counts, walk_and_count
 
@@ -81,3 +81,4 @@ def main(args):
                        if count >= counts.mono.get(rel, 0)]
 
     convert(corpus, multinuclearish, odir)
+    announce_output_dir(odir)
