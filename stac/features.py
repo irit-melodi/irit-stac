@@ -29,6 +29,15 @@ import stac.lexicon.pdtb_markers as pdtb_markers
 from stac.lexicon.wordclass import WordClass
 from stac.edu import Context, enclosed, edus_in_span
 
+if sys.version > '3':
+    def treenode(tree):
+        "API-change padding for NLTK 2 vs NLTK 3 trees"
+        return tree.label()
+else:
+    def treenode(tree):
+        "API-change padding for NLTK 2 vs NLTK 3 trees"
+        return tree.node
+
 
 class CorpusConsistencyException(Exception):
     """
