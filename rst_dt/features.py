@@ -19,6 +19,7 @@ from stac.features import tune_for_csv, treenode
 K_CLASS = "c#CLASS"  # the thing we want to learn
 K_GROUPING = "m#file"
 K_TEXT = "m#text"
+K_NUM_EDUS_BETWEEN = "C#num_edus_between"
 
 # fields for a given EDU (will need to be suffixed, eg. KDU_ID + 'DU1')
 KDU_ID = "m#id"
@@ -40,7 +41,8 @@ def mk_csv_header(inputs, before):
     fields = []
     fields.extend(before)
     fields.extend(
-        [K_GROUPING])
+        [K_GROUPING,
+         K_NUM_EDUS_BETWEEN])
     # du-specific fields
     du_fields =\
         [KDU_ID,
@@ -96,8 +98,6 @@ def _fill_single_edu_txt_features(inputs, current, edu, vec):
     Note that this fills the input `vec` dictionary and
     returns void
     """
-    rtree = current.rsttree
-
     clean_text = edu.text
     clean_text = re.sub(r'(\.|<P>|,)*$', r'', clean_text)
     clean_text = re.sub(r'^"', r'', clean_text)
@@ -138,33 +138,18 @@ def single_edu_features(inputs, current, edu):
 # ---------------------------------------------------------------------
 
 
-def _fill_edu_pair_edu_features(inputs, current, edu_feats, edu1, edu2, vec):
+def _fill_edu_pair_gap_features(inputs,
+                                current,
+                                edu1,
+                                edu2,
+                                vec):
     """
     Pairwise features that are related to the gap between two EDUs
     """
-    edu1_span = edu1.text_span()
-    edu2_span = edu2.text_span()
-    big_span = edu1_span.merge(edu2_span)
-
-    edu1_info = edu_feats[edu1]
-    edu2_info = edu_feats[edu2]
-
-    # edu-specific features
-    for k in edu1_info:
-        vec[k + '_EDU1'] = edu1_info[k]
-        vec[k + '_EDU2'] = edu2_info[k]
+    vec[K_NUM_EDUS_BETWEEN] = abs(edu2.num - edu1.num) - 1
 
 
-def _fill_edu_pair_gap_features(inputs, current, edu_feats, edu1, edu2, vec):
-    """
-    Pairwise features that are related to the gap between two EDUs
-    """
-    edu1_span = edu1.text_span()
-    edu2_span = edu2.text_span()
-    big_span = edu1_span.merge(edu2_span)
-
-
-def edu_pair_features(inputs, current, edu_feats, edu1, edu2):
+def edu_pair_features(inputs, current, edu1, edu2):
     """
     Subvector for pairwise features between two given discourse units
     """
@@ -172,8 +157,7 @@ def edu_pair_features(inputs, current, edu_feats, edu1, edu2):
 
     vec[K_GROUPING] = os.path.basename(id_to_path(current.key))
 
-    _fill_edu_pair_edu_features(inputs, current, edu_feats, edu1, edu2, vec)
-    _fill_edu_pair_gap_features(inputs, current, edu_feats, edu1, edu2, vec)
+    _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec)
     return vec
 
 
@@ -206,7 +190,15 @@ def extract_pair_features(inputs, live=False):
             edu_feats[edu] = single_edu_features(inputs, current, edu)
 
         for edu1, edu2 in itertools.product(edus, edus):
-            vec = edu_pair_features(inputs, current, edu_feats, edu1, edu2)
+            vec = edu_pair_features(inputs, current, edu1, edu2)
+
+            # edu-specific features
+            edu1_info = edu_feats[edu1]
+            edu2_info = edu_feats[edu2]
+            for k in edu1_info:
+                vec[k + '_EDU1'] = edu1_info[k]
+                vec[k + '_EDU2'] = edu2_info[k]
+
             if not live:
                 vec[K_CLASS] = edu1 in links and edu2 in links[edu1]
             yield vec
