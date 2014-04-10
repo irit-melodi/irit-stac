@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# Note: you should have run build-model to gather the data for this
+# (it also builds a model, which we don't really use here)
+
+ZERO_DIR=$(dirname "$0")
+pushd "$ZERO_DIR" > /dev/null
+SCRIPT_DIR=$PWD
+popd > /dev/null
+cd "$SCRIPT_DIR/../../.." # STAC dir
+set -e
+
+#test cross-validation avec attachement et relations
+#
+DATA_DIR=$PWD/data/RST-SNAPSHOTS/latest
+DECODE_FLAGS=(-C $SCRIPT_DIR/rstdt-features.config)
+DECODER=attelo
+
+# ----------------------------------------------------------------------
+# configuration
+# ----------------------------------------------------------------------
+
+. "${SCRIPT_DIR}/config"
+
+if [ -z "${CORPUS_DIR}" ]; then
+    echo >&2 "Please set CORPUS_DIR in ${SCRIPT_DIR}/config"
+    echo >&2 "For example: CORPUS_DIR=\$HOME/CORPORA/rst_discourse_treebank/data"
+    exit 1
+fi
+
+if [ -z "${DATASETS}" ]; then
+    DATASETS=RSTtrees-WSJ-double-1.0
+fi
+
+if [ ! -d "${CORPUS_DIR}/${DATASET[0]}" ]; then
+    echo >&2 "Could not find ${CORPUS_DIR}/${DATASET[0]}"
+    echo >&2 "Is \$CORPUS_DIR set correctly? It should likely end with /data"
+    exit 1
+fi
+
+# ----------------------------------------------------------------------
+
+
+if [ ! -d "$DATA_DIR" ]; then
+    echo >&2 "No data to run experiments on"
+    echo >&2 "Please run $SCRIPT_DIR/gather-features"
+    exit 1
+fi
+
+TODAY=$(date +%Y-%m-%d)
+EVAL_DIR=$DATA_DIR/eval-$TODAY
+mkdir -p "$EVAL_DIR"
+
+T=$(mktemp -d -t rst_dt.XXXX)
+cd "$T"
+
+# NB: use a colon if you want a separate learner for relations
+LEARNERS=(bayes maxent)
+DECODERS=(last local locallyGreedy mst)
+
+for dset in "${DATASETS[@]}"; do
+    dset_bn=$(basename "$dset")
+    echo > "$EVAL_DIR/scores-$dset_bn"
+    # try x-fold validation with various algos
+    for learner in "${LEARNERS[@]}"; do
+        for decoder in "${DECODERS[@]}"; do
+            echo >&2 "=============================================================="
+            echo >&2 "$dset $decoder $learner"
+            echo >&2 "=============================================================="
+            echo >&2 ""
+            LEARNER_FLAGS="-l"$(echo "$learner" | sed -e 's/:/ --relation-learner /')
+            "$DECODER" evaluate "${DECODE_FLAGS[@]}"\
+                "$DATA_DIR/$dset_bn.edu-pairs.csv"\
+                "$DATA_DIR/$dset_bn.relations.csv"\
+                $LEARNER_FLAGS\
+                -d "$decoder" >> "$EVAL_DIR/scores-$dset_bn"
+        done
+    done
+done

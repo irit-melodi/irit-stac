@@ -1,0 +1,2 @@
+CORPUS_DIR=$HOME/CORPORA/rst_discourse_treebank/data
+DATASETS=(RSTtrees-WSJ-double-1.0 RSTtrees-WSJ-main-1.0/TRAINING)

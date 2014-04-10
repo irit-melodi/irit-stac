@@ -1,0 +1,68 @@
+#!/bin/bash
+
+ZERODIR=$(dirname "$0")
+pushd "$ZERODIR" > /dev/null
+SCRIPT_DIR=$PWD
+popd > /dev/null
+cd "$SCRIPT_DIR/../../.." # STAC dir
+
+TODAY=$(date +%Y-%m-%d)
+SNAPSHOT=$PWD/data/RST-SNAPSHOTS/$TODAY
+
+# ----------------------------------------------------------------------
+# configuration
+# ----------------------------------------------------------------------
+
+. "${SCRIPT_DIR}/config"
+
+if [ -z "${CORPUS_DIR}" ]; then
+    echo >&2 "Please set CORPUS_DIR in ${SCRIPT_DIR}/config"
+    echo >&2 "For example: CORPUS_DIR=\$HOME/CORPORA/rst_discourse_treebank/data"
+    exit 1
+fi
+
+if [ -z "${DATASETS}" ]; then
+    DATASETS=(RSTtrees-WSJ-double-1.0)
+fi
+
+if [ ! -d "${CORPUS_DIR}/${DATASETS[0]}" ]; then
+    echo >&2 "Could not find ${CORPUS_DIR}/${DATASETS[0]}"
+    echo >&2 "Is \$CORPUS_DIR set correctly? It should likely end with /data"
+    exit 1
+fi
+
+# ----------------------------------------------------------------------
+
+mkdir -p "$SNAPSHOT/tmp"
+
+die () {
+    errcode=$?
+    echo "ARGH! Something went wrong; check the log files in $SNAPSHOT/tmp"
+    exit $errcode
+}
+trap die ERR
+
+for dset in "${DATASETS[@]}"; do
+    echo >&2 "gathering features for $dset"
+    dset_bn=$(basename "$dset")
+    code/rst_dt/rst-util features "$CORPUS_DIR/$dset" --output "$SNAPSHOT/tmp"\
+        2> "$SNAPSHOT/tmp/$dset_bn.features.log"
+done
+mv "$SNAPSHOT"/tmp/*.csv "$SNAPSHOT"
+
+# combine the csv files into one megafile
+dset0_bn=$(basename "${DATASETS[0]}")
+for ext in edu-pairs relations; do
+    head -n 1 "$SNAPSHOT/$dset0_bn.$ext.csv" > "$SNAPSHOT/all.$ext.csv"
+    for dset in "${DATASETS[@]}"; do
+        dset_bn=$(basename "$dset")
+        tail -n +2 "$SNAPSHOT/$dset_bn.$ext.csv"\
+            >> "$SNAPSHOT/all.$ext.csv"
+    done
+done
+
+# symlink this as the latest snapshot we have
+pushd data/RST-SNAPSHOTS > /dev/null
+rm -f latest
+ln -s "$TODAY" latest
+popd > /dev/null

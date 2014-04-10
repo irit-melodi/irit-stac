@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Build models from extracted features.
+# You should run gather-features first
+
+ZERO_DIR=$(dirname "$0")
+pushd "$ZERO_DIR" > /dev/null
+SCRIPT_DIR=$PWD
+popd > /dev/null
+cd "$SCRIPT_DIR/../../.."
+
+die () {
+    errcode=$?
+    echo "ARGH! Something went wrong building the model"
+    exit $errcode
+}
+trap die ERR
+
+SNAPSHOT=$PWD/data/RST-SNAPSHOTS/latest
+# NB: use a colon if you want a separate relation learner, eg. perc:bayes
+ATTELO_LEARNERS=(bayes)
+ATTELO_CONFIG="$SCRIPT_DIR/rstdt-features.config"
+
+# ----------------------------------------------------------------------
+# configuration
+# ----------------------------------------------------------------------
+
+. "${SCRIPT_DIR}/config"
+
+if [ -z "${CORPUS_DIR}" ]; then
+    echo >&2 "Please set CORPUS_DIR in ${SCRIPT_DIR}/config"
+    echo >&2 "For example: CORPUS_DIR=\$HOME/CORPORA/rst_discourse_treebank/data"
+    exit 1
+fi
+
+if [ -z "${DATASETS}" ]; then
+    DATASETS=(RSTtrees-WSJ-double-1.0)
+fi
+
+if [ ! -d "${CORPUS_DIR}/${DATASETS[0]}" ]; then
+    echo >&2 "Could not find ${CORPUS_DIR}/${DATASETS[0]}"
+    echo >&2 "Is \$CORPUS_DIR set correctly? It should likely end with /data"
+    exit 1
+fi
+
+# ----------------------------------------------------------------------
+
+if [ ! -d "$SNAPSHOT" ]; then
+    echo >&2 "No data snapshot detected; please run $SCRIPT_DIR/gather-features"
+    exit 1
+fi
+
+T=$(mktemp -d -t rst_dt.XXXX)
+pushd "$T" > /dev/null
+for dset in all "${DATASETS[@]}"; do
+    dset_bn=$(basename "$dset")
+    for learner in "${ATTELO_LEARNERS[@]}"; do
+        echo >&2 "[build model] learning $learner models for dataset $dset"
+        LEARNER_FLAGS="-l"$(echo "$learner" | sed -e 's/:/ --relation-learner /')
+        attelo learn -C "$ATTELO_CONFIG"\
+            $LEARNER_FLAGS\
+            "$SNAPSHOT/$dset_bn.edu-pairs.csv"\
+            "$SNAPSHOT/$dset_bn.relations.csv"
+        learner_file_name=$(echo "$learner" | sed -e 's/:/-/')
+        for m in "$T"/*.model; do
+            mstub=$(basename "$m" .model)
+            mv "$m" "$SNAPSHOT"/"$mstub-$dset_bn-$learner_file_name".model
+        done
+    done
+done
+popd > /dev/null
