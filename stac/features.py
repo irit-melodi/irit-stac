@@ -788,7 +788,7 @@ def get_players(inputs):
     return people
 
 
-def extract_pair_features(inputs, discourse_only=True, live=False):
+def extract_pair_features(inputs, window, discourse_only=True, live=False):
     """
     Return a pair of dictionaries, one for attachments
     and one for relations
@@ -809,7 +809,7 @@ def extract_pair_features(inputs, discourse_only=True, live=False):
                 ctx2 = current.contexts[edu2]
                 if ctx1.dialogue != ctx2.dialogue:
                     continue
-                if vec[K_NUM_EDUS_BETWEEN] > 5:
+                if window > 0 and vec[K_NUM_EDUS_BETWEEN] > window:
                     break
                 rels = attachments(doc.relations, edu1, edu2)
                 rels_vec = copy.copy(vec)
