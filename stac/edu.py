@@ -154,13 +154,15 @@ class Context(object):
         if len(matches) == 1:
             return matches[0]
         else:
-            msg = "Was expecting exactly one %s for edu %s, got %d"\
-                    % (typ, edu.identifier(), len(matches))
             if matches:
                 warnings.warn(msg)
                 return matches[0]
             else:
-                raise Exception(msg)
+                oops = "Was expecting exactly one %s for edu %s" %\
+                    (typ, edu.identifier()) +\
+                    ", but got %d\nSurrounders found: %s" %\
+                    (len(matches), map(str, surrounders))
+                raise Exception(oops)
 
     @classmethod
     def _for_edu(cls, enclosure, edu):
