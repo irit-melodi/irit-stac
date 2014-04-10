@@ -190,6 +190,8 @@ def extract_pair_features(inputs, live=False):
             edu_feats[edu] = single_edu_features(inputs, current, edu)
 
         for edu1, edu2 in itertools.product(edus, edus):
+            if edu1 == edu2:
+                continue
             vec = edu_pair_features(inputs, current, edu1, edu2)
 
             # edu-specific features
