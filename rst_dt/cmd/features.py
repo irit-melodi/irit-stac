@@ -57,13 +57,16 @@ def main(args):
     """
     odir = get_output_dir(args)
     inputs = read_common_inputs(args, read_corpus(args))
-    of_bn = os.path.join(odir, os.path.basename(args.corpus))
-    features_file = of_bn + '.features.csv'
     header = mk_csv_header(inputs, [K_CLASS])
 
-    with codecs.open(features_file, 'wb') as ofile:
-        writer = mk_csv_writer(header, ofile)
-        for row in extract_pair_features(inputs):
-            writer.writerow(row)
-
+    of_bn = os.path.join(odir, os.path.basename(args.corpus))
+    relations_file = of_bn + '.relations.csv'
+    edu_pairs_file = of_bn + '.edu-pairs.csv'
+    with codecs.open(relations_file, 'wb') as r_ofile:
+        with codecs.open(edu_pairs_file, 'wb') as p_ofile:
+            p_writer = mk_csv_writer(header, p_ofile)
+            r_writer = mk_csv_writer(header, r_ofile)
+            for p_row, r_row in extract_pair_features(inputs):
+                p_writer.writerow(p_row)
+                r_writer.writerow(r_row)
     announce_output_dir(odir)

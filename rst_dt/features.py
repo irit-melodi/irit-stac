@@ -3,7 +3,7 @@ Feature extraction library functions for RST_DT corpus
 """
 
 from collections import namedtuple
-import collections
+import copy
 import itertools
 import os
 import re
@@ -164,13 +164,18 @@ def edu_pair_features(inputs, current, edu1, edu2):
 def simplify_deptree(dtree):
     """
     Boil a dependency tree down into a dictionary from edu to [edu]
+    and a dictionary from (edu, edu) to rel
     """
     links = {}
+    relations = {}
     for subtree in dtree:
         src = treenode(subtree).edu
         tgts = [treenode(child).edu for child in subtree]
         links[src] = tgts
-    return links
+        for child in subtree:
+            cnode = treenode(child)
+            relations[(src, cnode.edu)] = cnode.rel
+    return links, relations
 
 
 def extract_pair_features(inputs, live=False):
@@ -182,7 +187,8 @@ def extract_pair_features(inputs, live=False):
         current = preprocess(inputs, k)
         edus = current.rsttree.leaves()
         # reduced dependency graph as dictionary (edu to [edu])
-        links = simplify_deptree(current.deptree) if not live else {}
+        links, relations =\
+            simplify_deptree(current.deptree) if not live else {}
 
         # single edu features
         edu_feats = {}
@@ -201,9 +207,17 @@ def extract_pair_features(inputs, live=False):
                 vec[k + '_EDU1'] = edu1_info[k]
                 vec[k + '_EDU2'] = edu2_info[k]
 
+            pairs_vec = vec
+            rels_vec = copy.copy(vec)
+
             if not live:
-                vec[K_CLASS] = edu1 in links and edu2 in links[edu1]
-            yield vec
+                pairs_vec[K_CLASS] = edu1 in links and edu2 in links[edu1]
+                if pairs_vec[K_CLASS]:
+                    rels_vec[K_CLASS] = relations[edu1, edu2]
+                else:
+                    rels_vec[K_CLASS] = 'UNRELATED'
+
+            yield pairs_vec, rels_vec
 
 
 def preprocess(inputs, k):
