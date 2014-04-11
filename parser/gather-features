@@ -11,6 +11,7 @@ SNAPSHOT=$PWD/data/SNAPSHOTS/$TODAY
 LEX_DIR=data/resources/lexicon
 ANNO='bronze|Bronze|silver|SILVER|GOLD'
 DATASETS="socl-season1 pilot"
+WINDOW="5" # "-1" for no window
 
 mkdir -p "$SNAPSHOT/tmp"
 
@@ -26,6 +27,7 @@ for dset in $DATASETS; do
     code/queries/rel-info "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --experimental\
         --anno "$ANNO"\
+        --window "$WINDOW"\
         2> "$SNAPSHOT/tmp/$dset.features.log"
     code/queries/rel-info "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --experimental\
