@@ -255,7 +255,7 @@ function toggle_hidden(name) {
     def _add_subreport_link(self, k, html, sep, descr):
         k2       = copy.copy(k)
         k2.stage = 'discourse'
-        rel_p    = self.mk_output_path('../../../', k, '.png')
+        rel_p    = self.mk_output_path('../../../', k, '.svg')
         sp       = ET.SubElement(html, 'span')
         sp.text  = sep
         h_a      = ET.SubElement(html, 'a', href=rel_p)
