@@ -809,7 +809,7 @@ def extract_pair_features(inputs, window, discourse_only=True, live=False):
                 ctx2 = current.contexts[edu2]
                 if ctx1.dialogue != ctx2.dialogue:
                     continue
-                if window > 0 and vec[K_NUM_EDUS_BETWEEN] > window:
+                if window >= 0 and vec[K_NUM_EDUS_BETWEEN] > window:
                     break
                 rels = attachments(doc.relations, edu1, edu2)
                 rels_vec = copy.copy(vec)
