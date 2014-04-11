@@ -5,6 +5,7 @@
 Merge several dialogue level annotations into one
 """
 
+from __future__ import print_function
 import copy
 import sys
 
@@ -149,8 +150,9 @@ def main(args):
             sought = _dialogues_in_turns(corpus, args.turns[0], args.turns[1])
             if len(sought) < 2:
                 sys.exit("Must specify at least two dialogues")
-            print >> sys.stderr,\
-                "Merging dialogues %s" % map(anno_id_from_tuple, sought)
+            print("Merging dialogues: " +
+                  ", ".join(map(anno_id_from_tuple, sought)),
+                  file=sys.stderr)
         except GlozzException as oops:
             sys.exit(str(oops))
     else:
