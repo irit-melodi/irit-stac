@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF8"> 
+        <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+        <script type="text/javascript" src="js/d3.js"></script>
+        <script type="text/javascript" src="js/crossfilter.js"></script>
+        <script type="text/javascript" src="js/dc.js"></script>
+        <script type="text/javascript" src="js/underscore.js"></script>
+        <script type="text/javascript">
+            function downloadJSAtOnload() {
+                var element = document.createElement("script");
+                element.src = "js/example.js";
+                document.body.appendChild(element);
+            }
+            if (window.addEventListener) {
+                window.addEventListener("load", downloadJSAtOnload, false);
+            } else if (window.attachEvent) {
+                window.attachEvent("onload", downloadJSAtOnload);
+            } else {
+                window.onload = downloadJSAtOnload;
+            }
+        </script>
+        <link rel="stylesheet" type="text/css" href="./css/dc.css" media="screen" /> 
+    </head>
+
+    <body>
+        <div id="charts"></div><br/>
+        <div id="revision"></div><br/>
+    </body>
+
+</html>
+
