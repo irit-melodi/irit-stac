@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Note: you should have run build-model to gather the data for this
 # (it also builds a model, which we don't really use here)

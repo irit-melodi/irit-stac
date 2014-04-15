@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ZERODIR=$(dirname "$0")
 pushd "$ZERODIR" > /dev/null

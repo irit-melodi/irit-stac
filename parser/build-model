@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Build models from extracted features.
 # You should run gather-features first
