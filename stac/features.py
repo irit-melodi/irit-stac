@@ -356,8 +356,8 @@ K_SAME_TURN = "D#same_turn"
 
 # fields for a given EDU (will need to be suffixed, eg. KDU_ID + 'DU1')
 KDU_ID = "m#id"
-KDU_SP1 = "C#start"
-KDU_SP2 = "C#end"
+KDU_SP1 = "m#start"
+KDU_SP2 = "m#end"
 KDU_TEXT = "m#text"
 KDU_HAS_EMOTICONS = "D#has_emoticons"
 KDU_HAS_PLAYER_NAME_EXACT = "D#has_player_name_exact"
