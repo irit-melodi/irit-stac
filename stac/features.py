@@ -242,7 +242,7 @@ def has_pdtb_markers(markers, tokens):
     if not isinstance(tokens, collections.Sequence):
         raise TypeError("tokens must form a sequence")
     words = [t.word for t in tokens]
-    return any(m.appears_in(words) for m in markers)
+    return pdtb_markers.Marker.any_appears_in(markers, words)
 
 
 def lexical_markers(sublex, tokens):

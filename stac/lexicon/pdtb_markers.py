@@ -65,6 +65,22 @@ class Marker:
         exprs    = frozenset(sep.join(e.words) for e in self.exprs)
         return all(sentence.find(e) >= 0 for e in exprs)
 
+    @classmethod
+    def any_appears_in(cls, markers, words, sep='#####'):
+        """
+        Return True if any of the given markers appears in the word
+        sequence.
+
+        See `appears_in` for details.
+        """
+        sentence = sep.join(words).lower()
+        for m in markers:
+            exprs = frozenset(sep.join(e.words) for e in m.exprs)
+            if all(sentence.find(e) >= 0 for e in exprs):
+                return True
+        return False
+
+
 def read_entry(s):
     """
     Return a Marker and a set of relations
