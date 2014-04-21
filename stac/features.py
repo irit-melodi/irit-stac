@@ -763,13 +763,11 @@ def mk_current(inputs, people, k):
     """
     Pre-process and bundle up a representation of the current document
     """
-    if inputs.ignore_cdus:
-        # don't touch the CDUs (effect = ignores them)
-        doc = inputs.corpus[k]
-    else:
+    doc = inputs.corpus[k]
+    if not inputs.ignore_cdus:
         # replace all CDUs in links with their recursive heads
         graph = stac_gr.Graph.from_doc(inputs.corpus, k)
-        doc = graph.without_cdus(sloppy=True).doc
+        graph.strip_cdus(sloppy=True)
 
     contexts = Context.for_edus(doc, inputs.postags[k])
     parses = inputs.parses[k] if inputs.parses else None
