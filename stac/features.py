@@ -378,6 +378,24 @@ KDU_WORD_FIRST = "D#word_first"
 KDU_WORD_LAST = "D#word_last"
 KDU_LEMMA_SUBJECT = "D#lemma_subject"
 
+DU_SPECIFIC_FIELDS =\
+    [KDU_ID, KDU_WORD_FIRST,
+     KDU_WORD_LAST,
+     KDU_HAS_PLAYER_NAME_EXACT,
+     KDU_HAS_PLAYER_NAME_FUZZY,
+     KDU_HAS_EMOTICONS,
+     KDU_IS_EMOTICON_ONLY,
+     KDU_SPEAKER_STARTED_DIA,
+     KDU_SPEAKER_ALREADY_TALKED_IN_DIA,
+     KDU_SPEAKER_TURN1_POSITION_IN_DIA,
+     KDU_TURN_POSITION_IN_DIA,
+     KDU_EDU_POSITION_IN_TURN,
+     KDU_ENDS_WITH_BANG,
+     KDU_ENDS_WITH_QMARK,
+     KDU_NUM_TOKENS,
+     KDU_SP1,
+     KDU_SP2]
+
 
 def mk_csv_header_lex(inputs):
     """
@@ -406,23 +424,7 @@ def mk_csv_header(inputs, before):
          K_DIALOGUE_ACT_PAIRS,
          K_SAME_TURN])
     # du-specific fields
-    du_fields =\
-        [KDU_ID, KDU_WORD_FIRST,
-         KDU_WORD_LAST,
-         KDU_HAS_PLAYER_NAME_EXACT,
-         KDU_HAS_PLAYER_NAME_FUZZY,
-         KDU_HAS_EMOTICONS,
-         KDU_IS_EMOTICON_ONLY,
-         KDU_SPEAKER_STARTED_DIA,
-         KDU_SPEAKER_ALREADY_TALKED_IN_DIA,
-         KDU_SPEAKER_TURN1_POSITION_IN_DIA,
-         KDU_TURN_POSITION_IN_DIA,
-         KDU_EDU_POSITION_IN_TURN,
-         KDU_ENDS_WITH_BANG,
-         KDU_ENDS_WITH_QMARK,
-         KDU_NUM_TOKENS,
-         KDU_SP1,
-         KDU_SP2]
+    du_fields = copy.copy(DU_SPECIFIC_FIELDS)
     du_fields.extend(mk_csv_header_lex(inputs))
     if inputs.experimental:
         du_fields.append(KDU_LEMMA_SUBJECT)
@@ -440,24 +442,8 @@ def mk_csv_header(inputs, before):
 def mk_csv_header_single(inputs,
                          before):
     "header entry for all features (single EDU variant)"
-    fields =\
-        [K_DIALOGUE,
-         KDU_ID, KDU_WORD_FIRST,
-         KDU_WORD_LAST,
-         KDU_HAS_PLAYER_NAME_EXACT,
-         KDU_HAS_PLAYER_NAME_FUZZY,
-         KDU_HAS_EMOTICONS,
-         KDU_IS_EMOTICON_ONLY,
-         KDU_SPEAKER_STARTED_DIA,
-         KDU_SPEAKER_ALREADY_TALKED_IN_DIA,
-         KDU_SPEAKER_TURN1_POSITION_IN_DIA,
-         KDU_TURN_POSITION_IN_DIA,
-         KDU_EDU_POSITION_IN_TURN,
-         KDU_ENDS_WITH_BANG,
-         KDU_ENDS_WITH_QMARK,
-         KDU_NUM_TOKENS,
-         KDU_SP1,
-         KDU_SP2]
+    fields = [K_DIALOGUE]
+    fields.extend(DU_SPECIFIC_FIELDS)
     fields.extend(mk_csv_header_lex(inputs))
     if inputs.experimental:
         fields.append(KDU_LEMMA_SUBJECT)
