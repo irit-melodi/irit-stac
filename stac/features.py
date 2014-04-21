@@ -364,6 +364,7 @@ KDU_HAS_PLAYER_NAME_EXACT = "D#has_player_name_exact"
 KDU_HAS_PLAYER_NAME_FUZZY = "D#has_player_name_fuzzy"
 KDU_HAS_FOR_NP = "D#has_FOR_np"
 KDU_IS_EMOTICON_ONLY = "D#is_emoticon_only"
+KDU_HAS_CORRECTION_STAR = "D#has_correction_star"
 KDU_ENDS_WITH_BANG = "D#ends_with_bang"
 KDU_ENDS_WITH_QMARK = "D#ends_with_qmark"
 KDU_SPEAKER_STARTED_DIA = "D#speaker_started_the_dialogue"
@@ -390,6 +391,7 @@ DU_SPECIFIC_FIELDS =\
      KDU_SPEAKER_TURN1_POSITION_IN_DIA,
      KDU_TURN_POSITION_IN_DIA,
      KDU_EDU_POSITION_IN_TURN,
+     KDU_HAS_CORRECTION_STAR,
      KDU_ENDS_WITH_BANG,
      KDU_ENDS_WITH_QMARK,
      KDU_NUM_TOKENS,
@@ -410,6 +412,7 @@ def mk_csv_header_lex(inputs):
         fields.append(field)
 
     return fields
+
 
 
 def mk_csv_header(inputs, before):
@@ -543,6 +546,11 @@ def _fill_single_edu_txt_features(inputs, current, edu, vec):
     tokens = ctx.tokens
     edu_span = edu.text_span()
 
+    def has_initial_star(span):
+        "Text in span has an initial star but no other"
+        txt = doc.text(span)
+        return txt[0] == "*" and "*" not in txt[1:]
+
     def ends_with_bang(span):
         "Text in span ends with an exclamation"
         return doc.text(span)[-1] == '!'
@@ -580,6 +588,7 @@ def _fill_single_edu_txt_features(inputs, current, edu, vec):
     edu_span = edu.text_span()
     vec[KDU_ENDS_WITH_BANG] = ends_with_bang(edu_span)
     vec[KDU_ENDS_WITH_QMARK] = ends_with_qmark(edu_span)
+    vec[KDU_HAS_CORRECTION_STAR] = has_initial_star(edu_span)
 
     if inputs.debug:
         vec[KDU_TEXT] = tune_for_csv(doc.text(edu_span))
