@@ -18,6 +18,7 @@ from educe.external.parser import\
     SearchableTree,\
     ConstituencyTree
 from educe.stac import postag, corenlp
+from educe.stac.annotation import turn_id
 import educe.corpus
 import educe.glozz
 import educe.stac
@@ -370,7 +371,9 @@ KDU_ENDS_WITH_QMARK = "D#ends_with_qmark"
 KDU_SPEAKER_STARTED_DIA = "D#speaker_started_the_dialogue"
 KDU_SPEAKER_ALREADY_TALKED_IN_DIA = "D#speaker_already_spoken_in_dialogue"
 KDU_EDU_POSITION_IN_TURN = "C#edu_position_in_turn"
+KDU_TURN_FOLLOWS_GAP = "D#turn_follows_gap"
 KDU_TURN_POSITION_IN_DIA = "C#position_in_dialogue"
+KDU_TURN_POSITION_IN_GAME = "C#position_in_game"
 KDU_SPEAKER_TURN1_POSITION_IN_DIA = "C#speakers_first_turn_in_dialogue"
 KDU_NUM_TOKENS = "C#num_tokens"
 KDU_LEX_ = "D#lex"
@@ -389,7 +392,9 @@ DU_SPECIFIC_FIELDS =\
      KDU_SPEAKER_STARTED_DIA,
      KDU_SPEAKER_ALREADY_TALKED_IN_DIA,
      KDU_SPEAKER_TURN1_POSITION_IN_DIA,
+     KDU_TURN_FOLLOWS_GAP,
      KDU_TURN_POSITION_IN_DIA,
+     KDU_TURN_POSITION_IN_GAME,
      KDU_EDU_POSITION_IN_TURN,
      KDU_HAS_CORRECTION_STAR,
      KDU_ENDS_WITH_BANG,
@@ -629,16 +634,23 @@ def _fill_single_edu_chat_features(_, current, edu, vec):
     Returns void.
     """
     ctx = current.contexts[edu]
-    turn_pos = 1 + ctx.dialogue_turns.index(ctx.turn)
     spk_turn1_pos = 1 + position_of_speaker_first_turn(ctx)
-    assert spk_turn1_pos <= turn_pos
+    turn_pos_wrt_dia = 1 + ctx.dialogue_turns.index(ctx.turn)
+    turn_pos_wrt_game = 1 + ctx.doc_turns.index(ctx.turn)
+    assert spk_turn1_pos <= turn_pos_wrt_dia
     edu_pos = 1 + ctx.turn_edus.index(edu)
 
+    dialogue_tids = list(map(turn_id, ctx.dialogue_turns))
+    tid = turn_id(ctx.turn)
+
     vec[KDU_EDU_POSITION_IN_TURN] = edu_pos
-    vec[KDU_TURN_POSITION_IN_DIA] = turn_pos
+    vec[KDU_TURN_POSITION_IN_DIA] = turn_pos_wrt_dia
+    vec[KDU_TURN_POSITION_IN_GAME] = turn_pos_wrt_game
+    vec[KDU_TURN_FOLLOWS_GAP] =\
+        tid - 1 in dialogue_tids and tid != min(dialogue_tids)
     vec[KDU_SPEAKER_STARTED_DIA] = speaker_started_dialogue(ctx)
     vec[KDU_SPEAKER_TURN1_POSITION_IN_DIA] = spk_turn1_pos
-    vec[KDU_SPEAKER_ALREADY_TALKED_IN_DIA] = spk_turn1_pos < turn_pos
+    vec[KDU_SPEAKER_ALREADY_TALKED_IN_DIA] = spk_turn1_pos < turn_pos_wrt_dia
 
 
 def _fill_single_edu_psr_features(inputs, current, edu, vec):

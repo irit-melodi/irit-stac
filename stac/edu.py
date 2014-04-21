@@ -129,17 +129,20 @@ class Context(object):
     * dialogue - the dialogue surrounding this EDU
     * dialogue_turns - all the turns in the dialogue surrounding this EDU
                        (non-empty, sorted by first-widest span)
+    * doc_turns - all the turns in the document
     * tokens   - (may not be present): tokens contained within this EDU
 
     """
     def __init__(self,
                  turn, turn_edus,
                  dialogue, dialogue_turns,
+                 doc_turns,
                  tokens=None):
         self.turn = turn
         self.turn_edus = turn_edus
         self.dialogue = dialogue
         self.dialogue_turns = dialogue_turns
+        self.doc_turns = doc_turns
         self.tokens = tokens
 
     @classmethod
@@ -165,7 +168,7 @@ class Context(object):
                 raise Exception(oops)
 
     @classmethod
-    def _for_edu(cls, enclosure, edu):
+    def _for_edu(cls, enclosure, doc_turns, edu):
         """
         Extract the context for a single EDU, but with the benefit of an
         enclosure graph to avoid repeatedly combing over objects
@@ -180,6 +183,7 @@ class Context(object):
                   if isinstance(wrapped, WrappedToken)]
         return cls(turn, sorted_first_widest(t_edus),
                    dialogue, sorted_first_widest(d_turns),
+                   sorted_first_widest(doc_turns),
                    tokens=tokens)
 
     @classmethod
@@ -193,10 +197,10 @@ class Context(object):
             egraph = EnclosureGraph(doc, postags)
         else:
             egraph = EnclosureGraph(doc)
-        egraph.reduce()
+        doc_turns = list(filter(educe.stac.is_turn, doc.units))
         contexts = {}
         for edu in filter(educe.stac.is_edu, doc.units):
-            contexts[edu] = cls._for_edu(egraph, edu)
+            contexts[edu] = cls._for_edu(egraph, doc_turns, edu)
         return contexts
 
 
