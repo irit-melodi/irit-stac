@@ -351,6 +351,7 @@ K_DIALOGUE_ACT_PAIRS = "D#dialogue_act_pairs"
 K_ENDS_WITH_QMARK_PAIRS = "D#ends_with_qmark_pairs"
 K_NUM_EDUS_BETWEEN = "C#num_edus_between"
 K_NUM_SPEAKERS_BETWEEN = "C#num_speakers_between"
+K_SAME_SPEAKER = "D#same_speaker"
 K_ANNOTATOR = "m#annotator"
 K_TEXT = "m#text"
 K_SAME_TURN = "D#same_turn"
@@ -428,6 +429,7 @@ def mk_csv_header(inputs, before):
         [K_DIALOGUE, K_ANNOTATOR,
          K_NUM_EDUS_BETWEEN,
          K_NUM_SPEAKERS_BETWEEN,
+         K_SAME_SPEAKER,
          K_ENDS_WITH_QMARK_PAIRS,
          K_DIALOGUE_ACT_PAIRS,
          K_SAME_TURN])
@@ -746,6 +748,7 @@ def _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec):
 
     vec[K_NUM_EDUS_BETWEEN] = len(edus_in_span(doc, big_span)) - 2
     vec[K_NUM_SPEAKERS_BETWEEN] = len(speakers_between)
+    vec[K_SAME_SPEAKER] = speaker(ctx1.turn) == speaker(ctx2.turn)
     vec[K_SAME_TURN] = ctx1.turn == ctx2.turn
 
     if inputs.debug:
