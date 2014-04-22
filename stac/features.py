@@ -649,7 +649,7 @@ def _fill_single_edu_chat_features(_, current, edu, vec):
     vec[KDU_TURN_POSITION_IN_DIA] = turn_pos_wrt_dia
     vec[KDU_TURN_POSITION_IN_GAME] = turn_pos_wrt_game
     vec[KDU_TURN_FOLLOWS_GAP] =\
-        tid - 1 in dialogue_tids and tid != min(dialogue_tids)
+        tid and tid - 1 in dialogue_tids and tid != min(dialogue_tids)
     vec[KDU_SPEAKER_STARTED_DIA] = speaker_started_dialogue(ctx)
     vec[KDU_SPEAKER_TURN1_POSITION_IN_DIA] = spk_turn1_pos
     vec[KDU_SPEAKER_ALREADY_TALKED_IN_DIA] = spk_turn1_pos < turn_pos_wrt_dia
