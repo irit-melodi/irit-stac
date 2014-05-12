@@ -104,8 +104,6 @@ LEXICONS = [Lexicon('domain', 'stac_domain.txt', True),
             # perhaps be merged with one of the other lexicons
             # fr.irit.stac.features.CalculsTraitsTache3
             Lexicon('pronoun', 'pronouns.txt', True),
-            # collapsed into single is_question feature
-            Lexicon('question', 'questions.txt', False),
             Lexicon('ref', 'stac_referential.txt', False)]
 
 PDTB_MARKERS_BASENAME = 'pdtb_markers.txt'
