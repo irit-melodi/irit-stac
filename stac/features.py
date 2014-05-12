@@ -551,6 +551,43 @@ class MergedLexKeyGroup(MergedKeyGroup):
 # single EDU non-lexical features
 # ---------------------------------------------------------------------
 
+QUESTION_WORDS = ["what",
+                  "which",
+                  "where",
+                  "when",
+                  "who",
+                  "how",
+                  "why",
+                  "whose"]
+
+
+def is_question(current, edu):
+    """
+    Is this EDU a question (or does it contain one?)
+    """
+
+    def is_sqlike(anno):
+        "is some sort of question"
+        return isinstance(anno, ConstituencyTree)\
+            and anno.node in ['SBARQ', 'SQ']
+
+    doc = current.doc
+    span = edu.text_span()
+    has_qmark = "?" in doc.text(span)[-1]
+
+    ctx = current.contexts[edu]
+    tokens = ctx.tokens
+    starts_w_qword = False
+    if tokens:
+        starts_w_qword = tokens[0].word.lower() in QUESTION_WORDS
+
+    parses = current.parses
+    trees = enclosed_trees(span, parses.trees)
+    with_q_tag = map_topdown(is_sqlike, None, trees)
+    has_q_tag = bool(with_q_tag)
+    return has_qmark or starts_w_qword or has_q_tag
+
+
 class SingleEduSubgroup(KeyGroup):
     """
     Abstract keygroup for subgroups of the merged SingleEduKeys.
@@ -571,16 +608,6 @@ class SingleEduSubgroup(KeyGroup):
         """
         raise NotImplementedError("fill should be implemented by a subclass")
 
-
-def is_question(current, edu):
-    """
-    Is this EDU a question (or does it contain one?)
-    """
-    doc = current.doc
-    span = edu.text_span()
-    has_qmark = "?" in doc.text(span)[-1]
-    QWORDS = ["what", "which", "where", "when", "who", "how", "why", "whose"]
-    return has_qmark
 
 
 class SingleEduSubgroup_Meta(SingleEduSubgroup):
@@ -772,7 +799,9 @@ class SingleEduSubgroup_Parser(SingleEduSubgroup):
                           "the lemma corresponding to the "
                           "subject of this EDU"),
              Key.discrete("has_FOR_np",
-                          "if the EDU has the pattern IN(for).. NP")]
+                          "if the EDU has the pattern IN(for).. NP"),
+             Key.discrete("is_question",
+                          "if the EDU is (or contains) a question")]
         super(SingleEduSubgroup_Parser, self).__init__(desc, keys)
 
     def fill(self, current, edu, target=None):
@@ -803,6 +832,7 @@ class SingleEduSubgroup_Parser(SingleEduSubgroup):
         subject = subjects[0] if subjects else None
         vec["has_FOR_np"] = bool(map_topdown(is_for_pp_with_np, None, trees))
         vec["lemma_subject"] = tune_for_csv(subject)
+        vec["is_question"] = is_question(current, edu)
 
 
 class SingleEduKeys(MergedKeyGroup):
@@ -901,8 +931,8 @@ class PairSubgroup_Tuple(PairSubgroup):
         self.sf_cache = sf_cache
         desc = self.__doc__.strip()
         keys =\
-            [Key.discrete("ends_with_qmark_pairs",
-                          "boolean tuple: if each EDU ends with ?"),
+            [Key.discrete("is_question_pairs",
+                          "boolean tuple: if each EDU is a question"),
              Key.discrete("dialogue_act_pairs",
                           "tuple of dialogue acts for both EDUs")]
         super(PairSubgroup_Tuple, self).__init__(desc, keys)
@@ -911,12 +941,12 @@ class PairSubgroup_Tuple(PairSubgroup):
         vec = self if target is None else target
         vec_edu1 = self.sf_cache[edu1]
         vec_edu2 = self.sf_cache[edu2]
-        edu1_qmark = vec_edu1["ends_with_qmark"]
-        edu2_qmark = vec_edu2["ends_with_qmark"]
+        edu1_q = vec_edu1["is_question"]
+        edu2_q = vec_edu2["is_question"]
         edu1_act = clean_dialogue_act(real_dialogue_act(self.corpus, edu1))
         edu2_act = clean_dialogue_act(real_dialogue_act(self.corpus, edu2))
 
-        vec["ends_with_qmark_pairs"] = '%s_%s' % (edu1_qmark, edu2_qmark)
+        vec["is_question_pairs"] = '%s_%s' % (edu1_q, edu2_q)
         vec["dialogue_act_pairs"] = '%s_%s' % (edu1_act, edu2_act)
 
 
