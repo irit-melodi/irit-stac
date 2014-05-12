@@ -1004,11 +1004,13 @@ def extract_pair_features(inputs, window, discourse_only=True, live=False):
                       key=lambda x: x.span)
         for edu1 in edus:
             for edu2 in itr.dropwhile(lambda x: x.span <= edu1.span, edus):
-                vec = edu_pair_features(inputs, current, edu1, edu2)
                 ctx1 = current.contexts[edu1]
                 ctx2 = current.contexts[edu2]
                 if ctx1.dialogue != ctx2.dialogue:
-                    continue
+                    break  # we can break because the EDUs are sorted
+                           # so once we're out of dialogue, anything
+                           # that follows will also be so
+                vec = edu_pair_features(inputs, current, edu1, edu2)
                 if window >= 0 and vec["num_edus_between"] > window:
                     break
                 rels = attachments(doc.relations, edu1, edu2)
