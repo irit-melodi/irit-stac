@@ -716,7 +716,7 @@ def _fill_single_edu_chat_features(_, current, edu, vec):
 
 
 KEYS_SINGLE_PARSER =\
-    _kg("parser features [experimental]",
+    _kg("parser features",
         [Key.discrete("lemma_subject",
                       "the lemma corresponding to the subject of this EDU"),
          Key.discrete("has_FOR_np",
@@ -764,9 +764,8 @@ class SingleEduKeys(MergedKeyGroup):
                   KEYS_SINGLE_TOKEN,
                   KEYS_SINGLE_CHAT,
                   KEYS_SINGLE_PUNCT,
+                  KEYS_SINGLE_PARSER,
                   MergedLexKeyGroup(inputs)]
-        if inputs.experimental:
-            groups.append(KEYS_SINGLE_PARSER)
         if inputs.debug:
             groups.append(KEYS_SINGLE_DEBUG)
         super(SingleEduKeys, self).__init__("single EDU features",
@@ -782,8 +781,7 @@ def _fill_single_edu_features(inputs, current, edu, vec):
     _fill_single_edu_lex_features(inputs, current, edu, vec)
     _fill_single_edu_pdtb_features(inputs, current, edu, vec)
     _fill_single_edu_chat_features(inputs, current, edu, vec)
-    if inputs.experimental:
-        _fill_single_edu_psr_features(inputs, current, edu, vec)
+    _fill_single_edu_psr_features(inputs, current, edu, vec)
 
 
 # ---------------------------------------------------------------------
@@ -1129,10 +1127,7 @@ def read_common_inputs(args, corpus):
     Read the data that is common to live/corpus mode.
     """
     postags = postag.read_tags(corpus, args.corpus)
-    if args.experimental:
-        parses = corenlp.read_results(corpus, args.corpus)
-    else:
-        parses = None
+    parses = corenlp.read_results(corpus, args.corpus)
     return _read_resources(args, corpus, postags, parses)
 
 
