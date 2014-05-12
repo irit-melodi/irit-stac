@@ -838,13 +838,13 @@ KEYS_PAIR_TUPLE =\
                       "tuple of dialogue acts for both EDUs")])
 
 
-def _fill_edu_pair_edu_features(inputs, current, edu1, edu2, vec):
+def _fill_edu_pair_edu_features(inputs, current, sf_cache, edu1, edu2, vec):
     """
     Pairwise features that come out of the single-edu features for
     each edu
     """
-    _fill_single_edu_features(inputs, current, edu1, vec.edu1)
-    _fill_single_edu_features(inputs, current, edu2, vec.edu2)
+    vec.edu1 = sf_cache[edu1]
+    vec.edu2 = sf_cache[edu2]
     edu1_qmark = vec.edu1["ends_with_qmark"]
     edu2_qmark = vec.edu2["ends_with_qmark"]
     edu1_act = clean_dialogue_act(real_dialogue_act(inputs.corpus, edu1))
@@ -869,7 +869,7 @@ KEYS_PAIR_GAP2 =\
         [Key.discrete("same_turn", "if both EDUs are in the same turn")])
 
 
-def _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec):
+def _fill_edu_pair_gap_features(inputs, current, sf_cache, edu1, edu2, vec):
     """
     Pairwise features that are related to the gap between two EDUs
     """
@@ -940,7 +940,7 @@ class PairKeys(MergedKeyGroup):
         return "\n".join(lines)
 
 
-def edu_pair_features(inputs, current, edu1, edu2):
+def edu_pair_features(inputs, current, sf_cache, edu1, edu2):
     """
     Subvector for pairwise features between two given discourse units
     """
@@ -950,10 +950,45 @@ def edu_pair_features(inputs, current, edu1, edu2):
     vec = PairKeys(inputs)
     vec["dialogue"] = friendly_dialogue_id(current.key, dia_span)
     vec["annotator"] = current.doc.origin.annotator
-    _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec)
-    _fill_edu_pair_edu_features(inputs, current, edu1, edu2, vec)
+    _fill_edu_pair_gap_features(inputs, current, sf_cache, edu1, edu2, vec)
+    _fill_edu_pair_edu_features(inputs, current, sf_cache, edu1, edu2, vec)
 
     return vec
+
+# ---------------------------------------------------------------------
+# (single) feature cache
+# ---------------------------------------------------------------------
+
+
+class FeatureCache(dict):
+    """
+    Cache for single edu features.
+    Retrieving an item from the cache lazily computes/memoises
+    the single EDU features for it.
+    """
+    def __init__(self, inputs, current):
+        self.inputs = inputs
+        self.current = current
+        super(FeatureCache, self).__init__()
+
+    def __getitem__(self, edu):
+        if edu in self:
+            return super(FeatureCache, self).__getitem__(edu)
+        else:
+            vec = SingleEduKeys(self.inputs)
+            _fill_single_edu_features(self.inputs,
+                                      self.current,
+                                      edu,
+                                      vec)
+            self[edu] = vec
+            return vec
+
+    def expire(self, edu):
+        """
+        Remove an edu from the cache if it's in there
+        """
+        if edu in self:
+            del self[edu]
 
 # ---------------------------------------------------------------------
 # extraction generators
@@ -1002,6 +1037,8 @@ def extract_pair_features(inputs, window, discourse_only=True, live=False):
         doc = current.doc
         edus = sorted([x for x in doc.units if educe.stac.is_edu(x)],
                       key=lambda x: x.span)
+
+        sf_cache = FeatureCache(inputs, current)
         for edu1 in edus:
             for edu2 in itr.dropwhile(lambda x: x.span <= edu1.span, edus):
                 ctx1 = current.contexts[edu1]
@@ -1010,7 +1047,7 @@ def extract_pair_features(inputs, window, discourse_only=True, live=False):
                     break  # we can break because the EDUs are sorted
                            # so once we're out of dialogue, anything
                            # that follows will also be so
-                vec = edu_pair_features(inputs, current, edu1, edu2)
+                vec = edu_pair_features(inputs, current, sf_cache, edu1, edu2)
                 if window >= 0 and vec["num_edus_between"] > window:
                     break
                 rels = attachments(doc.relations, edu1, edu2)
@@ -1026,6 +1063,9 @@ def extract_pair_features(inputs, window, discourse_only=True, live=False):
                     rels_vec.set_class(rels[0].type if rels else 'UNRELATED')
                     pairs_vec.set_class(bool(rels))
                     yield pairs_vec, rels_vec
+            # we shouldn't ever need edu1 again; expiring this means
+            # the cache uses constantish memory
+            sf_cache.expire(edu1)
 
 
 def extract_single_features(inputs, live=False):
