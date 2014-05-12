@@ -592,7 +592,6 @@ KEYS_SINGLE_TOKEN =\
                       "if the EDU consists solely of an emoticon")])
 
 
-
 KEYS_SINGLE_PUNCT =\
     _kg("punctuation features",
         [Key.discrete("has_correction_star",
@@ -1096,16 +1095,12 @@ def read_pdtb_lexicon(args):
     return pdtb_markers.read_lexicon(pdtb_lex_file)
 
 
-def init_lexicons(args):
+def _read_resources(args, corpus, postags, parses):
     """
-    Read all the lexicons in, from their expected locations
+    Read all external resources
     """
     for lex in LEXICONS:
         lex.read(args.resources)
-
-
-def _read_resources(args, corpus, postags, parses):
-    init_lexicons(args)
     pdtb_lex = read_pdtb_lexicon(args)
     return FeatureInput(corpus, postags, parses,
                         LEXICONS, pdtb_lex,
