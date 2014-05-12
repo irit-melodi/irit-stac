@@ -4,6 +4,7 @@ The feature extraction script (rel-info) is a lightweight frontend
 to this library
 """
 
+from __future__ import absolute_import, print_function
 from collections import defaultdict, namedtuple
 from itertools import chain
 import collections
@@ -27,6 +28,7 @@ import educe.util
 import fuzzy
 
 import stac.lexicon.pdtb_markers as pdtb_markers
+from stac.keys import Key, KeyGroup, MergedKeyGroup, ClassKeyGroup
 from stac.lexicon.wordclass import WordClass
 from stac.edu import Context, enclosed, edus_in_span
 
@@ -50,6 +52,7 @@ class CorpusConsistencyException(Exception):
     """
     def __init__(self, msg):
         super(CorpusConsistencyException, self).__init__(msg)
+
 
 # ---------------------------------------------------------------------
 # lexicon configuration
@@ -90,27 +93,6 @@ class Lexicon(object):
             self.subclasses = {k: frozenset(subcl) for k, subcl
                                in subclasses.items()}
 
-    def csv_field(self, prefix, entry, subclass=None):
-        """
-        For a given lexical class, return the name of its feature in the
-        CSV file
-        """
-        subclass_elems = [subclass] if subclass else []
-        return '_'.join([prefix, self.key, entry] + subclass_elems)
-
-    def csv_fields(self, prefix):
-        """
-        CSV field names for each entry/class in the lexicon
-        """
-        if self.classes:
-            headers = []
-            for entry in self.entries:
-                headers.extend(self.csv_field(prefix, entry, subclass=subcl)
-                               for subcl in self.subclasses[entry])
-            return headers
-        else:
-            return [self.csv_field(prefix, e) for e in self.entries]
-
 
 LEXICONS = [Lexicon('domain', 'stac_domain.txt', True),
             Lexicon('robber', 'stac_domain2.txt', False),
@@ -122,6 +104,7 @@ LEXICONS = [Lexicon('domain', 'stac_domain.txt', True),
             # perhaps be merged with one of the other lexicons
             # fr.irit.stac.features.CalculsTraitsTache3
             Lexicon('pronoun', 'pronouns.txt', True),
+            # collapsed into single is_question feature
             Lexicon('question', 'questions.txt', False),
             Lexicon('ref', 'stac_referential.txt', False)]
 
@@ -272,8 +255,8 @@ def real_dialogue_act(corpus, anno):
         raise CorpusConsistencyException(oops)
     else:
         if len(acts) > 1:
-            print >> sys.stderr,\
-                'More than one dialogue act for %s: %s' % (anno, acts)
+            print("More than one dialogue act for %s: %s" % (anno, acts),
+                  file=sys.stderr)
         return list(acts)[0]
 
 
@@ -342,125 +325,15 @@ def enclosed_trees(span, trees):
 
 
 # ---------------------------------------------------------------------
-# csv files
+# features
 # ---------------------------------------------------------------------
 
-K_CLASS = "c#CLASS"  # the thing we want to learn
-K_DIALOGUE = "m#dialogue"
-K_DIALOGUE_ACT_PAIRS = "D#dialogue_act_pairs"
-K_ENDS_WITH_QMARK_PAIRS = "D#ends_with_qmark_pairs"
-K_NUM_EDUS_BETWEEN = "C#num_edus_between"
-K_NUM_SPEAKERS_BETWEEN = "C#num_speakers_between"
-K_SAME_SPEAKER = "D#same_speaker"
-K_ANNOTATOR = "m#annotator"
-K_TEXT = "m#text"
-K_SAME_TURN = "D#same_turn"
 
-# fields for a given EDU (will need to be suffixed, eg. KDU_ID + 'DU1')
-KDU_ID = "m#id"
-KDU_SP1 = "m#start"
-KDU_SP2 = "m#end"
-KDU_TEXT = "m#text"
-KDU_HAS_EMOTICONS = "D#has_emoticons"
-KDU_HAS_PLAYER_NAME_EXACT = "D#has_player_name_exact"
-KDU_HAS_PLAYER_NAME_FUZZY = "D#has_player_name_fuzzy"
-KDU_HAS_FOR_NP = "D#has_FOR_np"
-KDU_IS_EMOTICON_ONLY = "D#is_emoticon_only"
-KDU_HAS_CORRECTION_STAR = "D#has_correction_star"
-KDU_ENDS_WITH_BANG = "D#ends_with_bang"
-KDU_ENDS_WITH_QMARK = "D#ends_with_qmark"
-KDU_SPEAKER_STARTED_DIA = "D#speaker_started_the_dialogue"
-KDU_SPEAKER_ALREADY_TALKED_IN_DIA = "D#speaker_already_spoken_in_dialogue"
-KDU_EDU_POSITION_IN_TURN = "C#edu_position_in_turn"
-KDU_TURN_FOLLOWS_GAP = "D#turn_follows_gap"
-KDU_TURN_POSITION_IN_DIA = "C#position_in_dialogue"
-KDU_TURN_POSITION_IN_GAME = "C#position_in_game"
-KDU_SPEAKER_TURN1_POSITION_IN_DIA = "C#speakers_first_turn_in_dialogue"
-KDU_NUM_TOKENS = "C#num_tokens"
-KDU_LEX_ = "D#lex"
-KDU_PDTB_ = "D#pdtb"
-KDU_WORD_FIRST = "D#word_first"
-KDU_WORD_LAST = "D#word_last"
-KDU_LEMMA_SUBJECT = "D#lemma_subject"
-
-DU_SPECIFIC_FIELDS =\
-    [KDU_ID, KDU_WORD_FIRST,
-     KDU_WORD_LAST,
-     KDU_HAS_PLAYER_NAME_EXACT,
-     KDU_HAS_PLAYER_NAME_FUZZY,
-     KDU_HAS_EMOTICONS,
-     KDU_IS_EMOTICON_ONLY,
-     KDU_SPEAKER_STARTED_DIA,
-     KDU_SPEAKER_ALREADY_TALKED_IN_DIA,
-     KDU_SPEAKER_TURN1_POSITION_IN_DIA,
-     KDU_TURN_FOLLOWS_GAP,
-     KDU_TURN_POSITION_IN_DIA,
-     KDU_TURN_POSITION_IN_GAME,
-     KDU_EDU_POSITION_IN_TURN,
-     KDU_HAS_CORRECTION_STAR,
-     KDU_ENDS_WITH_BANG,
-     KDU_ENDS_WITH_QMARK,
-     KDU_NUM_TOKENS,
-     KDU_SP1,
-     KDU_SP2]
-
-
-def mk_csv_header_lex(inputs):
+def _kg(*args):
     """
-    CSV header segment based to lexical lookup
+    Shorthand for KeyGroup, just to save on some indentation
     """
-    fields = []
-    for lex in inputs.lexicons:
-        fields.extend(lex.csv_fields(KDU_LEX_))
-
-    for rel in inputs.pdtb_lex:
-        field = '_'.join([KDU_PDTB_, rel])
-        fields.append(field)
-
-    return fields
-
-
-
-def mk_csv_header(inputs, before):
-    "header entry for all features"
-    fields = []
-    fields.extend(before)
-    fields.extend(
-        [K_DIALOGUE, K_ANNOTATOR,
-         K_NUM_EDUS_BETWEEN,
-         K_NUM_SPEAKERS_BETWEEN,
-         K_SAME_SPEAKER,
-         K_ENDS_WITH_QMARK_PAIRS,
-         K_DIALOGUE_ACT_PAIRS,
-         K_SAME_TURN])
-    # du-specific fields
-    du_fields = copy.copy(DU_SPECIFIC_FIELDS)
-    du_fields.extend(mk_csv_header_lex(inputs))
-    if inputs.experimental:
-        du_fields.append(KDU_LEMMA_SUBJECT)
-        du_fields.append(KDU_HAS_FOR_NP)
-    if inputs.debug:
-        du_fields.append(KDU_TEXT)
-    for edu in ['DU1', 'DU2']:
-        fields.extend(f + '_' + edu for f in du_fields)
-    # --
-    if inputs.debug:
-        fields.append(K_TEXT)
-    return fields
-
-
-def mk_csv_header_single(inputs,
-                         before):
-    "header entry for all features (single EDU variant)"
-    fields = [K_DIALOGUE]
-    fields.extend(DU_SPECIFIC_FIELDS)
-    fields.extend(mk_csv_header_lex(inputs))
-    if inputs.experimental:
-        fields.append(KDU_LEMMA_SUBJECT)
-        fields.append(KDU_HAS_FOR_NP)
-    if inputs.debug:
-        fields.append(KDU_TEXT)
-    return before + fields
+    return KeyGroup(*args)
 
 
 def tune_for_csv(string):
@@ -480,23 +353,6 @@ def tune_for_csv(string):
         return '__nil__'
 
 
-def _dump_vector(inputs, vec):
-    """
-    DEBUGGING ONLY: print a vector in the order it would appear in
-    the CSV file, pairing each field with its value
-    """
-
-    du_csv_fields_lex = []
-    for lex in inputs.lexicons:
-        du_csv_fields_lex.extend(lex.csv_fields(KDU_LEX_))
-    for rel in inputs.pdtb_lex:
-        field = '_'.join([KDU_PDTB_, rel])
-        du_csv_fields_lex.append(field)
-    header = mk_csv_header(inputs, [])
-    for hdr in header:
-        print hdr, vec[hdr]
-
-
 # ---------------------------------------------------------------------
 # feature extraction
 # ---------------------------------------------------------------------
@@ -509,6 +365,10 @@ FeatureInput = namedtuple('FeatureInput',
                           ['corpus', 'postags', 'parses',
                            'lexicons', 'pdtb_lex',
                            'ignore_cdus', 'debug', 'experimental'])
+
+# Overlaps with FeatureInput a bit; if this keeps up we may merge
+# them somehow
+Resources = namedtuple('Resources', "lexicons pdtb_lex")
 
 # A document and relevant contextual information
 DocumentPlus = namedtuple('DocumentPlus',
@@ -537,8 +397,214 @@ def friendly_dialogue_id(k, span):
     return '%s_%04d_%04d' % (bname, start, end)
 
 # ---------------------------------------------------------------------
-# single EDU
+# single EDU lexical features
 # ---------------------------------------------------------------------
+
+
+class LexKeyMaker(object):
+    """
+    Converter from lexical entries to feature keys in the stac.keys based
+    framework
+    """
+    def __init__(self, lexicon):
+        self.lexicon = lexicon
+
+    def mk_field(self, entry, subclass=None):
+        """
+        For a given lexical class, return the name of its feature in the
+        CSV file
+        """
+        subclass_elems = [subclass] if subclass else []
+        name = "_".join([self.key_prefix(), entry] + subclass_elems)
+        helptxt = "boolean (subclass of %s)" % entry if subclass else "boolean"
+        return Key.discrete(name, helptxt)
+
+    def mk_fields(self):
+        """
+        CSV field names for each entry/class in the lexicon
+        """
+        if self.lexicon.classes:
+            headers = []
+            for entry in self.lexicon.entries:
+                headers.extend(self.mk_field(entry, subclass=subcl)
+                               for subcl in self.lexicon.subclasses[entry])
+            return headers
+        else:
+            return [self.mk_field(e) for e in self.lexicon.entries]
+
+    def key_prefix(self):
+        """
+        Common CSV header name prefix to all columns based on this particular
+        lexicon
+        """
+        return "lex_" + self.lexicon.key
+
+
+class LexKeyGroup(KeyGroup, LexKeyMaker):
+    def __init__(self, lexicon):
+        LexKeyMaker.__init__(self, lexicon)
+        description = "%s (lexical features)" % self.key_prefix()
+        super(LexKeyGroup, self).__init__(description,
+                                          self.mk_fields())
+
+    def help_text(self):
+        """
+        CSV field names for each entry/class in the lexicon
+        """
+        header_name = (self.key_prefix() + "_...").ljust(KeyGroup.NAME_WIDTH)
+        header = "[D] %s %s" % (header_name, "")
+        lines = [header]
+        for entry in self.lexicon.entries:
+            keyname = entry
+            if self.lexicon.classes:
+                subkeys = ", ".join(self.lexicon.subclasses.get(entry, []))
+                keyname = keyname + "_{%s}" % subkeys
+            lines.append("       %s" % keyname.ljust(KeyGroup.NAME_WIDTH))
+        return "\n".join(lines)
+
+
+class PdtbKeyMaker(object):
+    def __init__(self, lexicon):
+        self.lexicon = lexicon
+
+    def mk_field(self, rel):
+        name = '_'.join([self.key_prefix(), rel])
+        return Key.discrete(name, "pdtb " + rel)
+
+    def mk_fields(self):
+        return [self.mk_field(x) for x in self.lexicon]
+
+    def key_prefix(self):
+        return "pdtb"
+
+
+class MergedLexKeyGroup(MergedKeyGroup):
+    def __init__(self, inputs):
+        groups =\
+            [LexKeyGroup(l) for l in inputs.lexicons] +\
+            [PdtbLexKeyGroup(inputs.pdtb_lex)]
+        description = "lexical features"
+        super(MergedLexKeyGroup, self).__init__(description, groups)
+
+    def help_text(self):
+        lines = [self.description,
+                 "-" * len(self.description)] +\
+            [g.help_text() for g in self.groups]
+        return "\n".join(lines)
+
+
+def _fill_single_edu_lex_features(inputs, current, edu, vec):
+    """
+    Single-EDU features based on lexical lookup.
+    Returns void.
+    """
+    ctx = current.contexts[edu]
+    tokens = ctx.tokens
+
+    # lexical features
+    for lex in inputs.lexicons:
+        factory = LexKeyMaker(lex)
+        for subkey in lex.entries:
+            sublex = lex.entries[subkey]
+            markers = lexical_markers(sublex, tokens)
+            if lex.classes:
+                for subclass in lex.subclasses[subkey]:
+                    field = factory.mk_field(subkey, subclass)
+                    vec[field.name] = subclass in markers
+            else:
+                field = factory.mk_field(subkey)
+                vec[field.name] = bool(markers)
+
+
+class PdtbLexKeyGroup(KeyGroup, PdtbKeyMaker):
+    def __init__(self, lexicon):
+        PdtbKeyMaker.__init__(self, lexicon)
+        description = "PDTB features"
+        super(PdtbLexKeyGroup, self).__init__(description,
+                                              self.mk_fields())
+
+    def help_text(self):
+        """
+        CSV field names for each entry/class in the lexicon
+        """
+        header_name = (self.key_prefix() + "_...").ljust(KeyGroup.NAME_WIDTH)
+        header_help = "if has lexical marker for the given class"
+        header = "[D] %s %s" % (header_name, header_help)
+        lines = [header]
+        for rel in self.lexicon:
+            lines.append("       %s" % rel.ljust(KeyGroup.NAME_WIDTH))
+        return "\n".join(lines)
+
+
+def _fill_single_edu_pdtb_features(inputs, current, edu, vec):
+    """
+    Single-EDU features based on lexical lookup
+    (PDTB marker lexicon)
+    """
+    ctx = current.contexts[edu]
+    tokens = ctx.tokens
+
+    # PDTB discoure relation markers
+    lex = inputs.pdtb_lex
+    factory = PdtbKeyMaker(lex)
+    for rel in lex:
+        field = factory.mk_field(rel)
+        has_marker = has_pdtb_markers(lex[rel], tokens)
+        vec[field.name] = has_marker
+
+
+# ---------------------------------------------------------------------
+# single EDU non-lexical features
+# ---------------------------------------------------------------------
+
+
+def is_question(inputs, current, edu):
+    """
+    Is this EDU a question (or does it contain one?)
+    """
+    doc = current.doc
+    span = edu.text_span()
+    has_qmark = "?" in doc.text(span)[-1]
+    QWORDS = ["what", "which", "where", "when", "who", "how", "why", "whose"]
+    return has_qmark
+
+
+KEYS_SINGLE_BASIC =\
+    _kg("basic text features",
+        [Key.meta("id",
+                  "some sort of unique identifier for the EDU"),
+         Key.discrete("word_first", "the first word in this EDU"),
+         Key.discrete("word_last", "the last word in this EDU"),
+         Key.discrete("has_player_name_exact",
+                      "if the EDU text has a player name in it"),
+         Key.discrete("has_player_name_fuzzy",
+                      "if the EDU has a word that sounds like "
+                      "a player name"),
+         Key.discrete("has_emoticons",
+                      "if the EDU has emoticon-tagged tokens"),
+         Key.discrete("is_emoticon_only",
+                      "if the EDU consists solely of an emoticon")])
+
+
+KEYS_SINGLE_BASIC2 =\
+    _kg("basic text features (2)",
+        [Key.continuous("num_tokens", "length of this EDU in tokens"),
+         Key.meta("start", "text span start"),
+         Key.meta("end", "text span end")])
+
+
+KEYS_SINGLE_PUNCT =\
+    _kg("punctuation features",
+        [Key.discrete("has_correction_star",
+                      "if the EDU begins with a '*' but does "
+                      "not contain others"),
+         Key.discrete("ends_with_bang", "if the EDU text ends with '!'"),
+         Key.discrete("ends_with_qmark", "if the EDU text ends with '?'")])
+
+
+KEYS_SINGLE_DEBUG =\
+    _kg("debug features",
+        [Key.meta("text", "EDU text [debug only]")])
 
 
 def _fill_single_edu_txt_features(inputs, current, edu, vec):
@@ -578,55 +644,48 @@ def _fill_single_edu_txt_features(inputs, current, edu, vec):
         word_last = None
 
     # basic string features
-    vec[KDU_NUM_TOKENS] = len(tokens)
-    vec[KDU_SP1] = edu_span.char_start
-    vec[KDU_SP2] = edu_span.char_end
+    vec["num_tokens"] = len(tokens)
+    vec["start"] = edu_span.char_start
+    vec["end"] = edu_span.char_end
     # emoticons
-    vec[KDU_IS_EMOTICON_ONLY] = is_just_emoticon(tokens)
-    vec[KDU_HAS_EMOTICONS] = bool(emoticons(tokens))
+    vec["is_emoticon_only"] = is_just_emoticon(tokens)
+    vec["has_emoticons"] = bool(emoticons(tokens))
     # other tokens
-    vec[KDU_HAS_PLAYER_NAME_EXACT] = has_one_of_words(current.players, tokens)
-    vec[KDU_HAS_PLAYER_NAME_FUZZY] = has_one_of_words(current.players, tokens,
-                                                      norm=fuzzy.nysiis)
+    vec["has_player_name_exact"] = has_one_of_words(current.players, tokens)
+    vec["has_player_name_fuzzy"] = has_one_of_words(current.players, tokens,
+                                                    norm=fuzzy.nysiis)
     # first and last word
-    vec[KDU_WORD_FIRST] = tune_for_csv(word_first)
-    vec[KDU_WORD_LAST] = tune_for_csv(word_last)
+    vec["word_first"] = tune_for_csv(word_first)
+    vec["word_last"] = tune_for_csv(word_last)
     # string features
     edu_span = edu.text_span()
-    vec[KDU_ENDS_WITH_BANG] = ends_with_bang(edu_span)
-    vec[KDU_ENDS_WITH_QMARK] = ends_with_qmark(edu_span)
-    vec[KDU_HAS_CORRECTION_STAR] = has_initial_star(edu_span)
+    vec["ends_with_bang"] = ends_with_bang(edu_span)
+    vec["ends_with_qmark"] = ends_with_qmark(edu_span)
+    vec["has_correction_star"] = has_initial_star(edu_span)
 
     if inputs.debug:
-        vec[KDU_TEXT] = tune_for_csv(doc.text(edu_span))
+        vec["text"] = tune_for_csv(doc.text(edu_span))
 
 
-def _fill_single_edu_lex_features(inputs, current, edu, vec):
-    """
-    Single-EDU features based on lexical lookup.
-    Returns void.
-    """
-    ctx = current.contexts[edu]
-    tokens = ctx.tokens
-
-    # lexical features
-    for lex in inputs.lexicons:
-        for subkey in lex.entries:
-            sublex = lex.entries[subkey]
-            markers = lexical_markers(sublex, tokens)
-            if lex.classes:
-                for subclass in lex.subclasses[subkey]:
-                    field = lex.csv_field(KDU_LEX_, subkey, subclass=subclass)
-                    vec[field] = subclass in markers
-            else:
-                field = lex.csv_field(KDU_LEX_, subkey)
-                vec[field] = bool(markers)
-
-    # PDTB discoure relation markers
-    for rel in inputs.pdtb_lex:
-        field = '_'.join([KDU_PDTB_, rel])
-        vec[field] = has_pdtb_markers(inputs.pdtb_lex[rel],
-                                      tokens)
+KEYS_SINGLE_CHAT =\
+    _kg("chat features",
+        [Key.discrete("speaker_started_the_dialogue",
+                      "if the speaker for this EDU is the same as that "
+                      "of the first turn in the dialogue"),
+         Key.discrete("speaker_already_spoken_in_dialogue",
+                      "if the speaker for this EDU is the same as that "
+                      "of a previous turn in the dialogue"),
+         Key.continuous("speakers_first_turn_in_dialogue",
+                        "position in the dialogue of the turn in which "
+                        "the speaker for this EDU first spoke"),
+         Key.discrete("turn_follows_gap",
+                      "if the EDU turn number is > 1 + previous turn"),
+         Key.continuous("position_in_dialogue",
+                        "relative position of the turn in the dialogue"),
+         Key.continuous("position_in_game",
+                        "relative position of the turn in the game"),
+         Key.continuous("edu_position_in_turn",
+                        "relative position of the EDU in the turn")])
 
 
 def _fill_single_edu_chat_features(_, current, edu, vec):
@@ -645,14 +704,23 @@ def _fill_single_edu_chat_features(_, current, edu, vec):
     dialogue_tids = list(map(turn_id, ctx.dialogue_turns))
     tid = turn_id(ctx.turn)
 
-    vec[KDU_EDU_POSITION_IN_TURN] = edu_pos
-    vec[KDU_TURN_POSITION_IN_DIA] = turn_pos_wrt_dia
-    vec[KDU_TURN_POSITION_IN_GAME] = turn_pos_wrt_game
-    vec[KDU_TURN_FOLLOWS_GAP] =\
+    vec["edu_position_in_turn"] = edu_pos
+    vec["position_in_dialogue"] = turn_pos_wrt_dia
+    vec["position_in_game"] = turn_pos_wrt_game
+    vec["turn_follows_gap"] =\
         tid and tid - 1 in dialogue_tids and tid != min(dialogue_tids)
-    vec[KDU_SPEAKER_STARTED_DIA] = speaker_started_dialogue(ctx)
-    vec[KDU_SPEAKER_TURN1_POSITION_IN_DIA] = spk_turn1_pos
-    vec[KDU_SPEAKER_ALREADY_TALKED_IN_DIA] = spk_turn1_pos < turn_pos_wrt_dia
+    vec["speaker_started_the_dialogue"] = speaker_started_dialogue(ctx)
+    vec["speakers_first_turn_in_dialogue"] = spk_turn1_pos
+    vec["speaker_already_spoken_in_dialogue"] =\
+        spk_turn1_pos < turn_pos_wrt_dia
+
+
+KEYS_SINGLE_PARSER =\
+    _kg("parser features [experimental]",
+        [Key.discrete("lemma_subject",
+                      "the lemma corresponding to the subject of this EDU"),
+         Key.discrete("has_FOR_np",
+                      "if the EDU has the pattern IN(for).. NP")])
 
 
 def _fill_single_edu_psr_features(inputs, current, edu, vec):
@@ -679,25 +747,75 @@ def _fill_single_edu_psr_features(inputs, current, edu, vec):
             and anno.topdown(is_nplike, None)
 
     edu_span = edu.text_span()
-    if inputs.experimental:
-        parses = current.parses
-        trees = enclosed_trees(edu_span, parses.trees)
-        has_for_np = bool(map_topdown(is_for_pp_with_np, None, trees))
-        subjects = subject_lemmas(edu_span, parses.deptrees)
-        subject = subjects[0] if subjects else None
-        vec[KDU_HAS_FOR_NP] = has_for_np
-        vec[KDU_LEMMA_SUBJECT] = tune_for_csv(subject)
+    parses = current.parses
+    trees = enclosed_trees(edu_span, parses.trees)
+    subjects = subject_lemmas(edu_span, parses.deptrees)
+    subject = subjects[0] if subjects else None
+    vec["has_FOR_np"] = bool(map_topdown(is_for_pp_with_np, None, trees))
+    vec["lemma_subject"] = tune_for_csv(subject)
 
 
-def single_edu_features(inputs, current, edu):
+class SingleEduKeys(MergedKeyGroup):
     """
-    Fields specific to one EDU
+    Features for a single EDU
     """
-    vec = {KDU_ID: edu.identifier()}
+    def __init__(self, inputs):
+        groups = [KEYS_SINGLE_BASIC,
+                  KEYS_SINGLE_CHAT,
+                  KEYS_SINGLE_PUNCT,
+                  KEYS_SINGLE_BASIC2,
+                  MergedLexKeyGroup(inputs)]
+        if inputs.experimental:
+            groups.append(KEYS_SINGLE_PARSER)
+        if inputs.debug:
+            groups.append(KEYS_SINGLE_DEBUG)
+        super(SingleEduKeys, self).__init__("single EDU features",
+                                            groups)
+
+
+def _fill_single_edu_features(inputs, current, edu, vec):
+    """
+    Fields specific to one EDU (helper)
+    """
+    vec["id"] = edu.identifier()
     _fill_single_edu_txt_features(inputs, current, edu, vec)
     _fill_single_edu_lex_features(inputs, current, edu, vec)
-    _fill_single_edu_psr_features(inputs, current, edu, vec)
+    _fill_single_edu_pdtb_features(inputs, current, edu, vec)
     _fill_single_edu_chat_features(inputs, current, edu, vec)
+    if inputs.experimental:
+        _fill_single_edu_psr_features(inputs, current, edu, vec)
+
+
+# ---------------------------------------------------------------------
+# EDU singletons (standalone mode)
+# ---------------------------------------------------------------------
+
+
+KEYS_SINGLE_STANDALONE =\
+    _kg("additional keys for single EDU in standalone mode",
+        [Key.meta("dialogue", "dialogue that contains both EDUs")])
+
+
+class SingleEduKeysForSingleExtraction(MergedKeyGroup):
+    """
+    Features for a single EDU, not used within EDU pair extraction,
+    but just in standalone mode for dialogue act annotations
+    """
+    def __init__(self, inputs):
+        groups = [KEYS_SINGLE_STANDALONE,
+                  SingleEduKeys(inputs)]
+        super(SingleEduKeysForSingleExtraction,
+              self).__init__("standalone single EDUs", groups)
+
+
+def standalone_single_edu_features(inputs, current, edu):
+    """
+    Fields specific to one EDU (for use in dialogue act annotation)
+    """
+    vec = SingleEduKeysForSingleExtraction(inputs)
+    _fill_single_edu_features(inputs, current, edu, vec)
+    dia_span = current.contexts[edu].dialogue.text_span()
+    vec["dialogue"] = friendly_dialogue_id(current.key, dia_span)
     return vec
 
 
@@ -705,26 +823,50 @@ def single_edu_features(inputs, current, edu):
 # EDU pairs
 # ---------------------------------------------------------------------
 
+# interesting problem: how do we manage the single edu features
+# here? one natural response might be to group it all into one
+# class but then what we would like to do is to also control the
+# help text so that the single edu features appear after all the
+# other features (we could conveniently arrange to have this be the
+# last block in the hierarchy)
+
+KEYS_PAIR_TUPLE =\
+    _kg("artificial tuple features",
+        [Key.discrete("ends_with_qmark_pairs",
+                      "boolean tuple: if each EDU ends with ?"),
+         Key.discrete("dialogue_act_pairs",
+                      "tuple of dialogue acts for both EDUs")])
+
 
 def _fill_edu_pair_edu_features(inputs, current, edu1, edu2, vec):
     """
     Pairwise features that come out of the single-edu features for
     each edu
     """
-    edu1_info = single_edu_features(inputs, current, edu1)
-    edu2_info = single_edu_features(inputs, current, edu2)
-    edu1_qmark = edu1_info[KDU_ENDS_WITH_QMARK]
-    edu2_qmark = edu2_info[KDU_ENDS_WITH_QMARK]
+    _fill_single_edu_features(inputs, current, edu1, vec.edu1)
+    _fill_single_edu_features(inputs, current, edu2, vec.edu2)
+    edu1_qmark = vec.edu1["ends_with_qmark"]
+    edu2_qmark = vec.edu2["ends_with_qmark"]
     edu1_act = clean_dialogue_act(real_dialogue_act(inputs.corpus, edu1))
     edu2_act = clean_dialogue_act(real_dialogue_act(inputs.corpus, edu2))
 
-    vec[K_ENDS_WITH_QMARK_PAIRS] = '%s_%s' % (edu1_qmark, edu2_qmark)
-    vec[K_DIALOGUE_ACT_PAIRS] = '%s_%s' % (edu1_act, edu2_act)
+    vec["ends_with_qmark_pairs"] = '%s_%s' % (edu1_qmark, edu2_qmark)
+    vec["dialogue_act_pairs"] = '%s_%s' % (edu1_act, edu2_act)
 
-    # edu-specific features
-    for k in edu1_info:
-        vec[k + '_DU1'] = edu1_info[k]
-        vec[k + '_DU2'] = edu2_info[k]
+
+KEYS_PAIR_GAP =\
+    _kg("the gap between EDUs",
+        [Key.continuous("num_edus_between",
+                        "number of intervening EDUs (0 if adjacent)"),
+         Key.continuous("num_speakers_between",
+                        "number of distinct speakers in intervening EDUs"),
+         Key.discrete("same_speaker",
+                      "if both EDUs have the same speaker")])
+
+# to fuse with pair_gap when we're satisfied everything is in order
+KEYS_PAIR_GAP2 =\
+    _kg("the gap between EDUs (2)",
+        [Key.discrete("same_turn", "if both EDUs are in the same turn")])
 
 
 def _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec):
@@ -746,13 +888,56 @@ def _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec):
                              (t for t in doc.units if t.type == 'Turn'))
     speakers_between = frozenset(speaker(t) for t in turns_between)
 
-    vec[K_NUM_EDUS_BETWEEN] = len(edus_in_span(doc, big_span)) - 2
-    vec[K_NUM_SPEAKERS_BETWEEN] = len(speakers_between)
-    vec[K_SAME_SPEAKER] = speaker(ctx1.turn) == speaker(ctx2.turn)
-    vec[K_SAME_TURN] = ctx1.turn == ctx2.turn
+    vec["num_edus_between"] = len(edus_in_span(doc, big_span)) - 2
+    vec["num_speakers_between"] = len(speakers_between)
+    vec["same_speaker"] = speaker(ctx1.turn) == speaker(ctx2.turn)
+    vec["same_turn"] = ctx1.turn == ctx2.turn
 
     if inputs.debug:
-        vec[K_TEXT] = tune_for_csv(doc.text(big_span))
+        vec["text"] = tune_for_csv(doc.text(big_span))
+
+
+KEYS_PAIR_BASIC =\
+    _kg("core features",
+        [Key.meta("dialogue", "dialogue that contains both EDUs"),
+         Key.meta("annotator", "annotator for the subdoc")])
+
+KEYS_PAIR_DEBUG =\
+    _kg("debug features",
+        [Key.meta("text", "text from DU1 start to DU2 end [debug only]")])
+
+
+class PairKeys(MergedKeyGroup):
+    """
+    Features for pairs of EDUs
+    """
+    def __init__(self, inputs):
+        groups = [KEYS_PAIR_BASIC,
+                  KEYS_PAIR_GAP,
+                  KEYS_PAIR_TUPLE,
+                  KEYS_PAIR_GAP2]
+        if inputs.debug:
+            groups.append(KEYS_PAIR_DEBUG)
+        self.edu1 = SingleEduKeys(inputs)
+        self.edu2 = SingleEduKeys(inputs)
+        super(PairKeys, self).__init__("pair features",
+                                       groups)
+
+    def csv_headers(self):
+        return super(PairKeys, self).csv_headers() +\
+            [h + "_DU1" for h in self.edu1.csv_headers()] +\
+            [h + "_DU2" for h in self.edu2.csv_headers()]
+
+    def csv_values(self):
+        return super(PairKeys, self).csv_values() +\
+            self.edu1.csv_values() +\
+            self.edu2.csv_values()
+
+    def help_text(self):
+        lines = [super(PairKeys, self).help_text(),
+                 "",
+                 self.edu1.help_text()]
+        return "\n".join(lines)
 
 
 def edu_pair_features(inputs, current, edu1, edu2):
@@ -761,12 +946,18 @@ def edu_pair_features(inputs, current, edu1, edu2):
     """
     ctx1 = current.contexts[edu1]
     dia_span = ctx1.dialogue.text_span()
-    vec = {K_DIALOGUE: friendly_dialogue_id(current.key, dia_span),
-           K_ANNOTATOR: current.doc.origin.annotator}
 
-    _fill_edu_pair_edu_features(inputs, current, edu1, edu2, vec)
+    vec = PairKeys(inputs)
+    vec["dialogue"] = friendly_dialogue_id(current.key, dia_span)
+    vec["annotator"] = current.doc.origin.annotator
     _fill_edu_pair_gap_features(inputs, current, edu1, edu2, vec)
+    _fill_edu_pair_edu_features(inputs, current, edu1, edu2, vec)
+
     return vec
+
+# ---------------------------------------------------------------------
+# extraction generators
+# ---------------------------------------------------------------------
 
 
 def mk_current(inputs, people, k):
@@ -818,22 +1009,21 @@ def extract_pair_features(inputs, window, discourse_only=True, live=False):
                 ctx2 = current.contexts[edu2]
                 if ctx1.dialogue != ctx2.dialogue:
                     continue
-                if window >= 0 and vec[K_NUM_EDUS_BETWEEN] > window:
+                if window >= 0 and vec["num_edus_between"] > window:
                     break
                 rels = attachments(doc.relations, edu1, edu2)
-                rels_vec = copy.copy(vec)
-                if len(rels) > 1:
-                    print >> sys.stderr,\
-                        'More than one relation between ', edu1, 'and', edu2
-                if rels and not live:
-                    rels_vec[K_CLASS] = rels[0].type
-                elif not live:
-                    rels_vec[K_CLASS] = 'UNRELATED'
-
-                pairs_vec = vec
-                if not live:
-                    pairs_vec[K_CLASS] = bool(rels)
-                yield pairs_vec, rels_vec
+                if live:
+                    yield vec, vec
+                else:
+                    rels_vec = ClassKeyGroup(vec)
+                    pairs_vec = ClassKeyGroup(vec)
+                    if len(rels) > 1:
+                        print('More than one relation between %s and %s' %
+                              (edu1, edu2),
+                              file=sys.stderr)
+                    rels_vec.set_class(rels[0].type if rels else 'UNRELATED')
+                    pairs_vec.set_class(bool(rels))
+                    yield pairs_vec, rels_vec
 
 
 def extract_single_features(inputs, live=False):
@@ -848,13 +1038,14 @@ def extract_single_features(inputs, live=False):
         doc = current.doc
         edus = [unit for unit in doc.units if educe.stac.is_edu(unit)]
         for edu in edus:
-            vec = single_edu_features(inputs, current, edu)
-            act = real_dialogue_act(inputs.corpus, edu)
-            dia_span = current.contexts[edu].dialogue.text_span()
-            vec[K_DIALOGUE] = friendly_dialogue_id(current.key, dia_span)
-            if not live:
-                vec[K_CLASS] = clean_dialogue_act(act)
-            yield vec
+            vec = standalone_single_edu_features(inputs, current, edu)
+            if live:
+                yield vec
+            else:
+                act = real_dialogue_act(inputs.corpus, edu)
+                cl_vec = ClassKeyGroup(vec)
+                cl_vec.set_class(clean_dialogue_act(act))
+                yield cl_vec
 
 
 # ---------------------------------------------------------------------
@@ -878,20 +1069,34 @@ def init_lexicons(args):
         lex.read(args.resources)
 
 
+def _read_resources(args, corpus, postags, parses):
+    init_lexicons(args)
+    pdtb_lex = read_pdtb_lexicon(args)
+    return FeatureInput(corpus, postags, parses,
+                        LEXICONS, pdtb_lex,
+                        args.ignore_cdus, args.debug, args.experimental)
+
+
+def read_list_inputs(args):
+    """
+    Read just the resources and flags needed to do a feature listing
+    """
+    args.debug = True
+    args.experimental = True
+    args.ignore_cdus = None
+    return _read_resources(args, None, None, None)
+
+
 def read_common_inputs(args, corpus):
     """
     Read the data that is common to live/corpus mode.
     """
-    init_lexicons(args)
-    pdtb_lex = read_pdtb_lexicon(args)
     postags = postag.read_tags(corpus, args.corpus)
     if args.experimental:
         parses = corenlp.read_results(corpus, args.corpus)
     else:
         parses = None
-    return FeatureInput(corpus, postags,
-                        parses, LEXICONS, pdtb_lex,
-                        args.ignore_cdus, args.debug, args.experimental)
+    return _read_resources(args, corpus, postags, parses)
 
 
 def read_live_inputs(args):

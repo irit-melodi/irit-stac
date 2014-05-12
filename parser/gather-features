@@ -22,14 +22,16 @@ die () {
 }
 trap die ERR
 
+code/queries/rel-info list "$LEX_DIR" > "$SNAPSHOT/features.txt"
+
 for dset in $DATASETS; do
     echo >&2 "gathering features for $dset"
-    code/queries/rel-info "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
+    code/queries/rel-info extract "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --experimental\
         --anno "$ANNO"\
         --window "$WINDOW"\
         2> "$SNAPSHOT/tmp/$dset.features.log"
-    code/queries/rel-info "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
+    code/queries/rel-info extract "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --experimental\
         --single\
         --anno "$ANNO"\
