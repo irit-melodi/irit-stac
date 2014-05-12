@@ -568,11 +568,17 @@ def is_question(inputs, current, edu):
     QWORDS = ["what", "which", "where", "when", "who", "how", "why", "whose"]
     return has_qmark
 
-
-KEYS_SINGLE_BASIC =\
-    _kg("basic text features",
+KEYS_SINGLE_META =\
+    _kg("EDU identification features",
         [Key.meta("id",
                   "some sort of unique identifier for the EDU"),
+         Key.meta("start", "text span start"),
+         Key.meta("end", "text span end")])
+
+
+KEYS_SINGLE_TOKEN =\
+    _kg("token-based features",
+        [Key.continuous("num_tokens", "length of this EDU in tokens"),
          Key.discrete("word_first", "the first word in this EDU"),
          Key.discrete("word_last", "the last word in this EDU"),
          Key.discrete("has_player_name_exact",
@@ -585,12 +591,6 @@ KEYS_SINGLE_BASIC =\
          Key.discrete("is_emoticon_only",
                       "if the EDU consists solely of an emoticon")])
 
-
-KEYS_SINGLE_BASIC2 =\
-    _kg("basic text features (2)",
-        [Key.continuous("num_tokens", "length of this EDU in tokens"),
-         Key.meta("start", "text span start"),
-         Key.meta("end", "text span end")])
 
 
 KEYS_SINGLE_PUNCT =\
@@ -760,10 +760,10 @@ class SingleEduKeys(MergedKeyGroup):
     Features for a single EDU
     """
     def __init__(self, inputs):
-        groups = [KEYS_SINGLE_BASIC,
+        groups = [KEYS_SINGLE_META,
+                  KEYS_SINGLE_TOKEN,
                   KEYS_SINGLE_CHAT,
                   KEYS_SINGLE_PUNCT,
-                  KEYS_SINGLE_BASIC2,
                   MergedLexKeyGroup(inputs)]
         if inputs.experimental:
             groups.append(KEYS_SINGLE_PARSER)
@@ -861,12 +861,8 @@ KEYS_PAIR_GAP =\
          Key.continuous("num_speakers_between",
                         "number of distinct speakers in intervening EDUs"),
          Key.discrete("same_speaker",
-                      "if both EDUs have the same speaker")])
-
-# to fuse with pair_gap when we're satisfied everything is in order
-KEYS_PAIR_GAP2 =\
-    _kg("the gap between EDUs (2)",
-        [Key.discrete("same_turn", "if both EDUs are in the same turn")])
+                      "if both EDUs have the same speaker"),
+         Key.discrete("same_turn", "if both EDUs are in the same turn")])
 
 
 def _fill_edu_pair_gap_features(inputs, current, sf_cache, edu1, edu2, vec):
@@ -914,8 +910,7 @@ class PairKeys(MergedKeyGroup):
     def __init__(self, inputs):
         groups = [KEYS_PAIR_BASIC,
                   KEYS_PAIR_GAP,
-                  KEYS_PAIR_TUPLE,
-                  KEYS_PAIR_GAP2]
+                  KEYS_PAIR_TUPLE]
         if inputs.debug:
             groups.append(KEYS_PAIR_DEBUG)
         self.edu1 = SingleEduKeys(inputs)
