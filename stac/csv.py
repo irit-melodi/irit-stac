@@ -79,6 +79,33 @@ class Utf8DictReader:
     def __iter__(self):
         return self
 
+
+class SparseDictReader(csv.DictReader):
+    """
+    A CSV reader which avoids putting null values in dictionaries
+    (note that this is basically a copy of DictReader)
+    """
+    def __init__(self, f, *args, **kwds):
+        csv.DictReader.__init__(self, f, *args, **kwds)
+
+    def next(self):
+        if self.line_num == 0:
+            # Used only for its side effect.
+            self.fieldnames
+        row = self.reader.next()
+        self.line_num = self.reader.line_num
+
+        # unlike the basic reader, we prefer not to return blanks,
+        # because we will typically wind up with a dict full of None
+        # values
+        while row == []:
+            row = self.reader.next()
+        d = {}
+        for name, col in zip(self.fieldnames, row):
+            if len(col) > 0:
+                d[name] = col
+        return d
+
 def mk_csv_writer(ofile):
     """
     Writes dictionaries.
