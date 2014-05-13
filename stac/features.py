@@ -26,6 +26,7 @@ import educe.stac
 import educe.stac.graph as stac_gr
 import educe.util
 import fuzzy
+from nltk.corpus import verbnet as vnet
 
 import stac.lexicon.pdtb_markers as pdtb_markers
 from stac.keys import Key, KeyGroup, MergedKeyGroup, ClassKeyGroup
@@ -107,6 +108,13 @@ LEXICONS = [Lexicon('domain', 'stac_domain.txt', True),
             Lexicon('ref', 'stac_referential.txt', False)]
 
 PDTB_MARKERS_BASENAME = 'pdtb_markers.txt'
+
+VERBNET_CLASSES = ['steal-10.5',
+                   'get-13.5.1',
+                   'give-13.1-1',
+                   'want-32.1-1-1',
+                   'want-32.1',
+                   'exchange-13.6-1']
 
 # ---------------------------------------------------------------------
 # relation queries
@@ -258,6 +266,14 @@ def real_dialogue_act(corpus, anno):
         return list(acts)[0]
 
 
+def enclosed_lemmas(span, parses):
+    """
+    Given a span and a list of parses, return any lemmas that
+    are within that span
+    """
+    return [x.features["lemma"] for x in enclosed(span, parses.tokens)]
+
+
 def subject_lemmas(span, trees):
     """
     Given a span and a list of dependency trees, return any lemmas
@@ -361,7 +377,7 @@ def tune_for_csv(string):
 # Global resources and settings used to extract feature vectors
 FeatureInput = namedtuple('FeatureInput',
                           ['corpus', 'postags', 'parses',
-                           'lexicons', 'pdtb_lex',
+                           'lexicons', 'pdtb_lex', 'verbnet_classes',
                            'ignore_cdus', 'debug', 'experimental'])
 
 # Overlaps with FeatureInput a bit; if this keeps up we may merge
@@ -522,6 +538,53 @@ class PdtbLexKeyGroup(KeyGroup):
             vec[field.name] = has_marker
 
 
+class VerbNetLexKeyGroup(KeyGroup):
+    """
+    One feature per VerbNet lexicon class
+    """
+    def __init__(self, vclasses):
+        self.vclasses = vclasses
+        description = "VerbNet features"
+        super(VerbNetLexKeyGroup, self).__init__(description,
+                                                 self.mk_fields())
+
+    def mk_field(self, vclass):
+        "From verb class to feature key"
+        name = '_'.join([self.key_prefix(), vclass])
+        return Key.discrete(name, "VerbNet " + vclass)
+
+    def mk_fields(self):
+        "Feature name for each relation in the lexicon"
+        return [self.mk_field(x) for x in self.vclasses]
+
+    @classmethod
+    def key_prefix(cls):
+        "All feature keys in this lexicon should start with this string"
+        return "verbnet"
+
+    def help_text(self):
+        """
+        CSV field names for each entry/class in the lexicon
+        """
+        header_name = (self.key_prefix() + "_...").ljust(KeyGroup.NAME_WIDTH)
+        header_help = "if has lemma in the given class"
+        header = "[D] %s %s" % (header_name, header_help)
+        lines = [header]
+        for vclass in self.vclasses:
+            lines.append("       %s" % vclass.ljust(KeyGroup.NAME_WIDTH))
+        return "\n".join(lines)
+
+    def fill(self, current, edu, target=None):
+        "See `SingleEduSubgroup`"
+
+        vec = self if target is None else target
+        lemmas = frozenset(enclosed_lemmas(edu.text_span(), current.parses))
+        for vclass in self.vclasses:
+            matching = lemmas.intersection(vnet.lemmas(vclass))
+            field = self.mk_field(vclass)
+            vec[field.name] = bool(matching)
+
+
 class MergedLexKeyGroup(MergedKeyGroup):
     """
     Single-EDU features based on lexical lookup.
@@ -529,7 +592,8 @@ class MergedLexKeyGroup(MergedKeyGroup):
     def __init__(self, inputs):
         groups =\
             [LexKeyGroup(l) for l in inputs.lexicons] +\
-            [PdtbLexKeyGroup(inputs.pdtb_lex)]
+            [PdtbLexKeyGroup(inputs.pdtb_lex),
+             VerbNetLexKeyGroup(inputs.verbnet_classes)]
         description = "lexical features"
         super(MergedLexKeyGroup, self).__init__(description, groups)
 
@@ -1236,7 +1300,7 @@ def _read_resources(args, corpus, postags, parses):
         lex.read(args.resources)
     pdtb_lex = read_pdtb_lexicon(args)
     return FeatureInput(corpus, postags, parses,
-                        LEXICONS, pdtb_lex,
+                        LEXICONS, pdtb_lex, VERBNET_CLASSES,
                         args.ignore_cdus, args.debug, args.experimental)
 
 
