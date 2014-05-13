@@ -744,7 +744,6 @@ class SingleEduSubgroup(KeyGroup):
         raise NotImplementedError("fill should be implemented by a subclass")
 
 
-
 class SingleEduSubgroup_Meta(SingleEduSubgroup):
     """
     Basic EDU-identification features
