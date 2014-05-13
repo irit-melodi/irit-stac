@@ -109,6 +109,8 @@ LEXICONS = [Lexicon('domain', 'stac_domain.txt', True),
 
 PDTB_MARKERS_BASENAME = 'pdtb_markers.txt'
 
+VerbNetEntry = namedtuple("VerbNetEntry", "classname lemmas")
+
 VERBNET_CLASSES = ['steal-10.5',
                    'get-13.5.1',
                    'give-13.1-1',
@@ -377,7 +379,7 @@ def tune_for_csv(string):
 # Global resources and settings used to extract feature vectors
 FeatureInput = namedtuple('FeatureInput',
                           ['corpus', 'postags', 'parses',
-                           'lexicons', 'pdtb_lex', 'verbnet_classes',
+                           'lexicons', 'pdtb_lex', 'verbnet_entries',
                            'ignore_cdus', 'debug', 'experimental'])
 
 # Overlaps with FeatureInput a bit; if this keeps up we may merge
@@ -542,20 +544,20 @@ class VerbNetLexKeyGroup(KeyGroup):
     """
     One feature per VerbNet lexicon class
     """
-    def __init__(self, vclasses):
-        self.vclasses = vclasses
+    def __init__(self, ventries):
+        self.ventries = ventries
         description = "VerbNet features"
         super(VerbNetLexKeyGroup, self).__init__(description,
                                                  self.mk_fields())
 
-    def mk_field(self, vclass):
+    def mk_field(self, ventry):
         "From verb class to feature key"
-        name = '_'.join([self.key_prefix(), vclass])
-        return Key.discrete(name, "VerbNet " + vclass)
+        name = '_'.join([self.key_prefix(), ventry.classname])
+        return Key.discrete(name, "VerbNet " + ventry.classname)
 
     def mk_fields(self):
         "Feature name for each relation in the lexicon"
-        return [self.mk_field(x) for x in self.vclasses]
+        return [self.mk_field(x) for x in self.ventries]
 
     @classmethod
     def key_prefix(cls):
@@ -570,8 +572,9 @@ class VerbNetLexKeyGroup(KeyGroup):
         header_help = "if has lemma in the given class"
         header = "[D] %s %s" % (header_name, header_help)
         lines = [header]
-        for vclass in self.vclasses:
-            lines.append("       %s" % vclass.ljust(KeyGroup.NAME_WIDTH))
+        for ventry in self.ventries:
+            lines.append("       %s" %
+                         ventry.classname.ljust(KeyGroup.NAME_WIDTH))
         return "\n".join(lines)
 
     def fill(self, current, edu, target=None):
@@ -579,9 +582,9 @@ class VerbNetLexKeyGroup(KeyGroup):
 
         vec = self if target is None else target
         lemmas = frozenset(enclosed_lemmas(edu.text_span(), current.parses))
-        for vclass in self.vclasses:
-            matching = lemmas.intersection(vnet.lemmas(vclass))
-            field = self.mk_field(vclass)
+        for ventry in self.ventries:
+            matching = lemmas.intersection(ventry.lemmas)
+            field = self.mk_field(ventry)
             vec[field.name] = bool(matching)
 
 
@@ -593,7 +596,7 @@ class MergedLexKeyGroup(MergedKeyGroup):
         groups =\
             [LexKeyGroup(l) for l in inputs.lexicons] +\
             [PdtbLexKeyGroup(inputs.pdtb_lex),
-             VerbNetLexKeyGroup(inputs.verbnet_classes)]
+             VerbNetLexKeyGroup(inputs.verbnet_entries)]
         description = "lexical features"
         super(MergedLexKeyGroup, self).__init__(description, groups)
 
@@ -1299,8 +1302,11 @@ def _read_resources(args, corpus, postags, parses):
     for lex in LEXICONS:
         lex.read(args.resources)
     pdtb_lex = read_pdtb_lexicon(args)
+
+    verbnet_entries = [VerbNetEntry(x, frozenset(vnet.lemmas(x)))
+                       for x in VERBNET_CLASSES]
     return FeatureInput(corpus, postags, parses,
-                        LEXICONS, pdtb_lex, VERBNET_CLASSES,
+                        LEXICONS, pdtb_lex, verbnet_entries,
                         args.ignore_cdus, args.debug, args.experimental)
 
 
