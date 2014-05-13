@@ -11,6 +11,7 @@ breaking things up into paragraphs and [segments] seems to
 go a long way.
 """
 
+import copy
 import itertools
 import textwrap
 
@@ -92,6 +93,7 @@ def annotate(txt, annotations, inserts=None):
     _, buf = add_endpoints(endpoints, buf, len(txt))
     return buf
 
+
 # ---------------------------------------------------------------------
 # differences
 # ---------------------------------------------------------------------
@@ -120,13 +122,20 @@ def reflow(text, width=40):
     return _concat(wrap(t) for t in text.split("\n"))
 
 
-def annotate_doc(doc):
+def annotate_doc(doc, span=None):
     """
     Pretty print an educe document and its annotations.
 
     See the lower-level `annotate` for more details
     """
-    return annotate(doc.text(), doc.annotations())
+    if span:
+        units_ = [u for u in doc.units if span.encloses(u.span)]
+        units = copy.deepcopy(units_)
+        for unit in units:
+            unit.span = unit.span.relative(span)
+    else:
+        units = doc.units
+    return annotate(doc.text(span), units).strip()
 
 
 def show_diff(doc_before, doc_after):

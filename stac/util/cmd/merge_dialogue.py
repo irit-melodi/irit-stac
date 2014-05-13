@@ -12,6 +12,7 @@ import sys
 from educe.annotation import Span
 from educe.glozz import GlozzException
 
+from stac.util.annotate import annotate_doc
 from stac.util.args import\
     add_usual_input_args, add_usual_output_args, anno_id,\
     read_corpus,\
@@ -81,6 +82,14 @@ def _dialogues_in_turns(corpus, turn1, turn2):
     return [anno_id_to_tuple(x.local_id()) for x in matching_dialogues]
 
 
+def _merge_spans(annos):
+    """
+    Return one big span stretching across all the annotations
+    """
+    return Span(min(x.text_span().char_start for x in annos),
+                max(x.text_span().char_end for x in annos))
+
+
 def _merge_dialogues_in_document(sought, doc):
     """
     Given an iterable of dialogue annotation ids, merge them
@@ -94,9 +103,7 @@ def _merge_dialogues_in_document(sought, doc):
     dialogues = sorted(dialogues_,
                        key=lambda x: x.text_span().char_start)
     combined = copy.deepcopy(dialogues[0])
-    combined.span =\
-        Span(min(x.text_span().char_start for x in dialogues),
-             max(x.text_span().char_end for x in dialogues))
+    combined.span = _merge_spans(dialogues)
     for feat in ['Trades', 'Gets', 'Dice_rolling']:
         combined.features[feat] = _concatenate_features(dialogues, feat)
     for dialogue in dialogues:
@@ -130,7 +137,31 @@ def config_argparser(parser):
                               metavar='INT', type=int,
                               nargs=2,
                               help='eg. 187 192')
+    parser.add_argument('--commit-msg', action='store_true',
+                        help='Generate a summary for commit message')
     parser.set_defaults(func=main)
+
+
+def commit_msg(args, corpus, k, sought):
+    """
+    Generate a commit message describing the dialogue merging operation
+    we are about to do (has to be run before merging happens)
+    """
+    doc = corpus[k]
+    prefix = "Turns %d-%d" % tuple(args.turns)\
+        if args.turns else "Dialogues"
+    dstr = ", ".join(map(anno_id_from_tuple, sought))
+    dialogues = [_get_annotation_with_id(d, doc.units) for d in sought]
+    if dialogues:
+        dspan = _merge_spans(dialogues)
+        lines = ["%s_%s: merge dialogues" % (k.doc, k.subdoc),
+                 "",
+                 "%s (%s), was:" % (prefix, dstr),
+                 "",
+                 annotate_doc(doc, span=dspan)]
+        return "\n".join(lines)
+    else:
+        return "(no commit message; nothing to merge)"
 
 
 def main(args):
@@ -157,8 +188,15 @@ def main(args):
             sys.exit(str(oops))
     else:
         sought = args.dialogues
+    if args.commit_msg and corpus:
+        key0 = list(corpus)[0]
+        # compute this before we change things
+        cmsg = commit_msg(args, corpus, key0, sought)
     for k in corpus:
         doc = corpus[k]
         _merge_dialogues_in_document(sought, doc)
         save_document(output_dir, k, doc)
     announce_output_dir(output_dir)
+    if args.commit_msg and corpus:
+        print("-----8<------")
+        print(cmsg)
