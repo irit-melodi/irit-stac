@@ -15,9 +15,13 @@ import educe.corpus
 import educe.stac
 import educe.stac.graph as stacgraph
 
-from stac.util.args import get_output_dir
+from stac.util.args import\
+    get_output_dir, anno_id
+from stac.util.glozz import\
+    anno_id_from_tuple
 from stac.util.output import output_path_stub, mk_parent_dirs
 import stac.edu
+
 
 # slightly different from the stock stac-util version because it
 # supports live corpus mode
@@ -66,6 +70,11 @@ def _main_rel_graph(args):
         keys = [k for k in corpus if k.stage == 'discourse']
 
     for k in sorted(keys):
+        if args.highlight:
+            highlights = map(anno_id_from_tuple, args.highlight)
+            for anno in corpus[k].annotations():
+                if anno.local_id() in highlights:
+                    anno.features['highlight'] = 'orange'
         try:
             gra_ = stacgraph.Graph.from_doc(corpus, k)
             if args.strip_cdus:
@@ -140,6 +149,9 @@ def config_argparser(parser):
                         dest='draw',
                         default=True,
                         help='Do not actually draw the graph')
+    parser.add_argument('--highlight', nargs='+',
+                        metavar='ANNO_ID', type=anno_id,
+                        help='Highlight these annotations')
     parser.add_argument('--live', action='store_true',
                         help='Input is a flat collection of aa/ac files)')
 
