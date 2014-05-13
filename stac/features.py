@@ -28,6 +28,7 @@ import educe.util
 import fuzzy
 from nltk.corpus import verbnet as vnet
 
+import stac.csv
 import stac.lexicon.pdtb_markers as pdtb_markers
 from stac.keys import Key, KeyGroup, MergedKeyGroup, ClassKeyGroup
 from stac.lexicon.wordclass import WordClass
@@ -117,6 +118,23 @@ VERBNET_CLASSES = ['steal-10.5',
                    'want-32.1-1-1',
                    'want-32.1',
                    'exchange-13.6-1']
+
+INQUIRER_BASENAME = 'inqtabs.txt'
+
+INQUIRER_CLASSES = ['Positiv',
+                    'Negativ',
+                    'Pstv',
+                    'Ngtv',
+                    'NegAff',
+                    'PosAff',
+                    'If',
+                    'TrnGain',  # maybe gain/loss words related
+                    'TrnLoss',  # ...transactions
+                    'TrnLw',
+                    'Food',    # related to Catan resources?
+                    'Tool',    # related to Catan resources?
+                    'Region',  # related to Catan game?
+                    'Route']   # related to Catan game
 
 # ---------------------------------------------------------------------
 # relation queries
@@ -379,7 +397,9 @@ def tune_for_csv(string):
 # Global resources and settings used to extract feature vectors
 FeatureInput = namedtuple('FeatureInput',
                           ['corpus', 'postags', 'parses',
-                           'lexicons', 'pdtb_lex', 'verbnet_entries',
+                           'lexicons', 'pdtb_lex',
+                           'verbnet_entries',
+                           'inquirer_lex',
                            'ignore_cdus', 'debug', 'experimental'])
 
 # Overlaps with FeatureInput a bit; if this keeps up we may merge
@@ -588,6 +608,55 @@ class VerbNetLexKeyGroup(KeyGroup):
             vec[field.name] = bool(matching)
 
 
+class InquirerLexKeyGroup(KeyGroup):
+    """
+    One feature per Inquirer lexicon class
+    """
+    def __init__(self, lexicon):
+        self.lexicon = lexicon
+        description = "Inquirer features"
+        super(InquirerLexKeyGroup, self).__init__(description,
+                                                  self.mk_fields())
+
+    def mk_field(self, entry):
+        "From verb class to feature key"
+        name = '_'.join([self.key_prefix(), entry])
+        return Key.discrete(name, "Inquirer " + entry)
+
+    def mk_fields(self):
+        "Feature name for each relation in the lexicon"
+        return [self.mk_field(x) for x in self.lexicon]
+
+    @classmethod
+    def key_prefix(cls):
+        "All feature keys in this lexicon should start with this string"
+        return "inq"
+
+    def help_text(self):
+        """
+        CSV field names for each entry/class in the lexicon
+        """
+        header_name = (self.key_prefix() + "_...").ljust(KeyGroup.NAME_WIDTH)
+        header_help = "if has token in the given class"
+        header = "[D] %s %s" % (header_name, header_help)
+        lines = [header]
+        for entry in self.lexicon:
+            lines.append("       %s" %
+                         entry.ljust(KeyGroup.NAME_WIDTH))
+        return "\n".join(lines)
+
+    def fill(self, current, edu, target=None):
+        "See `SingleEduSubgroup`"
+
+        vec = self if target is None else target
+        ctx = current.contexts[edu]
+        tokens = frozenset(t.word.lower() for t in ctx.tokens)
+        for entry in self.lexicon:
+            field = self.mk_field(entry)
+            matching = tokens.intersection(self.lexicon[entry])
+            vec[field.name] = bool(matching)
+
+
 class MergedLexKeyGroup(MergedKeyGroup):
     """
     Single-EDU features based on lexical lookup.
@@ -596,6 +665,7 @@ class MergedLexKeyGroup(MergedKeyGroup):
         groups =\
             [LexKeyGroup(l) for l in inputs.lexicons] +\
             [PdtbLexKeyGroup(inputs.pdtb_lex),
+             InquirerLexKeyGroup(inputs.inquirer_lex),
              VerbNetLexKeyGroup(inputs.verbnet_entries)]
         description = "lexical features"
         super(MergedLexKeyGroup, self).__init__(description, groups)
@@ -1295,6 +1365,23 @@ def read_pdtb_lexicon(args):
     return pdtb_markers.read_lexicon(pdtb_lex_file)
 
 
+def _read_inquirer_lexicon(args):
+    """
+    Read and return the local PDTB discourse marker lexicon.
+    """
+    inq_txt_file = os.path.join(args.resources, INQUIRER_BASENAME)
+    with open(inq_txt_file) as cin:
+        creader = stac.csv.SparseDictReader(cin, delimiter='\t')
+        words = defaultdict(list)
+        for row in creader:
+            for k in row:
+                word = row["Entry"].lower()
+                word = re.sub(r'#.*$', r'', word)
+                if k in INQUIRER_CLASSES:
+                    words[k].append(word)
+    return words
+
+
 def _read_resources(args, corpus, postags, parses):
     """
     Read all external resources
@@ -1302,11 +1389,12 @@ def _read_resources(args, corpus, postags, parses):
     for lex in LEXICONS:
         lex.read(args.resources)
     pdtb_lex = read_pdtb_lexicon(args)
+    inq_lex = _read_inquirer_lexicon(args)
 
     verbnet_entries = [VerbNetEntry(x, frozenset(vnet.lemmas(x)))
                        for x in VERBNET_CLASSES]
     return FeatureInput(corpus, postags, parses,
-                        LEXICONS, pdtb_lex, verbnet_entries,
+                        LEXICONS, pdtb_lex, verbnet_entries, inq_lex,
                         args.ignore_cdus, args.debug, args.experimental)
 
 
