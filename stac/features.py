@@ -954,7 +954,8 @@ class PairSubgroup_Gap(PairSubgroup):
     two EDUs
     """
 
-    def __init__(self):
+    def __init__(self, sf_cache):
+        self.sf_cache = sf_cache
         desc = "the gap between EDUs"
         keys =\
             [Key.continuous("num_edus_between",
@@ -963,7 +964,9 @@ class PairSubgroup_Gap(PairSubgroup):
                             "number of distinct speakers in intervening EDUs"),
              Key.discrete("same_speaker",
                           "if both EDUs have the same speaker"),
-             Key.discrete("same_turn", "if both EDUs are in the same turn")]
+             Key.discrete("same_turn", "if both EDUs are in the same turn"),
+             Key.discrete("has_inner_question",
+                          "if there is an intervening EDU that is a question")]
         super(PairSubgroup_Gap, self).__init__(desc, keys)
 
     def fill(self, current, edu1, edu2, target):
@@ -983,7 +986,13 @@ class PairSubgroup_Gap(PairSubgroup):
                                  (t for t in doc.units if t.type == 'Turn'))
         speakers_between = frozenset(speaker(t) for t in turns_between)
 
-        vec["num_edus_between"] = len(edus_in_span(doc, big_span)) - 2
+        inner_edus = edus_in_span(doc, big_span)
+        inner_edus.remove(edu1)
+        inner_edus.remove(edu2)
+
+        vec["has_inner_question"] = any(self.sf_cache[x]["is_question"]
+                                        for x in inner_edus)
+        vec["num_edus_between"] = len(inner_edus)
         vec["num_speakers_between"] = len(speakers_between)
         vec["same_speaker"] = speaker(ctx1.turn) == speaker(ctx2.turn)
         vec["same_turn"] = ctx1.turn == ctx2.turn
@@ -1033,7 +1042,7 @@ class PairKeys(MergedKeyGroup):
     def __init__(self, inputs, sf_cache=None):
         self.sf_cache = sf_cache
         groups = [PairSubGroup_Core(),
-                  PairSubgroup_Gap(),
+                  PairSubgroup_Gap(sf_cache),
                   PairSubgroup_Tuple(inputs, sf_cache)]
         if inputs.debug:
             groups.append(PairSubgroup_Debug())
