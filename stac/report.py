@@ -348,6 +348,12 @@ function toggle_hidden(name) {
         for x in xs:
             li      = ET.SubElement(ul, "li")
             li.append(x.html())
+            # this is slightly evil: modify the offending annotations
+            # with a highlight feature that the educe graphing lib
+            # can pick up
+            if severity == sv_ERROR:
+                for anno in x.annotations():
+                    anno.features["highlight"] = "red"
 
 # ---------------------------------------------------------------------
 # combined report
@@ -387,6 +393,9 @@ class CombinedReport(HtmlReport):
 class ReportItem:
     def __init__(self):
         pass
+
+    def annotations(self):
+        return []
 
     def text(self):
         return []

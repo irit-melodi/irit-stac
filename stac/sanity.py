@@ -234,7 +234,7 @@ def missing_features(doc, anno):
 def unexpected_features(doc, anno):
     rty = rough_type(anno)
     txt = doc.text(anno.text_span()).strip().lower()
-    ignored = frozenset(['Comments'])
+    ignored = frozenset(['Comments', 'highlight'])
 
     if rty in stac_expected_features:
         expected = stac_expected_features[rty]
