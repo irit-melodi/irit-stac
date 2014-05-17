@@ -9,8 +9,31 @@ STAC Glozz conventions
 # Alternatively the stac module should be kicked out of educe and
 # moved into the stac tree
 
+import math
+import time
+import random
+
 from educe.glozz import GlozzException
 import educe.stac
+
+
+class PseudoTimestamper(object):
+    """
+    Generator for the fake timestamps used as a Glozz IDs
+    """
+    def __init__(self):
+        start_time = int(time.time())
+        noise = math.floor(random.uniform(1, 5000))
+        self.initial = int(start_time + noise)
+        self.counter = 0
+
+    def next(self):
+        """
+        Fresh timestamp
+        """
+        self.counter += 1
+        return self.initial + self.counter
+
 
 def anno_id_from_tuple(author_date):
     """
@@ -45,11 +68,20 @@ def anno_date(anno):
     return int(anno.metadata['creation-date'])
 
 
+def set_anno_author(anno, author):
+    """
+    Replace the annotation author the given author
+    """
+    anno.metadata['author'] = author
+    anno._anno_id = anno_id_from_tuple((author, anno_date(anno)))
+
+
 def set_anno_date(anno, date):
     """
     Replace the annotation creation date with the given integer
     """
     anno.metadata['creation-date'] = str(date)
+    anno._anno_id = anno_id_from_tuple((anno_author(anno), date))
 
 
 def is_dialogue(anno):

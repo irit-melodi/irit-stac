@@ -10,6 +10,7 @@ STAC Swiss-Army knife modeled on the Glozz equivalent
 
 import argparse
 
+import stac.util.cmd.clean_emoticons
 import stac.util.cmd.filter
 import stac.util.cmd.graph
 import stac.util.cmd.insert
@@ -21,7 +22,8 @@ import stac.util.cmd.rename
 import stac.util.cmd.rewrite
 import stac.util.cmd.tmp
 
-SUBCOMMANDS = [stac.util.cmd.text,
+SUBCOMMANDS = [stac.util.cmd.clean_emoticons,
+               stac.util.cmd.text,
                stac.util.cmd.graph,
                stac.util.cmd.filter,
                stac.util.cmd.rename,

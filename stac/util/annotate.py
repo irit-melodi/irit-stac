@@ -138,12 +138,12 @@ def annotate_doc(doc, span=None):
     return annotate(doc.text(span), units).strip()
 
 
-def show_diff(doc_before, doc_after):
+def show_diff(doc_before, doc_after, span=None):
     """
     Display two educe documents (presumably two versions of the "same")
     side by side
     """
-    lines_before = reflow(annotate_doc(doc_before))
-    lines_after = reflow(annotate_doc(doc_after))
+    lines_before = reflow(annotate_doc(doc_before, span))
+    lines_after = reflow(annotate_doc(doc_after, span))
     pairs = itertools.izip_longest(lines_before, lines_after, fillvalue='')
     return "\n".join("%-40s | %-40s" % p for p in pairs)
