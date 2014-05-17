@@ -34,6 +34,7 @@ SUBCOMMANDS = [stac.util.cmd.clean_emoticons,
                stac.util.cmd.tmp,
                stac.util.cmd.move]
 
+
 def main():
     "stac-util main - parses cli args and hands off control to subcommands"
 
