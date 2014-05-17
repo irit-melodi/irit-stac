@@ -97,8 +97,7 @@ def get_turn(tid, doc):
     """
     def is_match(anno):
         "Is a turn with the right turn number"
-        return educe.stac.is_turn(anno) and\
-                int(anno.features['Identifier']) == tid
+        return educe.stac.is_turn(anno) and educe.stac.turn_id(anno) == tid
 
     turns = filter(is_match, doc.annotations())
     if not turns:
