@@ -90,7 +90,12 @@ def is_just_emoticon(tokens):
     """
     Similar to the one in stac.features, but takes WrappedTokens
     """
-    return len(tokens) == 1 and tokens[0].features["tag"] == 'E'
+    def is_emoticon(tok):
+        "is emoticon-like"
+        return tok.features["tag"] == 'E'\
+            or tok.features["word"] in ["(!)"]
+
+    return len(tokens) == 1 and is_emoticon(tokens[0])
 
 
 def has_links(doc, edu):
