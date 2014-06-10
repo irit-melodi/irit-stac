@@ -168,9 +168,10 @@ def dialogue_graphs(k, doc, contexts):
 
 def is_disconnected(gr, contexts, x):
     """
-    An EDU is considered disconnected if unless:
+    An EDU is considered disconnected unless:
 
     * it has an incoming link or
+    * it has an outgoing Conditional link
     * it's at the beginning of a dialogue
 
     In principle we don't need to look at EDUs that are disconnected
@@ -178,6 +179,11 @@ def is_disconnected(gr, contexts, x):
     non-dialogue-ending EDUs to not have outgoing links and (2) such
     information would be redundant with the incoming anyway
     """
+    BACKWARDS_WHITELIST = ["Conditional"]
+    def rel_type(rel):
+        "relation type for a given link (string)"
+        return gr.annotation(gr.mirror(rel)).type
+
     edu = gr.annotation(x)
     if edu not in contexts:
         return True
@@ -190,9 +196,12 @@ def is_disconnected(gr, contexts, x):
         first_turn_start = first_turn_span.char_start + len(first_turn_pref)
         rel_links    = [ r for r in gr.links(x) if gr.is_relation(r) ]
         has_incoming = any(x == gr.links(r)[1] for r in rel_links)
+        has_outgoing_whitelist = any(x == gr.links(r)[0] and
+                                     rel_type(r) in BACKWARDS_WHITELIST
+                                     for r in rel_links)
         espan        = edu.text_span()
         is_at_start  = espan.char_start == first_turn_start
-        return not (has_incoming or is_at_start)
+        return not (has_incoming or has_outgoing_whitelist or is_at_start)
 
 # ---------------------------------------------------------------------
 # annotation errors
