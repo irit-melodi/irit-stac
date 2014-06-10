@@ -6,10 +6,12 @@ Command line options
 """
 
 import argparse
+import copy
 import os
 import sys
 import tempfile
 
+import educe.annotation
 import educe.stac
 import educe.util
 
@@ -19,6 +21,21 @@ def read_corpus(args, verbose=True):
     Read the section of the corpus specified in the command line arguments.
     """
     is_interesting = educe.util.mk_is_interesting(args)
+    reader = educe.stac.Reader(args.corpus)
+    anno_files = reader.filter(reader.files(), is_interesting)
+    return reader.slurp(anno_files, verbose)
+
+
+def read_corpus_with_unannotated(args, verbose=True):
+    """
+    Read the section of the corpus specified in the command line arguments.
+    """
+    is_interesting1 = educe.util.mk_is_interesting(args)
+    args2 = copy.deepcopy(args)
+    args2.stage = 'unannotated'
+    args2.annotator = None
+    is_interesting2 = educe.util.mk_is_interesting(args2)
+    is_interesting = lambda x: is_interesting1(x) or is_interesting2(x)
     reader = educe.stac.Reader(args.corpus)
     anno_files = reader.filter(reader.files(), is_interesting)
     return reader.slurp(anno_files, verbose)
@@ -68,7 +85,8 @@ def add_usual_input_args(parser,
     arguments, in which case, just don't call this function.
 
     :param doc_subdoc_required force user to supply --doc/--subdoc
-           for this subcommand
+           for this subcommand (note you'll need to add stage/anno
+           yourself)
     :type doc_subdoc_required bool
 
     :param help_suffix appended to --doc/--subdoc help strings
@@ -111,3 +129,14 @@ def anno_id(string):
         msg = "%r is not of form author_date" % string
         raise argparse.ArgumentTypeError(msg)
     return (parts[0], int(parts[1]))
+
+
+def comma_span(string):
+    """
+    Split a comma delimited pair of integers into an educe span
+    """
+    parts = list(map(int, string.split(',')))
+    if len(parts) != 2:
+        msg = "%r is not of form n,m" % string
+        raise argparse.ArgumentTypeError(msg)
+    return educe.annotation.Span(parts[0], parts[1])

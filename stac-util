@@ -20,6 +20,7 @@ import stac.util.cmd.move
 import stac.util.cmd.nudge
 import stac.util.cmd.rename
 import stac.util.cmd.rewrite
+import stac.util.cmd.split_edu
 import stac.util.cmd.tmp
 
 SUBCOMMANDS = [stac.util.cmd.clean_emoticons,
@@ -29,6 +30,7 @@ SUBCOMMANDS = [stac.util.cmd.clean_emoticons,
                stac.util.cmd.rename,
                stac.util.cmd.rewrite,
                stac.util.cmd.merge_dialogue,
+               stac.util.cmd.split_edu,
                stac.util.cmd.nudge,
                stac.util.cmd.insert,
                stac.util.cmd.tmp,

@@ -35,6 +35,34 @@ class PseudoTimestamper(object):
         return self.initial + self.counter
 
 
+class TimestampCache(object):
+    """
+    Generates and stores a unique timestamp entry for each key.
+    You can use any hashable key, for exmaple, a span, or a turn id.
+    """
+
+    def __init__(self):
+        self.stamps = PseudoTimestamper()
+        self.reset()
+
+    def get(self, tid):
+        """
+        Return a timestamp for this turn id, either generating and
+        caching (if unseen) or fetching from the cache
+        """
+        if tid not in self.cache:
+            self.cache[tid] = self.stamps.next()
+        return self.cache[tid]
+
+    def reset(self):
+        """
+        Empty the cache (but maintain the timestamper state, so that
+        different documents get different timestamps; the difference
+        in timestamps is not mission-critical but potentially nice)
+        """
+        self.cache = {}
+
+
 def anno_id_from_tuple(author_date):
     """
     Glozz string representation of authors and dates (AUTHOR_DATE)
