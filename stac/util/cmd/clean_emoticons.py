@@ -14,61 +14,16 @@ from stac.edu import EnclosureGraph, sorted_first_widest
 
 from stac.util.annotate import show_diff
 from stac.util.glozz import\
-    PseudoTimestamper, set_anno_author, set_anno_date,\
+    TimestampCache, set_anno_author, set_anno_date,\
     anno_id_from_tuple
 from stac.util.args import\
     add_usual_output_args,\
+    read_corpus_with_unannotated,\
     get_output_dir, announce_output_dir
 from stac.util.output import save_document
 
 
 NAME = 'clean-emoticons'
-
-
-class TimestampCache(object):
-    """
-    Generates and stores a unique timestamp entry for each turn id.
-
-    The idea here is to ensure that timestamps from newly generated edus
-    are the same across all documents in the same family.
-    (family here is defined as same doc/subdoc)
-    """
-
-    def __init__(self):
-        self.stamps = PseudoTimestamper()
-        self.reset()
-
-    def get(self, tid):
-        """
-        Return a timestamp for this turn id, either generating and
-        caching (if unseen) or fetching from the cache
-        """
-        if tid not in self.cache:
-            self.cache[tid] = self.stamps.next()
-        return self.cache[tid]
-
-    def reset(self):
-        """
-        Empty the cache (but maintain the timestamper state, so that
-        different documents get different timestamps; the difference
-        in timestamps is not mission-critical but potentially nice)
-        """
-        self.cache = {}
-
-
-def custom_read_corpus(args, verbose=True):
-    """
-    Read the section of the corpus specified in the command line arguments.
-    """
-    is_interesting1 = educe.util.mk_is_interesting(args)
-    args2 = copy.deepcopy(args)
-    args2.stage = 'unannotated'
-    args2.annotator = None
-    is_interesting2 = educe.util.mk_is_interesting(args2)
-    is_interesting = lambda x: is_interesting1(x) or is_interesting2(x)
-    reader = educe.stac.Reader(args.corpus)
-    anno_files = reader.filter(reader.files(), is_interesting)
-    return reader.slurp(anno_files, verbose)
 
 
 def config_argparser(parser):
@@ -230,7 +185,7 @@ def main(args):
     You shouldn't need to call this yourself if you're using
     `config_argparser`
     """
-    corpus = custom_read_corpus(args)
+    corpus = read_corpus_with_unannotated(args)
     postags = educe.stac.postag.read_tags(corpus, args.corpus)
     tcache = TimestampCache()
     output_dir = get_output_dir(args)
