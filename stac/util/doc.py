@@ -100,6 +100,18 @@ def compute_renames(avoid, incoming):
     return renames
 
 
+def enclosing_span(spans):
+    """
+    Return a span that stretches from one end of a collection of spans
+    to the other end.
+    """
+    if len(spans) < 1:
+        raise ValueError("must have at least one span")
+
+    return Span(min(x.char_start for x in spans),
+                max(x.char_end for x in spans))
+
+
 def narrow_to_span(doc, span):
     """
     Return a deep copy of a document with only the text and

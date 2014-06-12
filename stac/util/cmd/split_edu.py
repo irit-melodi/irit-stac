@@ -6,14 +6,11 @@ Split an EDU along given cut points
 """
 
 from __future__ import print_function
-import collections
 import copy
 import sys
 
 import educe.annotation
 import educe.stac
-from educe.annotation import Span
-from stac.edu import EnclosureGraph, sorted_first_widest
 
 from stac.util.annotate import show_diff
 from stac.util.glozz import\
@@ -24,12 +21,16 @@ from stac.util.args import\
     read_corpus_with_unannotated,\
     get_output_dir, announce_output_dir,\
     comma_span
-from stac.util.doc import narrow_to_span
+from stac.util.doc import\
+    narrow_to_span, enclosing_span
 from stac.util.output import save_document
 
 
 NAME = 'split-edu'
 _AUTHOR = 'stacutil'
+# pylint: disable=fixme
+_SPLIT_PREFIX = 'FIXME:'
+# pylint: enable=fixme
 
 
 def config_argparser(parser):
@@ -49,26 +50,17 @@ def config_argparser(parser):
     parser.set_defaults(func=main)
 
 
-def _enclosing_span(spans):
-    if len(spans) < 1:
-        raise ValueError("must have at least one span")
-
-    return Span(min(x.char_start for x in spans),
-                max(x.char_end for x in spans))
-
-
 def _tweak_presplit(tcache, doc, spans):
     """
     What to do in case the split was already done manually
     (in the discourse section)
     """
-    new_edus = {}
     for span in sorted(spans):
         matches = [x for x in doc.units
                    if x.text_span() == span and educe.stac.is_edu(x)]
         if not matches:
             raise Exception("No matches found for %s in %s" %
-                            (span, k), file=sys.stderr)
+                            (span, doc.origin), file=sys.stderr)
         edu = matches[0]
         set_anno_date(edu, tcache.get(span))
         set_anno_author(edu, _AUTHOR)
@@ -92,14 +84,14 @@ def _actually_split(tcache, doc, spans, edu):
         set_anno_date(edu2, stamp)
         set_anno_author(edu2, _AUTHOR)
         if doc.origin.stage == 'units':
-            edu2.type = 'FIXME:' + edu2.type
+            edu2.type = _SPLIT_PREFIX + edu2.type
             for key in edu2.features:
-                edu2.features[key] = 'FIXME:' + edu2.features[key]
+                edu2.features[key] = _SPLIT_PREFIX + edu2.features[key]
         new_edus[new_id] = edu2
         edu2.span = span
         doc.units.append(edu2)
 
-    cdu_stamp = tcache.get(_enclosing_span(spans))
+    cdu_stamp = tcache.get(enclosing_span(spans))
     cdu = educe.annotation.Schema(anno_id_from_tuple((_AUTHOR, cdu_stamp)),
                                   frozenset(new_edus),
                                   frozenset(),
@@ -137,7 +129,7 @@ def _split_edu(tcache, k, doc, spans):
     Find the edu covered by these spans and do the split
     """
     # seek edu
-    big_span = _enclosing_span(spans)
+    big_span = enclosing_span(spans)
     matches = [x for x in doc.units
                if x.text_span() == big_span and educe.stac.is_edu(x)]
     if not matches and k.stage != 'discourse':
@@ -170,13 +162,12 @@ def main(args):
     `config_argparser`
     """
     corpus = read_corpus_with_unannotated(args)
-    postags = educe.stac.postag.read_tags(corpus, args.corpus)
     tcache = TimestampCache()
     output_dir = get_output_dir(args)
     for k in corpus:
         old_doc = corpus[k]
         new_doc = copy.deepcopy(old_doc)
-        span = _enclosing_span(args.spans)
+        span = enclosing_span(args.spans)
         _split_edu(tcache, k, new_doc, args.spans)
         diffs = _mini_diff(k, old_doc, new_doc, span)
         print("\n".join(diffs).encode('utf-8'), file=sys.stderr)
