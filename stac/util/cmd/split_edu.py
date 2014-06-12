@@ -60,6 +60,7 @@ def _tweak_presplit(tcache, doc, spans):
     What to do in case the split was already done manually
     (in the discourse section)
     """
+    renames = {}
     for span in sorted(spans):
         matches = [x for x in doc.units
                    if x.text_span() == span and educe.stac.is_edu(x)]
@@ -67,8 +68,24 @@ def _tweak_presplit(tcache, doc, spans):
             raise Exception("No matches found for %s in %s" %
                             (span, doc.origin), file=sys.stderr)
         edu = matches[0]
+        old_id = edu.local_id()
+        new_id = anno_id_from_tuple((_AUTHOR, tcache.get(span)))
         set_anno_date(edu, tcache.get(span))
         set_anno_author(edu, _AUTHOR)
+        renames[old_id] = new_id
+
+    for rel in doc.relations:
+        if rel.span.t1 in renames:
+            rel.span.t1 = renames[rel.span.t1]
+        if rel.span.t2 in renames:
+            rel.span.t2 = renames[rel.span.t2]
+    for schema in doc.schemas:
+        units2 = set(schema.units)
+        for unit in schema.units:
+            if unit in renames:
+                units2.remove(unit)
+                units2.add(renames[unit])
+        schema.units = units2
 
 
 def _actually_split(tcache, doc, spans, edu):
