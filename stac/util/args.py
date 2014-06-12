@@ -31,14 +31,20 @@ def read_corpus_with_unannotated(args, verbose=True):
     Read the section of the corpus specified in the command line arguments.
     """
     is_interesting1 = educe.util.mk_is_interesting(args)
-    args2 = copy.deepcopy(args)
-    args2.stage = 'unannotated'
-    args2.annotator = None
-    is_interesting2 = educe.util.mk_is_interesting(args2)
-    is_interesting = lambda x: is_interesting1(x) or is_interesting2(x)
     reader = educe.stac.Reader(args.corpus)
-    anno_files = reader.filter(reader.files(), is_interesting)
-    return reader.slurp(anno_files, verbose)
+    anno_files1 = reader.filter(reader.files(), is_interesting1)
+    # we only want to read the unannotated stuff if we also have other
+    # normal interesting matches (useful if annotator is forced)
+    if anno_files1:
+        args2 = copy.deepcopy(args)
+        args2.stage = 'unannotated'
+        args2.annotator = None
+        is_interesting2 = educe.util.mk_is_interesting(args2)
+        is_interesting = lambda x: is_interesting1(x) or is_interesting2(x)
+        anno_files = reader.filter(reader.files(), is_interesting)
+        return reader.slurp(anno_files, verbose)
+    else:
+        sys.exit("No matching files")
 
 
 def get_output_dir(args):
@@ -74,6 +80,15 @@ def announce_output_dir(output_dir):
     Tell the user where we saved the output
     """
     print >> sys.stderr, "Output files written to", output_dir
+
+
+def add_commit_args(parser):
+    """
+    Augment a subcommand argparser with an option to emit a commit
+    message for your version control tracking
+    """
+    parser.add_argument('--no-commit-msg', action='store_true',
+                        help='Skip commit message summary')
 
 
 def add_usual_input_args(parser,

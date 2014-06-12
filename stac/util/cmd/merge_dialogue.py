@@ -15,6 +15,7 @@ from educe.glozz import GlozzException
 from stac.util.annotate import annotate_doc
 from stac.util.args import\
     add_usual_input_args, add_usual_output_args, anno_id,\
+    add_commit_args,\
     read_corpus,\
     get_output_dir, announce_output_dir
 from stac.util.glozz import\
@@ -137,8 +138,7 @@ def config_argparser(parser):
                               metavar='INT', type=int,
                               nargs=2,
                               help='eg. 187 192')
-    parser.add_argument('--commit-msg', action='store_true',
-                        help='Generate a summary for commit message')
+    add_commit_args(parser)
     parser.set_defaults(func=main)
 
 
@@ -188,7 +188,7 @@ def main(args):
             sys.exit(str(oops))
     else:
         sought = args.dialogues
-    if args.commit_msg and corpus:
+    if corpus and not args.no_commit_msg:
         key0 = list(corpus)[0]
         # compute this before we change things
         cmsg = commit_msg(args, corpus, key0, sought)
@@ -197,6 +197,6 @@ def main(args):
         _merge_dialogues_in_document(sought, doc)
         save_document(output_dir, k, doc)
     announce_output_dir(output_dir)
-    if args.commit_msg and corpus:
+    if corpus and not args.no_commit_msg:
         print("-----8<------")
         print(cmsg)
