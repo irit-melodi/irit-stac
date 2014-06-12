@@ -88,8 +88,11 @@ class EnclosureGraph(graph.EnclosureGraph):
     """
     An enclosure graph based on STAC conventions
     """
+    _BLACKLIST = ["Preference", "Resource", "paragraph"]
+
     def __init__(self, doc, postags=None):
-        annos = [anno for anno in doc.units if anno.type != 'paragraph']
+        annos = [anno for anno in doc.units
+                 if anno.type not in EnclosureGraph._BLACKLIST]
         if postags:
             annos += [WrappedToken(tok) for tok in postags]
         super(EnclosureGraph, self).__init__(annos,
