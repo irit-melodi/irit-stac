@@ -103,7 +103,7 @@ def _actually_split(tcache, doc, spans, edu):
                                   frozenset(),
                                   'Complex_discourse_unit',
                                   {'author': _AUTHOR,
-                                   'creation-date': cdu_stamp},
+                                   'creation-date': str(cdu_stamp)},
                                   metadata={})
     cdu.fleshout(new_edus)
 
