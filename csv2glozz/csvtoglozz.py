@@ -39,7 +39,7 @@ import copy
 import csv, sys, codecs
 import datetime, time
 
-from stac.prettifyxml import prettify
+from educe.stac.util.prettifyxml import prettify
 
 def append_unit(root, unit_id, date, type, features, left, right):
     if right < left:
