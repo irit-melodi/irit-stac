@@ -20,7 +20,7 @@ import itertools
 import sys
 import xml.etree.ElementTree as ET
 
-import stac.csv
+import educe.stac.util.csv
 
 # ---------------------------------------------------------------------
 # template

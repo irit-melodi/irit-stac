@@ -10,14 +10,12 @@ import codecs
 import shutil
 import os
 
+from educe.annotation import RelSpan, Relation
 import educe.corpus
 import educe.glozz
-import educe.util
 import educe.stac
-from educe.annotation import RelSpan, Relation
-
-import stac.csv
-
+import educe.stac.util.csv
+import educe.util
 
 """
 Help visualise output of a discourse parser.  Concretely, augment unannotated

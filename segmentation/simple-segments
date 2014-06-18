@@ -21,7 +21,7 @@ import re
 import sys
 
 import segmentation
-import stac.csv
+import educe.stac.util.csv
 
 def segment_row(t):
     segments = [segmentation.span_text(t,sp) for sp in segmentation.segment(t)]
@@ -64,11 +64,11 @@ else:
     job=lambda t:t
 
 with open(filename_in, 'rb') as infile:
-    reader = stac.csv.mk_csv_reader(infile)
+    reader = educe.stac.util.csv.mk_csv_reader(infile)
     if args.csv:
         # csv library has built-in utf-8 encoding
         with open(args.output_file, 'wb') as outfile:
-            writer = stac.csv.mk_csv_writer(outfile)
+            writer = educe.stac.util.csv.mk_csv_writer(outfile)
             writer.writeheader()
             for row in reader:
                 writer.writerow(replace_text(job,row))

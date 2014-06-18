@@ -23,9 +23,9 @@ import Orange.data
 import Orange.data.io
 import Orange.feature
 
-import stac.csv
-import stac.features
-from stac.util.output import save_document
+import educe.stac.util.csv
+import educe.stac.util.features
+from educe.stac.util.output import save_document
 
 LEARNER = Orange.classification.bayes.NaiveLearner(adjust_threshold=True)
 
