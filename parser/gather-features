@@ -22,15 +22,15 @@ die () {
 }
 trap die ERR
 
-code/queries/rel-info list "$LEX_DIR" > "$SNAPSHOT/features.txt"
+stac-learning features  "$LEX_DIR" > "$SNAPSHOT/features.txt"
 
 for dset in $DATASETS; do
     echo >&2 "gathering features for $dset"
-    code/queries/rel-info extract "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
+    stac-learning extract "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --anno "$ANNO"\
         --window "$WINDOW"\
         2> "$SNAPSHOT/tmp/$dset.features.log"
-    code/queries/rel-info extract "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
+    stac-learning extract "data/$dset" "$LEX_DIR" "$SNAPSHOT/tmp"\
         --single\
         --anno "$ANNO"\
         2>> "$SNAPSHOT/tmp/$dset.features.log"
