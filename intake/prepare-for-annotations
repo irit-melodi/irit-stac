@@ -28,7 +28,7 @@ popd > /dev/null
 
 git add units discourse
 
-echo >&2 <<END_NAG
+cat >&2 <<END_NAG
 Don't forget to
 
 1. copy the files
