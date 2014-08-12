@@ -203,8 +203,8 @@ def _create_snapshot_dir(data_dir):
     snap_dir = fp.join(SNAPSHOTS, bname)
     if not fp.exists(snap_dir):
         os.makedirs(snap_dir)
-    link_files(data_dir, snap_dir)
-    force_symlink(bname, latest_snap())
+        link_files(data_dir, snap_dir)
+        force_symlink(bname, latest_snap())
     return snap_dir
 
 
