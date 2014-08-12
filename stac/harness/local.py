@@ -61,7 +61,9 @@ Which annotators to read from during feature extraction
 
 LEARNERS = [LearnerConfig.simple("bayes"),
             LearnerConfig.simple("maxent")]
-"""Attelo learner algorithms to try
+"""Attelo learner algorithms to try (probably along with variations in
+configuration settings)
+
 If the second element is None, we use the same learner for attachment
 and relations; otherwise we use the first for attachment and the second
 for relations
@@ -84,8 +86,11 @@ def _mk_econf_name(learner, decoder):
     """
     generate a short unique name for a learner/decoder combo
     """
+    rname = learner.relate
+    lname = learner.attach + ("_R_" + rname if rname else "")
 
-    return "%s-%s" % (learner.name, decoder.name)
+    return "%s-%s" % (lname, decoder.name)
+
 
 EVALUATIONS = [EvaluationConfig(name=_mk_econf_name(l, d),
                                 learner=l,
@@ -97,6 +102,20 @@ common, we will avoid rebuilding the model associated with
 that learner.  For the most part we just want the cartesian
 product, but some more sophisticated learners depend on the
 their decoder, and cannot be shared
+"""
+
+MODELERS = [EvaluationConfig(name=l.name,
+                             learner=l,
+                             decoder=None)
+            for l in LEARNERS]
+"""
+Like evaluations modulo decoders.
+
+For now in practice, this is identical to LEARNERS, but if we
+are to introduce decoder-based learners, this would change
+slightly to accomodate those. Most learners would be decoder
+indepnedent, save the decoder-based ones which would vary
+accordingly
 """
 
 

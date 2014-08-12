@@ -7,6 +7,7 @@ Miscellaneous utility functions
 """
 
 import os
+import sys
 
 from attelo.harness.util import timestamp
 
@@ -46,3 +47,11 @@ def link_files(src_dir, tgt_dir):
         eval_file = os.path.join(tgt_dir, fname)
         if os.path.isfile(data_file):
             os.link(data_file, eval_file)
+
+
+def exit_ungathered():
+    """
+    You don't seem to have run the gather command
+    """
+    sys.exit("""No data to run experiments on.
+Please run `irit-rst-dt gather`""")
