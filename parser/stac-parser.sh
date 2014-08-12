@@ -142,7 +142,7 @@ python "$CODE_DIR/parser/dialogue-acts" annotate\
     -C "$ATTELO_CONFIG"\
     "$TMP_CORPUS_DIR"\
     "$DATA_DIR/resources/lexicon"\
-    --model "$SNAPSHOT_DIR/all-dialogue-acts.model"\
+    --model "$SNAPSHOT_DIR/all.dialogue-acts.model"\
     --output "$TMP_CORPUS_DIR"\
     2> "$T/logs/0500-dialogue-acts.txt"
 announce_end
@@ -155,7 +155,7 @@ fi
 
 # extract features
 announce_start "Feature extraction"
-python "$CODE_DIR/queries/rel-info" --parsing\
+stac-learning extract --parsing\
     --experimental\
     "$TMP_CORPUS_DIR"\
     "$DATA_DIR/resources/lexicon"\
@@ -170,7 +170,7 @@ decode() {
     dset=$3
     learner_file_name=$(echo "$learner" | sed -e 's/:/-/')
 
-    MODEL_INFO="$dset-$learner_file_name"
+    MODEL_INFO="$dset.$learner_file_name"
     PARSED_STUB="$MODEL_INFO-$decoder"
     TMP_PARSED="$T/tmp-parsed/$PARSED_STUB"
     mkdir -p "$TMP_PARSED" "$T/parsed"
@@ -178,8 +178,8 @@ decode() {
     # TODO - not sure if we really need to feed different data for
     # attachments ande relations here (right now just duplicating
     attelo decode -C "$ATTELO_CONFIG"\
-        -A "$SNAPSHOT_DIR/attach-$MODEL_INFO.model"\
-        -R "$SNAPSHOT_DIR/relations-$MODEL_INFO.model"\
+        -A "$SNAPSHOT_DIR/$MODEL_INFO.attach.model"\
+        -R "$SNAPSHOT_DIR/$MODEL_INFO.relate.model"\
         -d "$decoder"\
         -o .\
         "$T/extracted-features.csv"\
