@@ -429,7 +429,7 @@ def main(args):
         _exit_ungathered()
     eval_dir, scratch_dir = _create_eval_dirs(args, data_dir)
 
-    with open(os.path.join(eval_dir, "versions.txt"), "w") as stream:
+    with open(os.path.join(eval_dir, "versions-evaluate.txt"), "w") as stream:
         call(["pip", "freeze"], stdout=stream)
 
     for corpus in EVALUATION_CORPORA:

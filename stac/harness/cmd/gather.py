@@ -65,7 +65,7 @@ def main(_):
     # log the features we used and version numbers for our infrastrucutre
     with open(os.path.join(tdir, "features.txt"), "w") as stream:
         call(["stac-learning", "features", LEX_DIR], stdout=stream)
-    with open(os.path.join(tdir, "versions.txt"), "w") as stream:
+    with open(os.path.join(tdir, "versions-gather.txt"), "w") as stream:
         call(["pip", "freeze"], stdout=stream)
     latest_dir = latest_tmp()
     force_symlink(os.path.basename(tdir), latest_dir)
