@@ -70,41 +70,12 @@ processed by pip
    This might be tricky if you're on a Mac.
    Ask Eric.
 
-4. Install educe and attelo prerequisites.
-
-       cd educe
-       pip install -r requirements.txt\
-          --allow-unverified pydot\
-          --allow-unverified python-graph-core\
-          --allow-unverified python-graph-dot
-       cd ..
-
-       cd attelo
-       pip install -r requirements.txt
-       cd ..
-
-
-5. Install educe and attelo in development mode. Development mode
-   simply puts the link to the current version of educe/attelo into
-   your environment
-
-       cd educe
-       python setup.py develop
-       cd ..
-
-       cd attelo
-       python setup.py develop
-       cd ..
-
-   If somebody tells you to update educe/attelo, it should be
-   possible to just go into the respective directories and
-   issue a `git pull`. No further installation will be needed.
-
-6. Install the STAC code in development mode
+4. Install the STAC code in development mode.
+   This should automatically fetch the educe/attelo dependencies
+   automatically
 
        cd Stac/code
-       pip install -r requirements.txt
-       python setup.py develop
+       pip install -e .
 
    Likewise, if somebody tells you to update the STAC code, it
    should be possible to just `svn update`.  No further
@@ -116,7 +87,7 @@ Now that you have everything installed, there are a handful of parser
 infrastructure scripts which run the feature extraction process, build
 the attachment/labeling models, and run the decoder on sample data.
 
-code/parser/gather-features
+irit-stac gather
 ~ do feature extraction from annotated data, along with pre-saved
   pos-tagging and and parser output, and some lexical resources
 
@@ -129,6 +100,6 @@ code/parser/stac-parser.sh
   parser and display a graph of the output (needs third party
   tools, see script for details)
 
-code/parser/harness.sh
-~ given extracted features (see gather-features), run experiments on
+irit-stac evaluate
+~ given extracted features (see irit-stac gather), run experiments on
   STAC data
