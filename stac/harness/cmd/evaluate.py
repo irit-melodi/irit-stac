@@ -27,7 +27,8 @@ from attelo.harness.util import\
 
 from ..local import\
     EVALUATION_CORPORA, EVALUATIONS, ATTELO_CONFIG_FILE
-from ..util import latest_tmp, link_files
+from ..util import\
+    exit_ungathered, latest_tmp, link_files
 
 NAME = 'evaluate'
 _DEBUG = 0
@@ -47,14 +48,6 @@ DataConfig = namedtuple("DataConfig", "attach relate")
 # ---------------------------------------------------------------------
 # user feedback
 # ---------------------------------------------------------------------
-
-
-def _exit_ungathered():
-    """
-    You don't seem to have run the gather command
-    """
-    sys.exit("""No data to run experiments on.
-Please run `irit-rst-dt gather`""")
 
 
 def _eval_banner(econf, lconf, fold):
@@ -351,7 +344,7 @@ def _do_corpus(lconf):
     attach_file = _eval_csv_path(lconf, "edu-pairs")
     relate_file = _eval_csv_path(lconf, "relations")
     if not os.path.exists(attach_file):
-        _exit_ungathered()
+        exit_ungathered()
     data_attach, data_relate =\
         read_data(attach_file, relate_file, verbose=True)
     dconf = DataConfig(attach=data_attach,
@@ -426,7 +419,7 @@ def main(args):
     """
     data_dir = latest_tmp()
     if not os.path.exists(data_dir):
-        _exit_ungathered()
+        exit_ungathered()
     eval_dir, scratch_dir = _create_eval_dirs(args, data_dir)
 
     with open(os.path.join(eval_dir, "versions-evaluate.txt"), "w") as stream:
