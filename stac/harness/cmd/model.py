@@ -121,10 +121,18 @@ def _data_path(lconf, ext):
 
 
 def _model_path(lconf, econf, mtype):
-    "Model for a given loop/eval config and fold"
+    "Model for a given loop/eval config"
     lname = econf.learner.name
     return os.path.join(lconf.snap_dir,
                         "%s.%s.%s.model" % (lconf.dataset, lname, mtype))
+
+
+def _dialogue_act_model_path(lconf, raw=False):
+    "Model for a given dataset"
+
+    prefix = "" if raw else "%s." % lconf.dataset
+    return fp.join(lconf.snap_dir,
+                   prefix + "dialogue-acts.model")
 
 
 def _decode_output_path(lconf, econf):
@@ -158,6 +166,14 @@ def _do_corpus(lconf):
     for econf in MODELERS:
         print(_model_banner(econf, lconf), file=sys.stderr)
         _learn(lconf, dconf, econf)
+
+    # learn dialogue acts (no learner choice)
+    call(["code/parser/dialogue-acts", "learn",
+          "-C", ATTELO_CONFIG_FILE,
+          _data_path(lconf, "just-edus"),
+          "--output", lconf.snap_dir])
+    os.rename(_dialogue_act_model_path(lconf, raw=True),
+              _dialogue_act_model_path(lconf, raw=False))
 
 
 # ---------------------------------------------------------------------
