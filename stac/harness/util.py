@@ -8,6 +8,11 @@ Miscellaneous utility functions
 
 import os
 import sys
+from os import path as fp
+
+# pylint: disable=no-name-in-module
+from sh import head, tail
+# pylint: enable=no-name-in-module
 
 from attelo.harness.util import timestamp
 
@@ -55,3 +60,40 @@ def exit_ungathered():
     """
     sys.exit("""No data to run experiments on.
 Please run `irit-rst-dt gather`""")
+
+
+def merge_csv(csv_files, output_csv):
+    """
+    Concatenate multiple csv files (assumed to have the same
+    header)
+
+    There should be at least one file to work with
+    """
+    if not csv_files:
+        raise ValueError("need non-empty list of csv files")
+    any_csv = csv_files[0]
+    with open(output_csv, "w") as combined:
+        head("-n", "1", any_csv, _out=combined)
+        for csv_file in csv_files:
+            tail("-n", "+2", csv_file, _out=combined)
+
+
+# ---------------------------------------------------------------------
+# paths
+# ---------------------------------------------------------------------
+
+
+def snap_model_path(lconf, econf, mtype):
+    "(snap directory) model for a given loop/eval config"
+
+    lname = econf.learner.name
+    return fp.join(lconf.snap_dir,
+                   "%s.%s.%s.model" % (lconf.dataset, lname, mtype))
+
+
+def snap_dialogue_act_model_path(lconf, raw=False):
+    "(snap directory) Model for a given dataset"
+
+    prefix = "" if raw else "%s." % lconf.dataset
+    return fp.join(lconf.snap_dir,
+                   prefix + "dialogue-acts.model")

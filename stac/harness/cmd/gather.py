@@ -9,16 +9,12 @@ from __future__ import print_function
 import os
 from os import path as fp
 
-# pylint: disable=no-name-in-module
-from sh import head, tail
-# pylint: enable=no-name-in-module
-
 from attelo.harness.util import call, force_symlink
 
 from ..local import\
     ALL_CORPUS, TRAINING_CORPORA, LEX_DIR, ANNOTATORS, WINDOW
 from ..util import\
-    current_tmp, latest_tmp
+    current_tmp, latest_tmp, merge_csv
 
 NAME = 'gather'
 
@@ -57,11 +53,8 @@ def main(_):
         csv_path = lambda f:\
             fp.join(tdir,
                     "%s.%s.csv" % (fp.basename(f), ext))
-        any_csv = csv_path(TRAINING_CORPORA[0])
-        with open(csv_path(ALL_CORPUS), "w") as combined:
-            head("-n", "1", any_csv, _out=combined)
-            for corpus in TRAINING_CORPORA:
-                tail("-n", "+2", csv_path(corpus), _out=combined)
+        merge_csv(map(csv_path, TRAINING_CORPORA),
+                  csv_path(ALL_CORPUS))
     # log the features we used and version numbers for our infrastrucutre
     with open(os.path.join(tdir, "features.txt"), "w") as stream:
         call(["stac-learning", "features", LEX_DIR], stdout=stream)

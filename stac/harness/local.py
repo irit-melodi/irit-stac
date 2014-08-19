@@ -59,6 +59,14 @@ ANNOTATORS = "(?i)" + "|".join(STAC_REVIEWERS)
 Which annotators to read from during feature extraction
 """
 
+TAGGER_JAR = 'lib/ark-tweet-nlp-0.3.2.jar'
+"POS tagger jar file (to be installed in LIB_DIR)"
+
+
+CORENLP_DIR = 'lib/stanford-corenlp-full-2013-06-20'
+"CoreNLP directory (to be installed in LIB_DIR)"
+
+
 LEARNERS = [LearnerConfig.simple("bayes"),
             LearnerConfig.simple("maxent")]
 """Attelo learner algorithms to try (probably along with variations in

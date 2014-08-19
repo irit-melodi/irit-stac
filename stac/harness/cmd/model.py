@@ -25,7 +25,8 @@ from attelo.harness.util import\
 from ..local import\
     SNAPSHOTS, EVALUATION_CORPORA, MODELERS, ATTELO_CONFIG_FILE
 from ..util import\
-    exit_ungathered, latest_tmp, latest_snap, link_files
+    exit_ungathered, latest_tmp, latest_snap, link_files,\
+    snap_model_path, snap_dialogue_act_model_path
 
 NAME = 'model'
 
@@ -76,8 +77,8 @@ class FakeLearnArgs(object):
     Things in common between attelo learn/decode
     """
     def __init__(self, lconf, econf):
-        model_file_a = _model_path(lconf, econf, "attach")
-        model_file_r = _model_path(lconf, econf, "relate")
+        model_file_a = snap_model_path(lconf, econf, "attach")
+        model_file_r = snap_model_path(lconf, econf, "relate")
 
         self.config = ATTELO_CONFIG_FILE
         self.data_attach = _data_path(lconf, "edu-pairs"),
@@ -120,21 +121,6 @@ def _data_path(lconf, ext):
                         "%s.%s.csv" % (lconf.dataset, ext))
 
 
-def _model_path(lconf, econf, mtype):
-    "Model for a given loop/eval config"
-    lname = econf.learner.name
-    return os.path.join(lconf.snap_dir,
-                        "%s.%s.%s.model" % (lconf.dataset, lname, mtype))
-
-
-def _dialogue_act_model_path(lconf, raw=False):
-    "Model for a given dataset"
-
-    prefix = "" if raw else "%s." % lconf.dataset
-    return fp.join(lconf.snap_dir,
-                   prefix + "dialogue-acts.model")
-
-
 def _decode_output_path(lconf, econf):
     "Model for a given loop/eval config and fold"
     return os.path.join(lconf.snap_dir,
@@ -172,8 +158,8 @@ def _do_corpus(lconf):
           "-C", ATTELO_CONFIG_FILE,
           _data_path(lconf, "just-edus"),
           "--output", lconf.snap_dir])
-    os.rename(_dialogue_act_model_path(lconf, raw=True),
-              _dialogue_act_model_path(lconf, raw=False))
+    os.rename(snap_dialogue_act_model_path(lconf, raw=True),
+              snap_dialogue_act_model_path(lconf, raw=False))
 
 
 # ---------------------------------------------------------------------
