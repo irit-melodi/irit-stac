@@ -106,6 +106,14 @@ def _minicorpus_doc_path(lconf):
                    _stub_name(lconf))
 
 
+def _resultcorpus_path(lconf):
+    """
+    path to temporary result corpus dir mimicking structure
+    of actual corpus
+    """
+    return lconf.tmp('resultcorpus')
+
+
 def _unannotated_dir_path(lconf):
     """
     path to the unannotated directory
@@ -255,7 +263,7 @@ def _decode_one(lconf, econf, log):
         "subdirectory for parser output of some sort"
         return fp.join(parent, _parsed_bname(lconf, econf))
 
-    tmp_parsed_dir = parsed_subpath(lconf.tmp_dir)
+    tmp_parsed_dir = parsed_subpath(lconf.tmp("tmp-parsed"))
     makedirs(tmp_parsed_dir)
     cmd = ["attelo", "decode",
            "-C", lconf.abspath(ATTELO_CONFIG_FILE),
@@ -276,12 +284,18 @@ def _decode_one(lconf, econf, log):
               parsed_csv)
 
     # units/foo
+    results_dir = _resultcorpus_path(lconf)
     units_dir = fp.join(_minicorpus_doc_path(lconf), "units")
+    result_units_dir = fp.join(results_dir, "units")
+    makedirs(result_units_dir)
     force_symlink(fp.join(units_dir, 'simple-da'),
-                  parsed_subpath(units_dir))
+                  parsed_subpath(result_units_dir))
+    for section in ["parsed", "pos-tagged"]:
+        force_symlink(fp.join(_minicorpus_doc_path(lconf), section),
+                      fp.join(results_dir, section))
 
     # discourse/foo
-    discourse_dir = fp.join(_minicorpus_doc_path(lconf), "discourse")
+    discourse_dir = fp.join(_resultcorpus_path(lconf), "discourse")
     lconf.pyt("parser/parse-to-glozz",
               _unannotated_dir_path(lconf),
               parsed_csv,
@@ -408,7 +422,7 @@ def _copy_results(lconf, output_dir):
     # copy the svg graphs into single flat dir
     graphs_dir = fp.join(output_dir, "graphs")
     makedirs(graphs_dir)
-    svg_files = sh.find(_minicorpus_path(lconf),
+    svg_files = sh.find(_resultcorpus_path(lconf),
                         "-name", "*.svg", _iter=True)
     for svg in (f.strip() for f in svg_files):
         svg2 = fp.join(graphs_dir,
