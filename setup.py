@@ -5,14 +5,14 @@ Most of this currently lives in educe, but the STAC
 harness seems fairly STAC-specific
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="stac",
     version="2014.08.11",
     author="Philippe Muller, Stergos Afantenos, Pascal Denis, Eric Kow",
     author_email="eric@eric.kow.com",
-    packages=["stac.harness"],
+    packages=find_packages(exclude=['guapi', 'guapi.*']),
     scripts=["cleanup/sanity-check", "irit-stac"],
     requires=["educe", "attelo", "sh"]
 )
