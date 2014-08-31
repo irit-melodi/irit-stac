@@ -90,35 +90,36 @@ def _seg_path(lconf):
     return lconf.tmp("segmented.csv")
 
 
-def _minicorpus_path(lconf):
+def _minicorpus_path(lconf, result=False):
     """
     path to temporary minicorpus dir mimicking structure
     of actual corpus
     """
-    return lconf.tmp('minicorpus')
+    return lconf.tmp('resultcorpus' if result else 'minicorpus')
 
 
-def _minicorpus_doc_path(lconf):
+def _minicorpus_doc_path(lconf, result=False):
     """
     path to subdir of the minicorpus for the file itself
     """
-    return fp.join(_minicorpus_path(lconf),
+    return fp.join(_minicorpus_path(lconf, result),
                    _stub_name(lconf))
 
 
-def _resultcorpus_path(lconf):
+def _minicorpus_stage_path(lconf, stage, result=False):
     """
-    path to temporary result corpus dir mimicking structure
-    of actual corpus
+    path to subdir of the minicorpus for the file itself
     """
-    return lconf.tmp('resultcorpus')
+    return fp.join(_minicorpus_doc, path(lconf, result),
+                   stage)
 
 
-def _unannotated_dir_path(lconf):
+def _unannotated_dir_path(lconf, result=False):
     """
     path to the unannotated directory
     """
-    return fp.join(_minicorpus_doc_path(lconf), "unannotated")
+    return fp.join(_minicorpus_doc_path(lconf, result),
+                   "unannotated")
 
 
 def _unannotated_stub_path(lconf):
@@ -283,24 +284,29 @@ def _decode_one(lconf, econf, log):
     merge_csv(glob.glob(fp.join(tmp_parsed_dir, "*.csv")),
               parsed_csv)
 
+    src_doc_dir = _minicorpus_doc_path(lconf)
+    tgt_doc_dir = _minicorpus_doc_path(lconf, result=True)
+
     # units/foo
-    results_dir = _resultcorpus_path(lconf)
-    units_dir = fp.join(_minicorpus_doc_path(lconf), "units")
-    result_units_dir = fp.join(results_dir, "units")
-    makedirs(result_units_dir)
-    force_symlink(fp.join(units_dir, 'simple-da'),
-                  parsed_subpath(result_units_dir))
+    src_units_dir = fp.join(src_doc_dir, "units")
+    tgt_units_dir = fp.join(tgt_doc_dir, "units")
+    makedirs(tgt_units_dir)
+    force_symlink(fp.join(src_units_dir, 'simple-da'),
+                  parsed_subpath(tgt_units_dir))
     for section in ["parsed", "pos-tagged"]:
-        force_symlink(fp.join(_minicorpus_doc_path(lconf), section),
-                      fp.join(results_dir, section))
+        force_symlink(fp.join(src_doc_dir, section),
+                      fp.join(tgt_doc_dir, section))
 
     # discourse/foo
-    discourse_dir = fp.join(_resultcorpus_path(lconf), "discourse")
+    discourse_dir = fp.join(tgt_doc_dir, "discourse")
     lconf.pyt("parser/parse-to-glozz",
               _unannotated_dir_path(lconf),
               parsed_csv,
-              parsed_subpath(discourse_dir),
-              stderr=log)
+              parsed_subpath(discourse_dir))
+
+    # unannotated
+    force_symlink(_unannotated_dir_path(lconf),
+                  _unannotated_dir_path(lconf, result=True))
 
 
 def _decode(lconf, log):
@@ -317,7 +323,7 @@ def _decode(lconf, log):
 def _graph(lconf, log):
     "Visualise the parses"
 
-    corpus_dir = _minicorpus_path(lconf)
+    corpus_dir = _minicorpus_path(lconf, result=True)
     cmd = ["stac-util", "graph", corpus_dir,
            "--output", corpus_dir]
     call(cmd, stderr=log)
@@ -422,7 +428,7 @@ def _copy_results(lconf, output_dir):
     # copy the svg graphs into single flat dir
     graphs_dir = fp.join(output_dir, "graphs")
     makedirs(graphs_dir)
-    svg_files = sh.find(_resultcorpus_path(lconf),
+    svg_files = sh.find(_minicorpus_path(lconf, result=True),
                         "-name", "*.svg", _iter=True)
     for svg in (f.strip() for f in svg_files):
         svg2 = fp.join(graphs_dir,
