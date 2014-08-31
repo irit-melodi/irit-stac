@@ -7,10 +7,11 @@ irit-rst-dt subcommands
 
 from . import\
     clean,\
+    count,\
     evaluate,\
     features,\
     gather,\
     model,\
     parse
 
-SUBCOMMANDS = [gather, evaluate, model, parse, features, clean]
+SUBCOMMANDS = [gather, evaluate, model, parse, features, count, clean]
