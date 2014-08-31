@@ -110,7 +110,7 @@ def _minicorpus_stage_path(lconf, stage, result=False):
     """
     path to subdir of the minicorpus for the file itself
     """
-    return fp.join(_minicorpus_doc, path(lconf, result),
+    return fp.join(_minicorpus_doc_path(lconf, result),
                    stage)
 
 
@@ -284,21 +284,21 @@ def _decode_one(lconf, econf, log):
     merge_csv(glob.glob(fp.join(tmp_parsed_dir, "*.csv")),
               parsed_csv)
 
-    src_doc_dir = _minicorpus_doc_path(lconf)
-    tgt_doc_dir = _minicorpus_doc_path(lconf, result=True)
-
     # units/foo
-    src_units_dir = fp.join(src_doc_dir, "units")
-    tgt_units_dir = fp.join(tgt_doc_dir, "units")
+    src_units_dir = _minicorpus_stage_path(lconf, "units")
+    tgt_units_dir = _minicorpus_stage_path(lconf, "units",
+                                           result=True)
     makedirs(tgt_units_dir)
     force_symlink(fp.join(src_units_dir, 'simple-da'),
                   parsed_subpath(tgt_units_dir))
     for section in ["parsed", "pos-tagged"]:
-        force_symlink(fp.join(src_doc_dir, section),
-                      fp.join(tgt_doc_dir, section))
+        force_symlink(_minicorpus_stage_path(lconf, section),
+                      _minicorpus_stage_path(lconf, section,
+                                             result=True))
 
     # discourse/foo
-    discourse_dir = fp.join(tgt_doc_dir, "discourse")
+    discourse_dir = _minicorpus_stage_path(lconf, "discourse",
+                                           result=True)
     lconf.pyt("parser/parse-to-glozz",
               _unannotated_dir_path(lconf),
               parsed_csv,
