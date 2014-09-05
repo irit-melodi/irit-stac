@@ -1,4 +1,10 @@
 fuzzy
+--allow-external pydot
+--allow-external python-graph-core
+--allow-external python-graph-dot
+--allow-unverified pydot
+--allow-unverified python-graph-core
+--allow-unverified python-graph-dot
 -e git+https://github.com/kowey/educe.git#egg=educe
 -e git+https://github.com/kowey/attelo.git#egg=attelo
 -e .
