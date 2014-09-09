@@ -56,16 +56,25 @@ processed by pip
    This might be tricky if you're on a Mac.
    Ask Eric.
 
-3. Install the STAC code in development mode.
+3. Linux users: (Debian/Ubuntu)
+
+       sudo apt-get install python-dev libyaml-dev
+
+4. Install the STAC code in development mode.
    This should automatically fetch the educe/attelo dependencies
    automatically
 
        cd Stac/code
        pip install -e .
 
-   Likewise, if somebody tells you to update the STAC code, it
-   should be possible to just `svn update`.  No further
-   installation will be needed
+   If this does not work, you may instead need to run
+
+       pip install -e . -r requirements.txt
+
+   At this point, if somebody tells you to update the STAC code, it
+   should be possible to just `svn update` and maybe
+   `pip install -e .` again if attelo/educe need to be updated.
+   No further installation will be needed
 
 ## Usage
 
