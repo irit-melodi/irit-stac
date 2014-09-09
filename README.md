@@ -65,16 +65,12 @@ processed by pip
    automatically
 
        cd Stac/code
-       pip install -e .
-
-   If this does not work, you may instead need to run
-
-       pip install -e . -r requirements.txt
+       pip install -r requirements.txt
 
    At this point, if somebody tells you to update the STAC code, it
    should be possible to just `svn update` and maybe
-   `pip install -e .` again if attelo/educe need to be updated.
-   No further installation will be needed
+   `pip install -r requirements.txt` again if attelo/educe need to be
+   updated. No further installation will be needed
 
 ## Usage
 
