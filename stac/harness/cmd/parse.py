@@ -22,6 +22,7 @@ from attelo.harness.util import\
     makedirs, call, force_symlink
 
 from ..local import\
+    CORENLP_SERVER_DIR, CORENLP_ADDRESS,\
     TAGGER_JAR, CORENLP_DIR, LEX_DIR,\
     EVALUATIONS, ATTELO_CONFIG_FILE
 from ..util import\
@@ -215,14 +216,12 @@ def _postag(lconf, log):
 def _sentence_parse(lconf, log):
     """
     Run sentence parser on input.
-
-    For now this has a very slow startup as corenlp reads its
-    input resources; there may be faster ways of running the
-    parser when in batch but it could take some programming.
     """
     corpus_dir = _minicorpus_path(lconf)
     lconf.pyt("run-3rd-party",
-              "--corenlp", lconf.abspath(CORENLP_DIR),
+              "--corenlp-server", lconf.abspath(CORENLP_SERVER_DIR),
+              "--corenlp-address", CORENLP_ADDRESS,
+              #"--corenlp", CORENLP_DIR,
               corpus_dir, corpus_dir,
               stderr=log)
 
@@ -357,7 +356,7 @@ def _pipeline(lconf):
     _stage("0300-pos-tagging", _postag,
            "POS tagging")
     _stage("0400-parsing", _sentence_parse,
-           "Sentence parsing (slow startup to read resources)")
+           "Sentence parsing (if slow, is starting parser server)")
     _stage("0500-dialogue-acts", _dialogue_acts,
            "Dialogue act annotation")
     _stage("0600-features", _feature_extraction,

@@ -60,11 +60,19 @@ Which annotators to read from during feature extraction
 """
 
 TAGGER_JAR = 'lib/ark-tweet-nlp-0.3.2.jar'
-"POS tagger jar file (to be installed in LIB_DIR)"
+"POS tagger jar file"
 
 
 CORENLP_DIR = 'lib/stanford-corenlp-full-2013-06-20'
-"CoreNLP directory (to be installed in LIB_DIR)"
+"CoreNLP directory"
+
+
+CORENLP_SERVER_DIR = "lib/corenlp-server"
+"corenlp-server directory (see http://github.com/kowey/corenlp-server)"
+
+
+CORENLP_ADDRESS = "tcp://localhost:5900"
+"0mq address to server"
 
 
 LEARNERS = [LearnerConfig.simple("bayes"),

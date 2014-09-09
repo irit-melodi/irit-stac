@@ -22,6 +22,9 @@ from educe import util
 from educe.stac import postag, corenlp
 import educe.stac
 
+from stac.harness.corenlp import ServerConfig
+import stac.harness.corenlp as corenlp_server
+
 # ---------------------------------------------------------------------
 # args
 # ---------------------------------------------------------------------
@@ -39,6 +42,11 @@ arg_parser.add_argument('--ark-tweet-nlp', metavar='FILE',
 arg_parser.add_argument('--corenlp', metavar='DIR',
                         help='Path to CoreNLP directory'
                        )
+arg_parser.add_argument('--corenlp-server', metavar='DIR',
+                        help='Launch/connect to CoreNLP server')
+arg_parser.add_argument('--corenlp-address',
+                        default='tcp://localhost:5900',
+                        help='Address of server (use w corenlp-server)')
 arg_parser.add_argument('--live',
                         action='store_const',
                         const=True,
@@ -49,7 +57,7 @@ args=arg_parser.parse_args()
 args.stage     = 'unannotated'
 args.annotator = None
 is_interesting=util.mk_is_interesting(args)
-pipelines = [ args.ark_tweet_nlp, args.corenlp ]
+pipelines = [args.ark_tweet_nlp, args.corenlp, args.corenlp_server]
 
 if all(t is None for t in pipelines):
     print >> sys.stderr, "At least one pipeline must be specified"
@@ -71,5 +79,10 @@ corpus     = reader.slurp(anno_files, verbose=True)
 if args.ark_tweet_nlp:
     postag.run_tagger(corpus, args.odir, args.ark_tweet_nlp)
 
-if args.corenlp:
+if args.corenlp_server:
+    config = ServerConfig(address=args.corenlp_address,
+                          directory=args.corenlp_server,
+                          output=sys.stderr)
+    corenlp_server.run_pipeline(corpus, args.odir, config)
+elif args.corenlp:
     corenlp.run_pipeline(corpus, args.odir, args.corenlp)

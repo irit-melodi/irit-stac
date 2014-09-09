@@ -14,5 +14,5 @@ setup(
     author_email="eric@erickow.com",
     packages=find_packages(exclude=['guapi', 'guapi.*']),
     scripts=["cleanup/sanity-check", "irit-stac"],
-    requires=["educe", "attelo", "sh"]
+    requires=["educe", "attelo", "sh", "pyzmq"]
 )

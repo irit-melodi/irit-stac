@@ -12,6 +12,7 @@ from . import\
     features,\
     gather,\
     model,\
-    parse
+    parse,\
+    stop
 
-SUBCOMMANDS = [gather, evaluate, model, parse, features, count, clean]
+SUBCOMMANDS = [gather, evaluate, model, parse, features, count, clean, stop]
