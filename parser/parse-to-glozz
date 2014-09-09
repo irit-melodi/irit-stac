@@ -86,7 +86,10 @@ def mk_relation(doc, row, counter):
     metadata = {}
     metadata['author'] = annotator
     metadata['creation-date'] = str(counter)
-    return Relation(rel_id=rel_id, span=span, type=label, features=features, metadata=metadata)
+    return Relation(rel_id=rel_id, span=span,
+                    rtype=label,
+                    features=features,
+                    metadata=metadata)
 
 # ----------------------------------------------------------------------
 # options
