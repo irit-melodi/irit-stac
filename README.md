@@ -43,7 +43,7 @@ command
 
     source $HOME/.virtualenvs/stac/bin/activate
 
-## Installation (development mode)
+## Installation (basics, development mode)
 
 Both educe and attelo supply requirements.txt files which can be
 processed by pip
@@ -71,6 +71,22 @@ processed by pip
    should be possible to just `svn update` and maybe
    `pip install -r requirements.txt` again if attelo/educe need to be
    updated. No further installation will be needed
+
+## Full installation (for irit-stac parse)
+
+You only need to do this if you intend to use the `irit-stac parse`
+command.
+
+1. Do the basic install above
+
+2. Download [tweet-nlp][tweet-nlp] and put the jar file in lib
+
+3. Download and install corenlp-server (needs Maven!)
+
+        cd lib
+        git clone https://github.com/kowey/corenlp-server
+        cd corenlp-server
+        mvn package
 
 ## Usage
 
@@ -168,3 +184,5 @@ feature directories, these are named by timestamp (with
   manually copy the eval directory to SNAPSHOTS, maybe with a
   small README explaining what it is, or at least a vaguely
   memorable name. This directory should be fairly self-contained.
+
+[tweet-nlp]: http://www.ark.cs.cmu.edu/TweetNLP/
