@@ -94,6 +94,8 @@ WINDOW = 5
 """
 Limited extracted EDUs to those separated by at most WINDOW EDUs.
 Adjacent EDUs are separated by 0.
+
+Note that you can set this to -1 to disable windowing algother.
 """
 
 
