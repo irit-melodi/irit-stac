@@ -55,7 +55,7 @@ anno_correctness = [ 'True', 'False', '?' ]
 
 
 turn_attrs  = [ 'Timestamp', 'Identifier', 'Emitter', 'Developments', 'Resources' ]
-speech_acts = [ 'Accept', 'Refusal', 'Strategic_comment', 'Other', 'Offer', 'Counteroffer' ]
+speech_acts = ['Accept', 'Refusal', 'Other', 'Offer', 'Counteroffer']
 discourse_rel_types =\
         [ 'Question-answer_pair'
         , 'Result'
