@@ -109,6 +109,17 @@ by running
 The harness will try to detect what work it has already done and pick
 up where it left off.
 
+### Configuration
+
+There is a small configuration module that you can edit
+in code/stac/harness/local.py
+
+It lets you control things such as which corpora to run on,
+which decoders and learners to try, and how to do feature
+extraction.
+
+It tries to be self-documenting.
+
 ### Standalone parser
 
 You can also use this infrastructure to parse new soclog files,
