@@ -99,7 +99,7 @@ class FakeEvalArgs(object):
         self.fold_file = open(lconf.fold_file, "r")
         self.fold = fold
         self.threshold = None
-        self.use_prob = None
+        self.use_prob = True
         self.heuristics = DEFAULT_HEURISTIC
         self.rfc = DEFAULT_RFC
         self.quiet = False
