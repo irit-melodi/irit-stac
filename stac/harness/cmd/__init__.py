@@ -13,6 +13,18 @@ from . import\
     gather,\
     model,\
     parse,\
-    stop
+    serve,\
+    stop,\
+    tmp
 
-SUBCOMMANDS = [gather, evaluate, model, parse, features, count, clean, stop]
+SUBCOMMANDS =\
+    [gather,
+     evaluate,
+     model,
+     parse,
+     features,
+     count,
+     clean,
+     serve,
+     stop,
+     tmp]

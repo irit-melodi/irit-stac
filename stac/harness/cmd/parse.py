@@ -43,7 +43,6 @@ class LoopConfig(object):
         self.snap_dir = fp.abspath(snap_dir)
         self.tmp_dir = fp.abspath(tmp_dir)
         self.dataset = "all"
-
         harness_dir = fp.dirname(fp.dirname(fp.abspath(__file__)))
         self.root_dir = fp.dirname(fp.dirname(fp.dirname(harness_dir)))
 
@@ -308,10 +307,11 @@ def _decode_one(lconf, econf, log):
                   _unannotated_dir_path(lconf, result=True))
 
 
-def _decode(lconf, log):
+def _decode(lconf, log, evaluations=None):
     "Decode the input using all the model/learner combos we know"
 
-    for econf in EVALUATIONS:
+    evaluations = evaluations or EVALUATIONS
+    for econf in evaluations:
         with _stac_msg("Decoding (dataset: %s, learner: %s, decoder: %s)" %
                        (lconf.dataset,
                         econf.learner.name,
@@ -328,7 +328,7 @@ def _graph(lconf, log):
     call(cmd, stderr=log)
 
 
-def _pipeline(lconf):
+def _pipeline(lconf, evaluations=None):
     """
     All of the parsing process
     """
@@ -361,7 +361,8 @@ def _pipeline(lconf):
            "Dialogue act annotation")
     _stage("0600-features", _feature_extraction,
            "Feature extraction")
-    _stage("0700-decoding", _decode,
+    _stage("0700-decoding",
+           lambda x, y: _decode(x, y, evaluations=evaluations),
            None)
     _stage("0800-graphs", _graph,
            "Drawing graphs")
