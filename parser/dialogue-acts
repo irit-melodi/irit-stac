@@ -23,7 +23,7 @@ import Orange.data.io
 import Orange.feature
 
 import educe.stac.util.csv as stac_csv
-import educe.stac.util.features as stac_features
+import educe.stac.learning.features as stac_features
 import educe.stac
 from educe.stac.util.output import save_document
 
@@ -281,7 +281,7 @@ def glozz_to_orange(inputs, model):
 
     data = Orange.data.Table(domain)
     for k in inputs.corpus:
-        current = stac_features.mk_current(inputs, people, k)
+        current = stac_features.mk_env(inputs, people, k, True).current
         doc = current.doc
         edus = [unit for unit in doc.units if educe.stac.is_edu(unit)]
         for edu in edus:
