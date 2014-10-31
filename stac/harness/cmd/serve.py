@@ -34,8 +34,19 @@ _DEBUG = 0
 
 
 def _result_path(lconf, econf, parent=None):
+    """
+    Path to directory where we are saving results
+    """
     parent = parent or lconf.tmp("parsed")
     return fp.join(parent, p._parsed_bname(lconf, econf))
+
+
+def _attelo_result_path(lconf, econf, parent=None):
+    """
+    Path to attelo graph file
+    """
+    return fp.join(_result_path(lconf, econf, parent),
+                   "graph.conll")
 
 
 def _decode_one(lconf, econf, log):
@@ -53,6 +64,13 @@ def _decode_one(lconf, econf, log):
            p._features_path(lconf),
            p._features_path(lconf)]
     call(cmd, cwd=parsed_dir, stderr=log)
+
+    weave_cmd = ["stac-learning", "weave",
+                 p._minicorpus_path(lconf),
+                 _attelo_result_path(lconf, econf),
+                 "--output",
+                 _attelo_result_path(lconf, econf) + "2"]
+    call(weave_cmd, stderr=log)
 
 
 def _decode(lconf, econf, log):
@@ -170,7 +188,6 @@ def main(args):
                              snap_dir=latest_snap(),
                              tmp_dir=tmp_dir)
         _pipeline(lconf, econf)
-        results_file = fp.join(_result_path(lconf, econf),
-                               'graph.conll')
+        results_file = _attelo_result_path(lconf, econf) + "2"
         with open(results_file, 'rb') as fin:
             socket.send(fin.read())
