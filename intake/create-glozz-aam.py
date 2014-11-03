@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Author: Eric Kow
@@ -14,7 +13,8 @@ Usage:
     create-glozz-aam.py input.soclog.csv output.aam
 """
 
-import csv
+from __future__ import print_function
+import argparse
 from   itertools import chain
 import itertools
 import sys
@@ -223,14 +223,22 @@ def emitter_combinations(s):
 # main
 # ---------------------------------------------------------------------
 
-if len(sys.argv) == 3:
-    filename_in  = sys.argv[1]
-    filename_out = sys.argv[2]
-else:
-    print >> sys.stderr, "Usage: create-glozz-aam.py input.soclog.csv output.aam"
-    sys.exit(1)
+def main():
+    "no surprises"
+    psr = argparse.ArgumentParser("Create STAC .aam")
+    psr.add_argument("input", metavar="FILE",
+                     help="soclog.csv file")
+    psr.add_argument("output", metavar="FILE",
+                     help="output aam file")
+    psr.add_argument("--players", nargs='+', metavar="NAME",
+                     help="override player set")
+    args = psr.parse_args(sys.argv[1:]) # ugh, assume Python interpreter
 
-players  = read_players(filename_in)
-model     = create_model(players)
-indent(model) # sigh, imperative
-ET.ElementTree(model).write(filename_out, encoding='utf-8', xml_declaration=True)
+    players = args.players or read_players(args.input)
+    model = create_model(players)
+    indent(model) # sigh, imperative
+    ET.ElementTree(model).write(args.output,
+                                encoding='utf-8',
+                                xml_declaration=True)
+
+main()
