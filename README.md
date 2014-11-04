@@ -53,19 +53,15 @@ processed by pip
 
        source $HOME/.virtualenvs/stac/bin/activate
 
-2. Install NLTK data files
-
-       python code/setup-nltk.py
-
-3. Install megam (for learning experiments only).
+2. Install megam (for learning experiments only).
    This might be tricky if you're on a Mac.
    Ask Eric.
 
-4. Linux users: (Debian/Ubuntu)
+3. Linux users: (Debian/Ubuntu)
 
        sudo apt-get install python-dev libyaml-dev
 
-5. Install the STAC code in development mode.
+4. Install the STAC code in development mode.
    This should automatically fetch the educe/attelo dependencies
    automatically
 
@@ -76,6 +72,11 @@ processed by pip
    should be possible to just `svn update` and maybe
    `pip install -r requirements.txt` again if attelo/educe need to be
    updated. No further installation will be needed
+
+5. Install NLTK data files
+
+       python code/setup-nltk.py
+
 
 ## Full installation (for the parsing pipeline)
 
