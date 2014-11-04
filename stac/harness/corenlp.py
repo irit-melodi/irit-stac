@@ -41,8 +41,9 @@ def _launch(config, status):
     to True to indicate that we have launched the server
     (but not necessarily that it is ready to receive anything)
     """
-    subprocess.Popen(["mvn", "exec:java",
-                      "-Dserver",
+    subprocess.Popen(["java", 
+                      "-jar",
+                      "corenlp-server-0.1.jar",
                       "-Dexec.args=-ssplit.eolonly true"],
                      cwd=config.directory,
                      stdout=config.output)
