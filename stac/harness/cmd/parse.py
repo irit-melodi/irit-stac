@@ -26,7 +26,7 @@ from ..local import\
     TAGGER_JAR, LEX_DIR,\
     EVALUATIONS, ATTELO_CONFIG_FILE
 from ..util import\
-    exit_ungathered, latest_snap, latest_tmp,\
+    latest_snap,\
     snap_model_path, snap_dialogue_act_model_path,\
     merge_csv
 
@@ -442,9 +442,6 @@ def main(args):
     `config_argparser`
     """
     _check_3rd_party()
-    data_dir = latest_tmp()
-    if not os.path.exists(data_dir):
-        exit_ungathered()
     lconf = LoopConfig(soclog=args.soclog,
                        snap_dir=latest_snap(),
                        tmp_dir=_mk_parser_temp(args))
