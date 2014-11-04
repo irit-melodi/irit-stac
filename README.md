@@ -80,12 +80,15 @@ command.
 
 1. Do the basic install above
 
-2. Download [tweet-nlp][tweet-nlp] and put the jar file in the
+2. Download [tweet-nlp][tweet-nlp] part of speech tagger
+   and put the jar file (ark-tweet- in the
    lib/ directory (ie. on the STAC SVN root at the same level as
    code/ and data/)
 
-3. Download and install corenlp-server (needs Maven!)
+3. Download and install corenlp-server (needs Apache Maven!)
 
+        cd Stac
+        mkdir lib
         cd lib
         git clone https://github.com/kowey/corenlp-server
         cd corenlp-server
@@ -94,7 +97,10 @@ command.
 ## Usage
 
 Running the pieces of infrastructure here should consist of running
-`irit-stac <subcommand>`
+`irit-stac <subcommand>` from the STAC SVN root.
+
+Folks who just want to run the parsing pipeline server should skip
+ahead to the section "Parsing pipeline server"
 
 ### Basics
 
@@ -131,6 +137,14 @@ using models built from features you have collected.
     irit-stac gather
     irit-stac model
     irit-stac parse code/parser/sample.soclog /tmp/parser-output
+
+### Parsing pipeline server
+
+The parsing pipeline server has the same function as the standalone
+parser but accepts inputs and sends outputs back over a network
+connection
+
+    irit-stac server --port 7777
 
 ### Scores
 
