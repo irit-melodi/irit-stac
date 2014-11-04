@@ -102,7 +102,7 @@ Running the pieces of infrastructure here should consist of running
 Folks who just want to run the parsing pipeline server should skip
 ahead to the section "Parsing pipeline server"
 
-### Basics
+### Basics (for Toulouse people)
 
 Using the harness consists of two steps, gathering the features, and
 running the n-fold cross validation loop
@@ -138,7 +138,7 @@ using models built from features you have collected.
     irit-stac model
     irit-stac parse code/parser/sample.soclog /tmp/parser-output
 
-### Parsing pipeline server
+### Parsing pipeline server (for Edinburgh people)
 
 The parsing pipeline server has the same function as the standalone
 parser but accepts inputs and sends outputs back over a network
