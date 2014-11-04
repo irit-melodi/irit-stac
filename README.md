@@ -4,9 +4,10 @@ This is the STAC codebase.
 
 1. Python 2.7. Python 3 might also work.
 2. pip (see educe README if you do not)
-3. git (to keep up with educe/attelo changes)
-4. graphviz (for visualising graphs)
-5. [optional] Anacoda (`conda --version` should say 2.2.6 or higher)
+3. virtualenv (optional [grumble], can be installed with pip)
+4. git (to keep up with educe/attelo changes)
+5. graphviz (for visualising graphs)
+6. [optional] Anacoda (`conda --version` should say 2.2.6 or higher)
 
 ## Sandboxing
 
@@ -52,7 +53,7 @@ processed by pip
 
        source $HOME/.virtualenvs/stac/bin/activate
 
-2. Install megam (for attelo).
+2. Install megam (for learning experiments only).
    This might be tricky if you're on a Mac.
    Ask Eric.
 
@@ -72,14 +73,16 @@ processed by pip
    `pip install -r requirements.txt` again if attelo/educe need to be
    updated. No further installation will be needed
 
-## Full installation (for irit-stac parse)
+## Full installation (for the parsing pipeline)
 
 You only need to do this if you intend to use the `irit-stac parse`
 command.
 
 1. Do the basic install above
 
-2. Download [tweet-nlp][tweet-nlp] and put the jar file in lib
+2. Download [tweet-nlp][tweet-nlp] and put the jar file in the
+   lib/ directory (ie. on the STAC SVN root at the same level as
+   code/ and data/)
 
 3. Download and install corenlp-server (needs Maven!)
 
