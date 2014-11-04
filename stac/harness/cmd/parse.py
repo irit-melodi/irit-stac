@@ -23,7 +23,7 @@ from attelo.harness.util import\
 
 from ..local import\
     CORENLP_SERVER_DIR, CORENLP_ADDRESS,\
-    TAGGER_JAR, CORENLP_DIR, LEX_DIR,\
+    TAGGER_JAR, LEX_DIR,\
     EVALUATIONS, ATTELO_CONFIG_FILE
 from ..util import\
     exit_ungathered, latest_snap, latest_tmp,\
@@ -396,9 +396,6 @@ def _check_3rd_party():
     if not fp.isfile(TAGGER_JAR):
         sys.exit("""Need %s
 See http://www.ark.cs.cmu.edu/TweetNLP""" % TAGGER_JAR)
-    if not fp.isdir(CORENLP_DIR):
-        sys.exit("""Need %s
-See http://nlp.stanford.edu/software/corenlp.shtml""" % CORENLP_DIR)
 
 
 def _mk_parser_temp(args):
