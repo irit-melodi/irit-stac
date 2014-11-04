@@ -7,7 +7,6 @@ server version of parse (soclog in, ??? out)
 
 from __future__ import print_function
 from os import path as fp
-import glob
 import tempfile
 import zmq
 
@@ -19,7 +18,7 @@ from attelo.harness.config import\
 
 from . import parse as p
 from ..util import\
-    exit_ungathered, latest_snap, latest_tmp,\
+    latest_snap,\
     snap_model_path, snap_dialogue_act_model_path,\
     merge_csv
 from ..local import\
@@ -164,9 +163,6 @@ def main(args):
     `config_argparser`
     """
     p._check_3rd_party()
-    data_dir = latest_tmp()
-    if not fp.exists(data_dir):
-        p.exit_ungathered()
 
     learner = LearnerConfig.simple("maxent")
     decoder = DecoderConfig.simple("locallyGreedy")
