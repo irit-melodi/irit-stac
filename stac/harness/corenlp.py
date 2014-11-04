@@ -43,7 +43,7 @@ def _launch(config, status):
     """
     subprocess.Popen(["java", 
                       "-jar",
-                      "corenlp-server-0.1.jar",
+                      "target/corenlp-server-0.1.jar",
                       "-Dexec.args=-ssplit.eolonly true"],
                      cwd=config.directory,
                      stdout=config.output)
