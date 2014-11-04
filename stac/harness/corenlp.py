@@ -44,7 +44,7 @@ def _launch(config, status):
     subprocess.Popen(["java", 
                       "-jar",
                       "target/corenlp-server-0.1.jar",
-                      "-ssplit.eolonly true"],
+                      "-ssplit.eolonly", "true"],
                      cwd=config.directory,
                      stdout=config.output)
     status.tried_to_launch = True
