@@ -78,10 +78,12 @@ processed by pip
        python code/setup-nltk.py
 
 
-## Full installation (for the parsing pipeline)
+## Full installation (Toulouse/Edinburgh)
 
 You only need to do this if you intend to use the `irit-stac parse`
-command.
+or `irit-stac serve` command, i.e. if you're participating in
+discourse parser experiments or integration work between the
+parsing pipeline and the dialogue manager.
 
 1. Do the basic install above
 
@@ -99,15 +101,15 @@ command.
         cd corenlp-server
         mvn package
 
-## Usage
+## Usage (Toulouse)
 
 Running the pieces of infrastructure here should consist of running
 `irit-stac <subcommand>` from the STAC SVN root.
 
-Folks who just want to run the parsing pipeline server should skip
-ahead to the section "Parsing pipeline server"
+Folks (likely in Edinburgh) who just want to run the parsing pipeline
+server should skip this section and go to "Usage (Edinburgh)" instead.
 
-### Basics (for Toulouse people)
+### Basics
 
 Using the harness consists of two steps, gathering the features, and
 running the n-fold cross validation loop
@@ -142,14 +144,6 @@ using models built from features you have collected.
     irit-stac gather
     irit-stac model
     irit-stac parse code/parser/sample.soclog /tmp/parser-output
-
-### Parsing pipeline server (for Edinburgh people)
-
-The parsing pipeline server has the same function as the standalone
-parser but accepts inputs and sends outputs back over a network
-connection
-
-    irit-stac server --port 7777
 
 ### Scores
 
@@ -217,5 +211,26 @@ feature directories, these are named by timestamp (with
   manually copy the eval directory to SNAPSHOTS, maybe with a
   small README explaining what it is, or at least a vaguely
   memorable name. This directory should be fairly self-contained.
+
+## Usage (Edinburgh)
+
+First make sure that the standalone parser works for you
+
+    irit-stac parse code/parser/sample.soclog /tmp/parser-output
+
+The parsing pipeline server has the same function as the standalone
+parser but accepts inputs and sends outputs back over a network
+connection
+
+    irit-stac server --port 7777
+
+Note that if you launch
+
+    irit-stac server --port 7777 --incremental
+
+The server will assume that every connection is *appending* to an
+input in progress, and will generate a new output based on the
+extended input (you'll have to restart the server for new inputs)
+
 
 [tweet-nlp]: http://www.ark.cs.cmu.edu/TweetNLP/
