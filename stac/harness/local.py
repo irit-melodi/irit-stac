@@ -86,7 +86,7 @@ for relations
 """
 
 DECODERS = [DecoderConfig.simple(x) for x in
-            ["last", "local", "locallyGreedy", "mst"]]
+            ["last", "local", "locallyGreedy"]]
 """Attelo decoders to try in experiment"""
 
 
