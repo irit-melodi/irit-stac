@@ -133,6 +133,10 @@ def config_argparser(psr):
     are to be added.
     """
     psr.set_defaults(func=main)
+    psr.add_argument("--incremental",
+                     action='store_true',
+                     help="each connection builds up the current "
+                     "input; restart parser for new input")
     psr.add_argument("--tmpdir", metavar="DIR",
                      help="put intermediary files here "
                      "(for debugging, default is via mktemp)")
@@ -155,6 +159,18 @@ def _mk_server_temp(args):
     return tmp_dir
 
 
+def _reset_parser(args):
+    """
+    Reset the parser and return the corresponding loop configuariton
+    """
+    tmp_dir = _mk_server_temp(args)
+    soclog = fp.join(tmp_dir, "soclog")
+    open(soclog, 'wb').close()
+    return p.LoopConfig(soclog=soclog,
+                        snap_dir=latest_snap(),
+                        tmp_dir=tmp_dir)
+
+
 def main(args):
     """
     Subcommand main.
@@ -174,16 +190,14 @@ def main(args):
     socket = context.socket(zmq.REP)
 #pylint: enable=no-member
     socket.bind("tcp://*:{}".format(args.port))
+    lconf = _reset_parser(args)
     while True:
-        tmp_dir = _mk_server_temp(args)
         incoming = socket.recv()
-        soclog = fp.join(tmp_dir, "soclog")
-        with open(soclog, 'wb') as fout:
-            print(incoming, file=fout)
-        lconf = p.LoopConfig(soclog=soclog,
-                             snap_dir=latest_snap(),
-                             tmp_dir=tmp_dir)
+        with open(lconf.soclog, 'ab') as fout:
+            print(incoming.strip(), file=fout)
         _pipeline(lconf, econf)
         results_file = _attelo_result_path(lconf, econf) + "2"
         with open(results_file, 'rb') as fin:
             socket.send(fin.read())
+        if not args.incremental:
+            lconf = _reset_parser(args)
