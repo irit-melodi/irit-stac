@@ -3,7 +3,7 @@ This is the STAC codebase.
 ## Prerequisites
 
 1. Python 2.7. Python 3 might also work.
-2. pip (see educe README if you do not)
+2. pip 1.5 or higher (see educe README if you do not)
 3. virtualenv (optional [grumble], can be installed with pip)
 4. git (to keep up with educe/attelo changes)
 5. graphviz (for visualising graphs)
@@ -49,11 +49,13 @@ command
 Both educe and attelo supply requirements.txt files which can be
 processed by pip
 
+0. Preflight: do you have the right versions of Python and pip?
+
 1. Switch into your STAC virtualenv
 
        source $HOME/.virtualenvs/stac/bin/activate
 
-2. Install megam (for learning experiments only).
+2. Install megam (for learning experiments only [Toulouse]).
    This might be tricky if you're on a Mac.
    Ask Eric.
 
