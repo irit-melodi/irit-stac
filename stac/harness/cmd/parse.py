@@ -191,6 +191,7 @@ def _segmented_to_glozz(lconf, log):
     """
     lconf.pyt("csv2glozz/csvtoglozz.py",
               "-f", _seg_path(lconf),
+              "--start", "1000",
               stderr=log,
               cwd=lconf.tmp_dir)
 
