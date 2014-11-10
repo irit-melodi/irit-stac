@@ -1,10 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
+import argparse
 import sys
 from datetime import date
 from pprint import pprint
 from os import path as fp
+
+import educe.util
+from educe.stac.util.args import add_usual_output_args
 
 """
 This is an educified version of the code/UNUSED/guapi/PredArg.py
@@ -157,4 +163,36 @@ def Create_Unit(Annotator, base_directory, uunits, uiter):
 
     for filename, segments in segs.items():
         with open(base_directory + filename + "_"+Annotator+ ".seg", "w") as f:
-            print "\n".join(_segments_to_lines(segments))
+            print("\n".join(_segments_to_lines(segments)))
+
+
+
+def process_corpus(corpus, output_dir):
+    for key in corpus:
+        print(key)
+
+
+def read_corpus_at_stage(args, stage, verbose=True):
+    """
+    Read the section of the corpus specified in the command line arguments.
+    """
+    is_interesting0 = educe.util.mk_is_interesting(args)
+    is_interesting = lambda k: is_interesting0(k) and k.stage == stage
+    reader = educe.stac.Reader(args.corpus)
+    anno_files = reader.filter(reader.files(), is_interesting)
+    return reader.slurp(anno_files, verbose)
+
+def mk_argparser():
+    psr = argparse.ArgumentParser(description='.seg intermediary file writer')
+
+    psr.add_argument('corpus', metavar='DIR', help='corpus dir')
+    # don't allow stage control; must be units
+    educe.util.add_corpus_filters(psr,
+                                  fields=['doc', 'subdoc', 'annotator'])
+    add_usual_output_args(psr)
+    return psr
+
+
+if __name__ == "__main__":
+    args = mk_argparser().parse_args()
+    print(args)
