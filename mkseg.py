@@ -30,7 +30,9 @@ class ResourceInfo(namedtuple("ResourceInfo",
     pass
 
 
-RESOURCE_STATUSES =\
+UNKNOWN_RESOURCE_STATUSES = ["Please choose...", "?"]
+
+KNOWN_RESOURCE_STATUSES =\
     ["Givable", "Not givable",
      "Receivable", "Not receivable",
      "Possessed", "Not possessed"]
@@ -38,18 +40,19 @@ RESOURCE_STATUSES =\
 def resource_snippet(resource):
     "output fragment for a resource"
 
-    status = resource.Status
+    features = resource.features
+    status_feat = features["Status"]
 
-    if resource.Status == "?":
+    if status_feat in UNKNOWN_RESOURCE_STATUSES:
         status = "Unknown"
-    elif resource.Status in RESOURCE_STATUSES:
-        status = resource.Status
+    elif status_feat in KNOWN_RESOURCE_STATUSES:
+        status = status_feat
     else:
-        raise Exception("Unexpected resource status: ", resource.Status)
+        raise Exception("Unexpected resource status: ", status_feat)
     template = " {status} ({kind}, {quantity})"
     return template.format(status=status,
-                           kind=resource.Kind,
-                           quantity=resource.Quantity)
+                           kind=features["Kind"],
+                           quantity=features["Quantity"])
 
 
 def link_snippet(left, right):
@@ -74,35 +77,36 @@ def anaphor_snippet(left, right, anaphora):
     return result
 
 
-def all_resources_snippet(seg, anaphors_detail):
-    result = ""
-    seg0 = seg[0]
-    several_ressource_text = []
-    if len(seg0.Resources) > 0:
-        for i in seg0.Resources:
-            if isinstance(i, Several_resources):
-                several_ressource_text.append(i.Text)
+# TODO: anaphora and several_resources
+def all_resources_snippet(edu, rstuff):
+    "turn resource annotations for an edu into a segpair fragment"
 
-    if len(seg0.Resources) > 0:
-        result = result + "#   Resource: "
-        for j in seg0.Resources:
-            if several_ressource_text != []:
-                if isinstance(j, Several_resources):
-                    resource = j.Resources[0]
-                    result += resource_snippet(resource)
-                    result += anaphor_snippet(resource, j, anaphors_detail)
-                else:
-                    if j.Text.split()[0] not in several_ressource_text[0]:
-                        result += resource_snippet(j)
-                        result += anaphor_snippet(j, j, anaphors_detail)
-            #pas de schéma on traite les ressources normalement"
-            else:
-                result += resource_snippet(j)
-                result += anaphor_snippet(j, j, anaphors_detail)
-    return result
+    resources = [x for x in rstuff.resources if edu.encloses(x)]
+
+    if resources:
+        result = "#   Resource: "
+        for resource in resources:
+            result += resource_snippet(resource)
+        return result
+#        for j in seg0.Resources:
+#            if several_ressource_text != []:
+#                if isinstance(j, Several_resources):
+#                    resource = j.Resources[0]
+#                    result += resource_snippet(resource)
+#                    result += anaphor_snippet(resource, j, anaphors_detail)
+#                else:
+#                    if j.Text.split()[0] not in several_ressource_text[0]:
+#                        result += resource_snippet(j)
+#                        result += anaphor_snippet(j, j, anaphors_detail)
+#            #pas de schéma on traite les ressources normalement"
+#            else:
+#                result += resource_snippet(j)
+#                result += anaphor_snippet(j, j, anaphors_detail)
+    else:
+        return ""
 
 
-def edu_to_segpair(doc, context, edu):
+def edu_to_segpair(doc, context, rstuff, edu):
     """
     output corresponding to a single EDU
 
@@ -118,11 +122,12 @@ def edu_to_segpair(doc, context, edu):
         "#   Speaker: {speaker}" +\
         "#  Surface_Act: {surface_act}"
 
+    surface_act = edu.features.get("Surface_Act", "?")
     result = template.format(dialogue_act=edu.type,
                              turn_id=tid,
                              text=doc.text(edu.text_span()),
                              speaker=turn.features["Emitter"],
-                             surface_act=edu.features["Surface_act"])
+                             surface_act=surface_act)
 
     addressees = set(x.strip()
                      for x in edu.features["Addressee"].split(";"))
@@ -131,8 +136,7 @@ def edu_to_segpair(doc, context, edu):
     for addressee in sorted(addressees):
         result += "#   Addressee: " + addressee
 
-    # appends stuff to result
-    #result += all_resources_snippet(seg, anaphors)
+    result += all_resources_snippet(edu, rstuff)
     result += "]"
     return (tid, result)
 
@@ -173,7 +177,7 @@ def process_document(corpus, key, output_dir):
     mk_parent_dirs(output_filename)
     context = Context.for_edus(doc)
 
-    segpairs = [edu_to_segpair(doc, context, edu)
+    segpairs = [edu_to_segpair(doc, context, rstuff, edu)
                 for edu in sorted_first_widest(context)]
 
     with codecs.open(output_filename, 'w', 'utf-8') as fout:
