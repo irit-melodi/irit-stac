@@ -168,7 +168,6 @@ def process_document(corpus, key, output_dir):
                                     if x.type == "Anaphora"],
                           several=[x for x in doc.schemas
                                    if x.type == "Several_resources"])
-    print(rstuff)
 
     output_filename = output_path_stub(output_dir, key) + ".seg"
     mk_parent_dirs(output_filename)
