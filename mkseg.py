@@ -130,8 +130,8 @@ def edu_to_segpair(doc, context, rstuff, edu):
                              surface_act=surface_act)
 
     addressees = set(x.strip()
-                     for x in edu.features["Addressee"].split(";"))
-    if "Please choose..." in addressees:
+                     for x in edu.features.get("Addressee", "").split(";"))
+    if not addressees or "Please choose..." in addressees:
         addressees = set("?")
     for addressee in sorted(addressees):
         result += "#   Addressee: " + addressee
