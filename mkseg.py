@@ -4,25 +4,38 @@
 from __future__ import print_function
 
 import argparse
-import sys
-from datetime import date
-from pprint import pprint
-from os import path as fp
+import codecs
+from collections import namedtuple
 
+from educe.stac.util.context import\
+    Context, sorted_first_widest
+from educe.stac.annotation import\
+    is_edu, is_resource, turn_id
+from educe.stac.util.args import\
+    add_usual_output_args, get_output_dir, announce_output_dir
+from educe.stac.util.output import\
+    mk_parent_dirs, output_path_stub
 import educe.util
-from educe.stac.util.args import add_usual_output_args
 
 """
 This is an educified version of the code/UNUSED/guapi/PredArg.py
 script
 """
 
+class ResourceInfo(namedtuple("ResourceInfo",
+                              ["resources", "anaphora", "several"])):
+    """
+    All resources, anaphora, etc in a document
+    """
+    pass
+
+
 RESOURCE_STATUSES =\
     ["Givable", "Not givable",
      "Receivable", "Not receivable",
      "Possessed", "Not possessed"]
 
-def _resource_snippet(resource):
+def resource_snippet(resource):
     "output fragment for a resource"
 
     status = resource.Status
@@ -39,52 +52,29 @@ def _resource_snippet(resource):
                            quantity=resource.Quantity)
 
 
-def _link_snippet(left, right):
+def link_snippet(left, right):
     "output fragment for an anaphoric link"
     template = " #Anaphora Link:({left}, {right})"
     return template.format(left=left.Text,
                            right=right.Text)
 
 
-def _anaphor_snippet(left, right, anaphora):
+def anaphor_snippet(left, right, anaphora):
     "output fragment for anaphoric links"
 
     result = ""
     if left.Kind == "Anaphoric":
         for anaphor in anaphora:
             if anaphor.Left_argument == left.ID:
-                result += _link_snippet(anaphor.Full_Left_argument,
+                result += link_snippet(anaphor.Full_Left_argument,
                                         anaphor.Full_Right_argument)
             if anaphor.Right_argument == right.ID:
-                result += _link_snippet(anaphor.Full_Right_argument,
+                result += link_snippet(anaphor.Full_Right_argument,
                                         anaphor.Full_Left_argument)
     return result
 
 
-def _segments_to_lines(segments):
-    """
-    return lines of .seg output
-
-    insert a marker whenever turns are more than 1 apart
-    """
-    def turn_id(seg):
-        ":: Int"
-        return int(seg.split()[2])
-
-    sorted_segments = sorted((turn_id(s), s)
-                             for s in segments)
-
-    result = []
-    prev_turn = None
-    for turn, segment in sorted_segments:
-        if prev_turn is not None and turn - prev_turn > 1:
-            result.append("*******END TURN************")
-        result.append(segment)
-        prev_turn = turn
-    return result
-
-
-def _all_resources_snippet(seg, anaphors_detail):
+def all_resources_snippet(seg, anaphors_detail):
     result = ""
     seg0 = seg[0]
     several_ressource_text = []
@@ -99,77 +89,96 @@ def _all_resources_snippet(seg, anaphors_detail):
             if several_ressource_text != []:
                 if isinstance(j, Several_resources):
                     resource = j.Resources[0]
-                    result += _resource_snippet(resource)
-                    result += _anaphor_snippet(resource, j, anaphors_detail)
+                    result += resource_snippet(resource)
+                    result += anaphor_snippet(resource, j, anaphors_detail)
                 else:
                     if j.Text.split()[0] not in several_ressource_text[0]:
-                        result += _resource_snippet(j)
-                        result += _anaphor_snippet(j, j, anaphors_detail)
+                        result += resource_snippet(j)
+                        result += anaphor_snippet(j, j, anaphors_detail)
             #pas de schéma on traite les ressources normalement"
             else:
-                result += _resource_snippet(j)
-                result += _anaphor_snippet(j, j, anaphors_detail)
+                result += resource_snippet(j)
+                result += anaphor_snippet(j, j, anaphors_detail)
     return result
 
 
-def Create_Unit(Annotator, base_directory, uunits, uiter):
-    # find speakers and idTurn
+def edu_to_segpair(doc, context, edu):
+    """
+    output corresponding to a single EDU
+
+    :: ... -> (Int, String)
+    """
+
+    turn = context[edu].turn
+    tid = turn_id(turn)
+
+    template = "{dialogue_act} "+\
+        "[ Turn_ID: {turn_id} "+\
+        "#    EDU_Span: {text}" +\
+        "#   Speaker: {speaker}" +\
+        "#  Surface_Act: {surface_act}"
+
+    result = template.format(dialogue_act=edu.type,
+                             turn_id=tid,
+                             text=doc.text(edu.text_span()),
+                             speaker=turn.features["Emitter"],
+                             surface_act=edu.features["Surface_act"])
+
+    addressees = set(x.strip()
+                     for x in edu.features["Addressee"].split(";"))
+    if "Please choose..." in addressees:
+        addressees = set("?")
+    for addressee in sorted(addressees):
+        result += "#   Addressee: " + addressee
+
+    # appends stuff to result
+    #result += all_resources_snippet(seg, anaphors)
+    result += "]"
+    return (tid, result)
 
 
-    def get_speaker_idturn(docfile):
-        speaker_idturn = dict()
-        anaphors=[]
-        for j in uunits:
-            if fp.basename(j.Docfile)==docfile:
-                for i in j.Dialogues:
-                    anaphors.append(i.Full_relations)
-                    for k in i.Turns:
-                        speaker_idturn[k.Shallow_ID]=k.Emitter
-                break
+def segpairs_to_string(segpairs):
+    """
+    massage segpairs into output: organise a list of
+    (turn id, segline) pairs, and
+    insert a marker whenever turns are more than 1 apart
 
-        return speaker_idturn, anaphors
-
-    segs = dict()
-    for seg in uiter.get_segments():
-        fbasename = fp.basename(seg[0].Textfile)
-        result = ""
-        if fbasename not in segs:
-            segs[fbasename] = []
-            speaker_idturn, anaphors = get_speaker_idturn(fbasename)
-            anaphors_detail = []
-            for anaphor in anaphors:
-                anaphors_detail.extend((i.ID, i.Left_argument, i.Right_argument)
-                                       for i in anaphor)
+    :: [(Int, String)] -> String
+    """
+    result = []
+    prev_turn = None
+    for turn, segment in sorted(segpairs):
+        if prev_turn is not None and turn - prev_turn > 1:
+            result.append("*******END TURN************")
+        result.append(segment)
+        result.append("") # empty line
+        prev_turn = turn
+    return "\n".join(result)
 
 
-        speaker = speaker_idturn[seg[0].Turn]
-        template = "{dialogue_act} [ Turn_ID: {turn_id} "+\
-                   "#    EDU_Span: {span}" +\
-                   "#   Speaker: {speaker}" +\
-                   "#  Surface_Act: {surface_act}"
-        result += template.format(dialogue_act=seg[0],
-                                  turn_id=seg[0].Turn,
-                                  edu_span=str(seg[0].Text),
-                                  speaker=str(speaker),
-                                  surface_act=str(seg[0].Surface_act_type))
+def process_document(corpus, key, output_dir):
+    """
+    Read the document and write an equivalent .seg file in the output
+    path
+    """
+    doc = corpus[key]
+    rstuff = ResourceInfo(resources=[x for x in doc.units
+                                     if educe.stac.is_resource(x)],
+                          anaphora=[x for x in doc.relations
+                                    if x.type == "Anaphora"],
+                          several=[x for x in doc.schemas
+                                   if x.type == "Several_resources"])
+    print(rstuff)
 
-        for receiver in seg[0].Receivers:
-           result += "#   Addressee: {}".format(receiver)
+    output_filename = output_path_stub(output_dir, key) + ".seg"
+    mk_parent_dirs(output_filename)
+    context = Context.for_edus(doc)
 
-        # appends stuff to result
-        result += _all_resources_snippet(seg, anaphors)
-        result += "]\n"
-        segs[fbasename].append(result)
+    segpairs = [edu_to_segpair(doc, context, edu)
+                for edu in sorted_first_widest(context)]
 
-    for filename, segments in segs.items():
-        with open(base_directory + filename + "_"+Annotator+ ".seg", "w") as f:
-            print("\n".join(_segments_to_lines(segments)))
-
-
-
-def process_corpus(corpus, output_dir):
-    for key in corpus:
-        print(key)
+    with codecs.open(output_filename, 'w', 'utf-8') as fout:
+        print(segpairs_to_string(segpairs), file=fout)
 
 
 def read_corpus_at_stage(args, stage, verbose=True):
@@ -182,7 +191,11 @@ def read_corpus_at_stage(args, stage, verbose=True):
     anno_files = reader.filter(reader.files(), is_interesting)
     return reader.slurp(anno_files, verbose)
 
+
 def mk_argparser():
+    """
+    Command line parser for this script
+    """
     psr = argparse.ArgumentParser(description='.seg intermediary file writer')
 
     psr.add_argument('corpus', metavar='DIR', help='corpus dir')
@@ -193,6 +206,14 @@ def mk_argparser():
     return psr
 
 
-if __name__ == "__main__":
+def main():
+    "create a .seg file for every file in the corpus"
     args = mk_argparser().parse_args()
-    print(args)
+    corpus = read_corpus_at_stage(args, 'units')
+    output_dir = get_output_dir(args)
+    for key in corpus:
+        process_document(corpus, key, output_dir)
+    announce_output_dir(output_dir)
+
+if __name__ == "__main__":
+    main()
