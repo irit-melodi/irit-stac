@@ -78,6 +78,34 @@ def _segments_to_lines(segments):
     return result
 
 
+def _all_resources_snippet(seg, anaphors_detail):
+    result = ""
+    seg0 = seg[0]
+    several_ressource_text = []
+    if len(seg0.Resources) > 0:
+        for i in seg0.Resources:
+            if isinstance(i, Several_resources):
+                several_ressource_text.append(i.Text)
+
+    if len(seg0.Resources) > 0:
+        result = result + "#   Resource: "
+        for j in seg0.Resources:
+            if several_ressource_text != []:
+                if isinstance(j, Several_resources):
+                    resource = j.Resources[0]
+                    result += _resource_snippet(resource)
+                    result += _anaphor_snippet(resource, j, anaphors_detail)
+                else:
+                    if j.Text.split()[0] not in several_ressource_text[0]:
+                        result += _resource_snippet(j)
+                        result += _anaphor_snippet(j, j, anaphors_detail)
+            #pas de schéma on traite les ressources normalement"
+            else:
+                result += _resource_snippet(j)
+                result += _anaphor_snippet(j, j, anaphors_detail)
+    return result
+
+
 def Create_Unit(Annotator, base_directory, uunits, uiter):
     # find speakers and idTurn
 
@@ -95,47 +123,17 @@ def Create_Unit(Annotator, base_directory, uunits, uiter):
 
         return speaker_idturn, anaphors
 
-    def get_ressource(seg, several_ressource_text, anaphors_detail, result):
-
-        seg0 = seg[0]
-        if len(seg0.Resources) > 0:
-            for i in seg0.Resources:
-                if isinstance(i, Several_resources):
-                    several_ressource_text.append(i.Text)
-
-        if len(seg0.Resources) > 0:
-            result = result + '#' +'   Resource: '
-            for j in seg0.Resources:
-                if several_ressource_text != []:
-                    if isinstance(j, Several_resources):
-                        resource = j.Resources[0]
-                        result += _resource_snippet(resource)
-                        result += _anaphor_snippet(resource, j, anaphors_detail)
-                    else:
-                        if j.Text.split()[0] not in several_ressource_text[0]:
-                            result += _resource_snippet(j)
-                            result += _anaphor_snippet(j, j, anaphors_detail)
-                #pas de schéma on traite les ressources normalement"
-                else:
-                    result += _resource_snippet(j)
-                    result += _anaphor_snippet(j, j, anaphors_detail)
-        return result
-
-
-    fbasename = fp.basename(seg[0].Textfile)
-
     segs = dict()
     for seg in uiter.get_segments():
+        fbasename = fp.basename(seg[0].Textfile)
         result = ""
         if fbasename not in segs:
             segs[fbasename] = []
             speaker_idturn, anaphors = get_speaker_idturn(fbasename)
             anaphors_detail = []
             for anaphor in anaphors:
-                for item in anaphor:
-                    anaphors_detail.append((item.ID,
-                                            item.Left_argument,
-                                            item.Right_argument))
+                anaphors_detail.extend((i.ID, i.Left_argument, i.Right_argument)
+                                       for i in anaphor)
 
 
         speaker = speaker_idturn[seg[0].Turn]
@@ -152,12 +150,9 @@ def Create_Unit(Annotator, base_directory, uunits, uiter):
         for receiver in seg[0].Receivers:
            result += "#   Addressee: {}".format(receiver)
 
-        #Traitement spécial pour les ressources multiples
-        #Recup la liste des ressources dans several ressources
-        several_ressource_text = []
         # appends stuff to result
-        result = get_ressource(seg, several_ressource_text, anaphors, result)
-        result = result + ']' + '\n'
+        result += _all_resources_snippet(seg, anaphors)
+        result += "]\n"
         segs[fbasename].append(result)
 
     for filename, segments in segs.items():
