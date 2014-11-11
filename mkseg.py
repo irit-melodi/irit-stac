@@ -1,6 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+This is an educified version of the code/UNUSED/guapi/PredArg.py
+script
+"""
+
 from __future__ import print_function
 
 import argparse
@@ -10,7 +15,7 @@ from collections import namedtuple
 from educe.stac.util.context import\
     Context, sorted_first_widest
 from educe.stac.annotation import\
-    is_edu, is_resource, turn_id
+    is_resource, turn_id
 from educe.stac.util.args import\
     add_usual_output_args,\
     get_output_dir,\
@@ -20,10 +25,6 @@ from educe.stac.util.output import\
     mk_parent_dirs, output_path_stub
 import educe.util
 
-"""
-This is an educified version of the code/UNUSED/guapi/PredArg.py
-script
-"""
 
 class ResourceInfo(namedtuple("ResourceInfo",
                               ["resources", "anaphora", "several"])):
@@ -192,7 +193,7 @@ def process_document(config, corpus, key, output_dir):
     doc = corpus[key]
     if config.emit_resources:
         rstuff = ResourceInfo(resources=[x for x in doc.units
-                                         if educe.stac.is_resource(x)],
+                                         if is_resource(x)],
                               anaphora=[x for x in doc.relations
                                         if x.type == "Anaphora"],
                               several=[x for x in doc.schemas
