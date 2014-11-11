@@ -160,19 +160,25 @@ def segpairs_to_string(segpairs):
     return "\n".join(result)
 
 
-def process_document(corpus, key, output_dir):
+def process_document(corpus, key, output_dir, resources=True):
     """
     Read the document and write an equivalent .seg file in the output
     path
     """
     doc = corpus[key]
-    rstuff = ResourceInfo(resources=[x for x in doc.units
-                                     if educe.stac.is_resource(x)],
-                          anaphora=[x for x in doc.relations
-                                    if x.type == "Anaphora"],
-                          several=[x for x in doc.schemas
-                                   if x.type == "Several_resources"])
+    if resources:
+        rstuff = ResourceInfo(resources=[x for x in doc.units
+                                         if educe.stac.is_resource(x)],
+                              anaphora=[x for x in doc.relations
+                                        if x.type == "Anaphora"],
+                              several=[x for x in doc.schemas
+                                       if x.type == "Several_resources"])
+    else:
+        rstuff = ResourceInfo(resources=[],
+                              anaphora=[],
+                              several=[])
 
+    # print(rstuff.anaphora)
     output_filename = output_path_stub(output_dir, key) + ".seg"
     mk_parent_dirs(output_filename)
     context = Context.for_edus(doc)
@@ -202,6 +208,14 @@ def mk_argparser():
     psr = argparse.ArgumentParser(description='.seg intermediary file writer')
 
     psr.add_argument('corpus', metavar='DIR', help='corpus dir')
+    psr.add_argument('--no-resources', dest='resources',
+                     action='store_false',
+                     default=True,
+                     help='suppress resource extraction')
+    psr.add_argument('--resources',
+                     action='store_true',
+                     help='allow resource extraction (default)')
+    psr.set_defaults(resources=True)
     # don't allow stage control; must be units
     educe.util.add_corpus_filters(psr,
                                   fields=['doc', 'subdoc', 'annotator'])
@@ -215,7 +229,7 @@ def main():
     corpus = read_corpus_at_stage(args, 'units')
     output_dir = get_output_dir(args)
     for key in corpus:
-        process_document(corpus, key, output_dir)
+        process_document(corpus, key, output_dir, args.resources)
     announce_output_dir(output_dir)
 
 if __name__ == "__main__":
