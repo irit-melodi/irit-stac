@@ -12,7 +12,10 @@ from educe.stac.util.context import\
 from educe.stac.annotation import\
     is_edu, is_resource, turn_id
 from educe.stac.util.args import\
-    add_usual_output_args, get_output_dir, announce_output_dir
+    add_usual_output_args,\
+    get_output_dir,\
+    announce_output_dir,\
+    read_corpus
 from educe.stac.util.output import\
     mk_parent_dirs, output_path_stub
 import educe.util
@@ -30,7 +33,9 @@ class ResourceInfo(namedtuple("ResourceInfo",
     pass
 
 
-UNKNOWN_RESOURCE_STATUSES = ["Please choose...", "?"]
+STAC_UNSET = "Please choose..."  # sigh
+
+UNKNOWN_RESOURCE_STATUSES = [STAC_UNSET, "?"]
 
 KNOWN_RESOURCE_STATUSES =\
     ["Givable", "Not givable",
@@ -123,15 +128,16 @@ def edu_to_segpair(doc, context, rstuff, edu):
         "#  Surface_Act: {surface_act}"
 
     surface_act = edu.features.get("Surface_Act", "?")
-    result = template.format(dialogue_act=edu.type,
+    dialogue_act = edu.type if edu.type != "Segment" else "?"
+    result = template.format(dialogue_act=dialogue_act,
                              turn_id=tid,
                              text=doc.text(edu.text_span()),
                              speaker=turn.features["Emitter"],
                              surface_act=surface_act)
 
-    addressees = set(x.strip()
-                     for x in edu.features.get("Addressee", "").split(";"))
-    if not addressees or "Please choose..." in addressees:
+    addresee_feat = edu.features.get("Addressee", STAC_UNSET)
+    addressees = set(x.strip() for x in addresee_feat.split(";"))
+    if not addressees or STAC_UNSET in addressees:
         addressees = set("?")
     for addressee in sorted(addressees):
         result += "#   Addressee: " + addressee
@@ -190,17 +196,6 @@ def process_document(corpus, key, output_dir, resources=True):
         print(segpairs_to_string(segpairs), file=fout)
 
 
-def read_corpus_at_stage(args, stage, verbose=True):
-    """
-    Read the section of the corpus specified in the command line arguments.
-    """
-    is_interesting0 = educe.util.mk_is_interesting(args)
-    is_interesting = lambda k: is_interesting0(k) and k.stage == stage
-    reader = educe.stac.Reader(args.corpus)
-    anno_files = reader.filter(reader.files(), is_interesting)
-    return reader.slurp(anno_files, verbose)
-
-
 def mk_argparser():
     """
     Command line parser for this script
@@ -216,6 +211,10 @@ def mk_argparser():
                      action='store_true',
                      help='allow resource extraction (default)')
     psr.set_defaults(resources=True)
+    psr.add_argument('--stage',
+                     choices=['units', 'unannotated'],
+                     default='units',
+                     help='which section of the corpus to read')
     # don't allow stage control; must be units
     educe.util.add_corpus_filters(psr,
                                   fields=['doc', 'subdoc', 'annotator'])
@@ -226,7 +225,7 @@ def mk_argparser():
 def main():
     "create a .seg file for every file in the corpus"
     args = mk_argparser().parse_args()
-    corpus = read_corpus_at_stage(args, 'units')
+    corpus = read_corpus(args)
     output_dir = get_output_dir(args)
     for key in corpus:
         process_document(corpus, key, output_dir, args.resources)
