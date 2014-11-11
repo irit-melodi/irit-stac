@@ -33,6 +33,16 @@ class ResourceInfo(namedtuple("ResourceInfo",
     pass
 
 
+class Config(namedtuple("Config",
+                        ["emit_resources",
+                         "emit_resource_status",
+                         "emit_dialogue_acts"])):
+    """
+    To specify how we want extraction to be done
+    """
+    pass
+
+
 STAC_UNSET = "Please choose..."  # sigh
 
 UNKNOWN_RESOURCE_STATUSES = [STAC_UNSET, "?"]
@@ -42,13 +52,15 @@ KNOWN_RESOURCE_STATUSES =\
      "Receivable", "Not receivable",
      "Possessed", "Not possessed"]
 
-def resource_snippet(resource):
+def resource_snippet(config, resource):
     "output fragment for a resource"
 
     features = resource.features
     status_feat = features["Status"]
 
-    if status_feat in UNKNOWN_RESOURCE_STATUSES:
+    if not config.emit_resource_status:
+        status = "Unknown"
+    elif status_feat in UNKNOWN_RESOURCE_STATUSES:
         status = "Unknown"
     elif status_feat in KNOWN_RESOURCE_STATUSES:
         status = status_feat
@@ -83,7 +95,7 @@ def anaphor_snippet(left, right, anaphora):
 
 
 # TODO: anaphora and several_resources
-def all_resources_snippet(edu, rstuff):
+def all_resources_snippet(config, edu, rstuff):
     "turn resource annotations for an edu into a segpair fragment"
 
     resources = [x for x in rstuff.resources if edu.encloses(x)]
@@ -91,7 +103,7 @@ def all_resources_snippet(edu, rstuff):
     if resources:
         result = "#   Resource: "
         for resource in resources:
-            result += resource_snippet(resource)
+            result += resource_snippet(config, resource)
         return result
 #        for j in seg0.Resources:
 #            if several_ressource_text != []:
@@ -111,7 +123,7 @@ def all_resources_snippet(edu, rstuff):
         return ""
 
 
-def edu_to_segpair(doc, context, rstuff, edu):
+def edu_to_segpair(config, doc, context, rstuff, edu):
     """
     output corresponding to a single EDU
 
@@ -128,7 +140,12 @@ def edu_to_segpair(doc, context, rstuff, edu):
         "#  Surface_Act: {surface_act}"
 
     surface_act = edu.features.get("Surface_Act", "?")
-    dialogue_act = edu.type if edu.type != "Segment" else "?"
+
+    if edu.type == "Segment" or not config.emit_dialogue_acts:
+        dialogue_act = "?"
+    else:
+        dialogue_act = edu.type
+
     result = template.format(dialogue_act=dialogue_act,
                              turn_id=tid,
                              text=doc.text(edu.text_span()),
@@ -142,7 +159,8 @@ def edu_to_segpair(doc, context, rstuff, edu):
     for addressee in sorted(addressees):
         result += "#   Addressee: " + addressee
 
-    result += all_resources_snippet(edu, rstuff)
+    if config.emit_resources:
+        result += all_resources_snippet(config, edu, rstuff)
     result += "]"
     return (tid, result)
 
@@ -166,13 +184,13 @@ def segpairs_to_string(segpairs):
     return "\n".join(result)
 
 
-def process_document(corpus, key, output_dir, resources=True):
+def process_document(config, corpus, key, output_dir):
     """
     Read the document and write an equivalent .seg file in the output
     path
     """
     doc = corpus[key]
-    if resources:
+    if config.emit_resources:
         rstuff = ResourceInfo(resources=[x for x in doc.units
                                          if educe.stac.is_resource(x)],
                               anaphora=[x for x in doc.relations
@@ -189,7 +207,7 @@ def process_document(corpus, key, output_dir, resources=True):
     mk_parent_dirs(output_filename)
     context = Context.for_edus(doc)
 
-    segpairs = [edu_to_segpair(doc, context, rstuff, edu)
+    segpairs = [edu_to_segpair(config, doc, context, rstuff, edu)
                 for edu in sorted_first_widest(context)]
 
     with codecs.open(output_filename, 'w', 'utf-8') as fout:
@@ -203,6 +221,7 @@ def mk_argparser():
     psr = argparse.ArgumentParser(description='.seg intermediary file writer')
 
     psr.add_argument('corpus', metavar='DIR', help='corpus dir')
+    # shall we pull resources out of the data?
     psr.add_argument('--no-resources', dest='resources',
                      action='store_false',
                      default=True,
@@ -211,13 +230,36 @@ def mk_argparser():
                      action='store_true',
                      help='allow resource extraction (default)')
     psr.set_defaults(resources=True)
+    # if we do grab resources, should we extract their
+    # giveble/receivable status or leave it Unknown?
+    psr.add_argument('--no-resource-status', dest='resource_status',
+                     action='store_false',
+                     default=True,
+                     help='suppress resource status labels')
+    psr.add_argument('--resource-status',
+                     action='store_true',
+                     help='allow resource status labels (default)')
+    psr.set_defaults(resource_status=True)
+
+    # what about dialogue acts?
+    # you could also just extract from unannotated, but skipping
+    # dialogue acts lets you pull out other stuff that may be in
+    # units like the addresees whilst ignoring the dialogue acts
+    psr.add_argument('--no-dialogue-acts', dest='dialogue_acts',
+                     action='store_false',
+                     default=True,
+                     help='suppress resource extraction')
+    psr.add_argument('--dialogue-acts',
+                     action='store_true',
+                     help='allow resource extraction (default)')
+    psr.set_defaults(dialogue_acts=True)
+    # don't allow stage control; must be units or unannotated
+    educe.util.add_corpus_filters(psr,
+                                  fields=['doc', 'subdoc', 'annotator'])
     psr.add_argument('--stage',
                      choices=['units', 'unannotated'],
                      default='units',
                      help='which section of the corpus to read')
-    # don't allow stage control; must be units
-    educe.util.add_corpus_filters(psr,
-                                  fields=['doc', 'subdoc', 'annotator'])
     add_usual_output_args(psr)
     return psr
 
@@ -227,8 +269,11 @@ def main():
     args = mk_argparser().parse_args()
     corpus = read_corpus(args)
     output_dir = get_output_dir(args)
+    config = Config(emit_resources=args.resources,
+                    emit_resource_status=args.resource_status,
+                    emit_dialogue_acts=args.dialogue_acts)
     for key in corpus:
-        process_document(corpus, key, output_dir, args.resources)
+        process_document(config, corpus, key, output_dir)
     announce_output_dir(output_dir)
 
 if __name__ == "__main__":
