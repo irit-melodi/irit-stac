@@ -37,7 +37,8 @@ class ResourceInfo(namedtuple("ResourceInfo",
 class Config(namedtuple("Config",
                         ["emit_resources",
                          "emit_resource_status",
-                         "emit_dialogue_acts"])):
+                         "emit_dialogue_acts",
+                         "emit_dialogue_boundaries"])):
     """
     To specify how we want extraction to be done
     """
@@ -52,6 +53,8 @@ KNOWN_RESOURCE_STATUSES =\
     ["Givable", "Not givable",
      "Receivable", "Not receivable",
      "Possessed", "Not possessed"]
+
+OUTPUT_DIALOGUE_BOUNDARY = "*******END TURN************"
 
 def resource_snippet(config, resource):
     "output fragment for a resource"
@@ -128,11 +131,14 @@ def edu_to_segpair(config, doc, context, rstuff, edu):
     """
     output corresponding to a single EDU
 
-    :: ... -> (Int, String)
+    :: ... -> (Int, String) (or None)
     """
 
     turn = context[edu].turn
     tid = turn_id(turn)
+
+    if tid is None:
+        return None
 
     template = "{dialogue_act} "+\
         "[ Turn_ID: {turn_id} "+\
@@ -166,7 +172,7 @@ def edu_to_segpair(config, doc, context, rstuff, edu):
     return (tid, result)
 
 
-def segpairs_to_string(segpairs):
+def segpairs_to_string(config, segpairs):
     """
     massage segpairs into output: organise a list of
     (turn id, segline) pairs, and
@@ -177,11 +183,14 @@ def segpairs_to_string(segpairs):
     result = []
     prev_turn = None
     for turn, segment in sorted(segpairs):
-        if prev_turn is not None and turn - prev_turn > 1:
-            result.append("*******END TURN************")
+        if config.emit_dialogue_boundaries and\
+            prev_turn is not None and turn - prev_turn > 1:
+            result.append(OUTPUT_DIALOGUE_BOUNDARY)
         result.append(segment)
         result.append("") # empty line
         prev_turn = turn
+    if not config.emit_dialogue_boundaries:
+        result.append(OUTPUT_DIALOGUE_BOUNDARY)
     return "\n".join(result)
 
 
@@ -208,11 +217,12 @@ def process_document(config, corpus, key, output_dir):
     mk_parent_dirs(output_filename)
     context = Context.for_edus(doc)
 
-    segpairs = [edu_to_segpair(config, doc, context, rstuff, edu)
-                for edu in sorted_first_widest(context)]
+    segpairs_ = [edu_to_segpair(config, doc, context, rstuff, edu)
+                 for edu in sorted_first_widest(context)]
+    segpairs = filter(None, segpairs_)
 
     with codecs.open(output_filename, 'w', 'utf-8') as fout:
-        print(segpairs_to_string(segpairs), file=fout)
+        print(segpairs_to_string(config, segpairs), file=fout)
 
 
 def mk_argparser():
@@ -254,6 +264,22 @@ def mk_argparser():
                      action='store_true',
                      help='allow resource extraction (default)')
     psr.set_defaults(dialogue_acts=True)
+
+    # dialogue boundaries
+    psr.add_argument('--no-dialogue-boundaries',
+                     dest='dialogue_boundaries',
+                     action='store_false',
+                     default=True,
+                     help='suppress dialogue boundaries')
+    psr.add_argument('--dialogue-boundaries',
+                     action='store_true',
+                     help='emit dialogue boundaries (called TURN here)')
+    psr.set_defaults(dialogue_boundaries=True)
+
+    psr.add_argument('--pipeline',
+                     action='store_true',
+                     help="default settings for pipeline use"
+                     " (implies --no-dialogue-boundaries, etc)")
     # don't allow stage control; must be units or unannotated
     educe.util.add_corpus_filters(psr,
                                   fields=['doc', 'subdoc', 'annotator'])
@@ -270,9 +296,15 @@ def main():
     args = mk_argparser().parse_args()
     corpus = read_corpus(args)
     output_dir = get_output_dir(args)
+    if args.pipeline:
+        args.resources = True
+        args.resource_status = False
+        args.dialogue_acts = False
+        args.dialogue_boundaries = False
     config = Config(emit_resources=args.resources,
                     emit_resource_status=args.resource_status,
-                    emit_dialogue_acts=args.dialogue_acts)
+                    emit_dialogue_acts=args.dialogue_acts,
+                    emit_dialogue_boundaries=args.dialogue_boundaries)
     for key in corpus:
         process_document(config, corpus, key, output_dir)
     announce_output_dir(output_dir)
