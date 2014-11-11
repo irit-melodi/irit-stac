@@ -10,6 +10,7 @@ from __future__ import print_function
 
 import argparse
 import codecs
+import copy
 from collections import namedtuple
 
 from educe.stac.util.context import\
@@ -26,7 +27,7 @@ from educe.stac.util.output import\
 import educe.util
 
 
-class ResourceInfo(namedtuple("ResourceInfo",
+class ResourceAnnos(namedtuple("ResourceAnnos",
                               ["resources", "anaphora", "several"])):
     """
     All resources, anaphora, etc in a document
@@ -38,7 +39,8 @@ class Config(namedtuple("Config",
                         ["emit_resources",
                          "emit_resource_status",
                          "emit_dialogue_acts",
-                         "emit_dialogue_boundaries"])):
+                         "emit_dialogue_boundaries",
+                         "fake_turn_ids"])):
     """
     To specify how we want extraction to be done
     """
@@ -73,6 +75,15 @@ KNOWN_RESOURCE_STATUSES =\
 
 OUTPUT_DIALOGUE_BOUNDARY = "*******END TURN************"
 
+
+def rewrite_unknown(val):
+    """
+    replace a string value with 'Unknown' if it represents
+    some kind of unknown value in the corpus
+    """
+    return "Unknown" if val == STAC_UNSET else val
+
+
 def resource_snippet(config, resource):
     "output fragment for a resource"
 
@@ -88,9 +99,13 @@ def resource_snippet(config, resource):
     else:
         raise Exception("Unexpected resource status: ", status_feat)
     template = " {status} ({kind}, {quantity})"
+
+    kind = rewrite_unknown(features["Kind"])
+    quantity = rewrite_unknown(features["Quantity"])
+
     return template.format(status=status,
-                           kind=features["Kind"],
-                           quantity=features["Quantity"])
+                           kind=kind,
+                           quantity=quantity)
 
 
 def link_snippet(left, right):
@@ -174,6 +189,22 @@ def get_eduinfo(config, doc, context, rstuff, edu):
                    rstuff=rstuff)
 
 
+def eduinfo_set_turn_id(info, tid):
+    """
+    return a copy of an eduinfo tuple with an updated turn id
+
+    there's probably a more pythonic way of doing this
+    """
+    return EduInfo(edu=info.edu,
+                   turn_id=tid,
+                   dialogue_act=info.dialogue_act,
+                   text=info.text,
+                   surface_act=info.surface_act,
+                   speaker=info.speaker,
+                   addressees=info.addressees,
+                   rstuff=info.rstuff)
+
+
 def eduinfo_to_string(config, info):
     """
     render a single eduinfo as a a string
@@ -229,14 +260,14 @@ def process_document(config, corpus, key, output_dir):
     """
     doc = corpus[key]
     if config.emit_resources:
-        rstuff = ResourceInfo(resources=[x for x in doc.units
-                                         if is_resource(x)],
-                              anaphora=[x for x in doc.relations
-                                        if x.type == "Anaphora"],
-                              several=[x for x in doc.schemas
-                                       if x.type == "Several_resources"])
+        rstuff = ResourceAnnos(resources=[x for x in doc.units
+                                          if is_resource(x)],
+                               anaphora=[x for x in doc.relations
+                                         if x.type == "Anaphora"],
+                               several=[x for x in doc.schemas
+                                        if x.type == "Several_resources"])
     else:
-        rstuff = ResourceInfo(resources=[],
+        rstuff = ResourceAnnos(resources=[],
                               anaphora=[],
                               several=[])
 
@@ -247,7 +278,11 @@ def process_document(config, corpus, key, output_dir):
 
     infos_ = [get_eduinfo(config, doc, context, rstuff, edu)
               for edu in sorted_first_widest(context)]
-    infos = [x for x in infos_ if x.turn_id is not None]
+    if config.fake_turn_ids:
+        infos = [eduinfo_set_turn_id(x, i + 1)
+                 for i, x in enumerate(infos_)]
+    else:
+        infos = [x for x in infos_ if x.turn_id is not None]
 
     with codecs.open(output_filename, 'w', 'utf-8') as fout:
         print(eduinfo_list_to_string(config, infos), file=fout)
@@ -304,6 +339,10 @@ def mk_argparser():
                      help='emit dialogue boundaries (called TURN here)')
     psr.set_defaults(dialogue_boundaries=True)
 
+    psr.add_argument('--fake-turn-ids',
+                     action='store_true',
+                     help="ignore turn ids; just enumerate")
+
     psr.add_argument('--pipeline',
                      action='store_true',
                      help="default settings for pipeline use"
@@ -329,10 +368,12 @@ def main():
         args.resource_status = False
         args.dialogue_acts = False
         args.dialogue_boundaries = False
+        args.fake_turn_ids = True
     config = Config(emit_resources=args.resources,
                     emit_resource_status=args.resource_status,
                     emit_dialogue_acts=args.dialogue_acts,
-                    emit_dialogue_boundaries=args.dialogue_boundaries)
+                    emit_dialogue_boundaries=args.dialogue_boundaries,
+                    fake_turn_ids=args.fake_turn_ids)
     for key in corpus:
         process_document(config, corpus, key, output_dir)
     announce_output_dir(output_dir)
