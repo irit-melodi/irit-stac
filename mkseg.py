@@ -45,6 +45,23 @@ class Config(namedtuple("Config",
     pass
 
 
+class EduInfo(namedtuple("EduInfo",
+                        ["edu",
+                         "dialogue_act",
+                         "turn_id",
+                         "text",
+                         "speaker",
+                         "surface_act",
+                         "addressees",
+                         "rstuff"])):
+    """
+    Representation of some of the data used to build a segpair
+    This is a bit incomplete, unfortunately
+    """
+    pass
+
+
+
 STAC_UNSET = "Please choose..."  # sigh
 
 UNKNOWN_RESOURCE_STATUSES = [STAC_UNSET, "?"]
@@ -127,25 +144,13 @@ def all_resources_snippet(config, edu, rstuff):
         return ""
 
 
-def edu_to_segpair(config, doc, context, rstuff, edu):
+def get_eduinfo(config, doc, context, rstuff, edu):
     """
-    output corresponding to a single EDU
+    extract the interesting parst of an EDU
 
-    :: ... -> (Int, String) (or None)
+    :: ... -> EduInfo
     """
-
     turn = context[edu].turn
-    tid = turn_id(turn)
-
-    if tid is None:
-        return None
-
-    template = "{dialogue_act} "+\
-        "[ Turn_ID: {turn_id} "+\
-        "#    EDU_Span: {text}" +\
-        "#   Speaker: {speaker}" +\
-        "#  Surface_Act: {surface_act}"
-
     surface_act = edu.features.get("Surface_Act", "?")
 
     if edu.type == "Segment" or not config.emit_dialogue_acts:
@@ -153,42 +158,65 @@ def edu_to_segpair(config, doc, context, rstuff, edu):
     else:
         dialogue_act = edu.type
 
-    result = template.format(dialogue_act=dialogue_act,
-                             turn_id=tid,
-                             text=doc.text(edu.text_span()),
-                             speaker=turn.features["Emitter"],
-                             surface_act=surface_act)
 
     addresee_feat = edu.features.get("Addressee", STAC_UNSET)
     addressees = set(x.strip() for x in addresee_feat.split(";"))
     if not addressees or STAC_UNSET in addressees:
         addressees = set("?")
-    for addressee in sorted(addressees):
+
+    return EduInfo(edu=edu,
+                   turn_id=turn_id(turn),
+                   dialogue_act=dialogue_act,
+                   text=doc.text(edu.text_span()),
+                   surface_act=surface_act,
+                   speaker=turn.features["Emitter"],
+                   addressees=addressees,
+                   rstuff=rstuff)
+
+
+def eduinfo_to_string(config, info):
+    """
+    render a single eduinfo as a a string
+
+    :: EduInfo -> String
+    """
+    template = "{dialogue_act} "+\
+        "[Turn_ID: {turn_id} "+\
+        "#    EDU_Span: {text}" +\
+        "#   Speaker: {speaker}" +\
+        "#  Surface_Act: {surface_act}"
+
+    result = template.format(dialogue_act=info.dialogue_act,
+                             turn_id=info.turn_id,
+                             text=info.text,
+                             speaker=info.speaker,
+                             surface_act=info.surface_act)
+    for addressee in sorted(info.addressees):
         result += "#   Addressee: " + addressee
 
     if config.emit_resources:
-        result += all_resources_snippet(config, edu, rstuff)
+        result += all_resources_snippet(config, info.edu, info.rstuff)
     result += "]"
-    return (tid, result)
+    return result
 
 
-def segpairs_to_string(config, segpairs):
+def eduinfo_list_to_string(config, infos):
     """
     massage segpairs into output: organise a list of
     (turn id, segline) pairs, and
     insert a marker whenever turns are more than 1 apart
 
-    :: [(Int, String)] -> String
+    :: [EduInfo] -> String
     """
     result = []
     prev_turn = None
-    for turn, segment in sorted(segpairs):
+    for info in sorted(infos, key=lambda x: x.turn_id):
         if config.emit_dialogue_boundaries and\
-            prev_turn is not None and turn - prev_turn > 1:
+            prev_turn is not None and info.turn_id - prev_turn > 1:
             result.append(OUTPUT_DIALOGUE_BOUNDARY)
-        result.append(segment)
+        result.append(eduinfo_to_string(config, info))
         result.append("") # empty line
-        prev_turn = turn
+        prev_turn = info.turn_id
     if not config.emit_dialogue_boundaries:
         result.append(OUTPUT_DIALOGUE_BOUNDARY)
     return "\n".join(result)
@@ -217,12 +245,12 @@ def process_document(config, corpus, key, output_dir):
     mk_parent_dirs(output_filename)
     context = Context.for_edus(doc)
 
-    segpairs_ = [edu_to_segpair(config, doc, context, rstuff, edu)
-                 for edu in sorted_first_widest(context)]
-    segpairs = filter(None, segpairs_)
+    infos_ = [get_eduinfo(config, doc, context, rstuff, edu)
+              for edu in sorted_first_widest(context)]
+    infos = [x for x in infos_ if x.turn_id is not None]
 
     with codecs.open(output_filename, 'w', 'utf-8') as fout:
-        print(segpairs_to_string(config, segpairs), file=fout)
+        print(eduinfo_list_to_string(config, infos), file=fout)
 
 
 def mk_argparser():
