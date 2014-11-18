@@ -50,8 +50,9 @@ class ChatMessage(namedtuple('ChatMessage',
         "to settlers XML element"
         node = ET.Element("game_event")
         node.append(text_elem("event_id", self.identifier))
+        payload = ET.SubElement(node, "chat_message")
         for edu in self.edus:
-            node.append(edu.to_xml())
+            payload.append(edu.to_xml())
         return node
 
 
