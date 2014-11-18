@@ -17,7 +17,6 @@ from educe.stac.annotation import RENAMES
 import xml.etree.cElementTree as ET
 
 
-
 def text_elem(name, text):
     """
     convenience function for creating XML nodes with just text
@@ -77,10 +76,9 @@ class Edu(namedtuple('Edu',
         node.append(text_elem("text", self.text))
         node.append(self.surface_act.to_xml())
         node.append(self.dialogue_act.to_xml())
-        ds = ET.Element("discourse_structure")
+        ds_node = ET.SubElement(node, "discourse_structure")
         for pair in self.ds_pairs:
-            ds.append(pair.to_xml())
-        node.append(ds)
+            ds_node.append(pair.to_xml())
         return node
 
 
@@ -150,7 +148,9 @@ class DialogueActType(Enum):
 
     def to_xml(self):
         "to settlers XML element"
+        # pylint: disable=no-member
         return ET.Element(self.name)
+        # pylint: enable=no-member
 
     @classmethod
     def from_string(cls, string):
@@ -200,6 +200,7 @@ class DialogueAct(object):
             String or None -> SurfaceAct
         """
 
+
 class RelationLabel(Enum):
     "discourse relation label"
     continuation = 1
@@ -221,7 +222,9 @@ class RelationLabel(Enum):
 
     def to_xml(self):
         "to settlers XML element"
+        # pylint: disable=no-member
         return ET.Element(self.name)
+        # pylint: enable=no-member
 
     @classmethod
     def from_string(cls, string):
@@ -250,6 +253,4 @@ RELATION_LABELS =\
      'Comment': RelationLabel.commentary,
      'Clarification_question': RelationLabel.clarification_q,
      'Background': RelationLabel.background}
-
-
 # pylint: enable=no-init
