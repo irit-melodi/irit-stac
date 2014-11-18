@@ -1,4 +1,3 @@
-fuzzy
 --allow-external pydot
 --allow-external python-graph-core
 --allow-external python-graph-dot
