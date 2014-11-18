@@ -64,13 +64,6 @@ def _decode_one(lconf, econf, log):
            p._features_path(lconf)]
     call(cmd, cwd=parsed_dir, stderr=log)
 
-    weave_cmd = ["stac-learning", "weave",
-                 p._minicorpus_path(lconf),
-                 _attelo_result_path(lconf, econf),
-                 "--output",
-                 _attelo_result_path(lconf, econf) + "2"]
-    call(weave_cmd, stderr=log)
-
 
 def _decode(lconf, econf, log):
     "Decode the input using all the model/learner combos we know"
@@ -80,6 +73,17 @@ def _decode(lconf, econf, log):
                     econf.learner.name,
                     econf.decoder.name)):
         _decode_one(lconf, econf, log)
+
+
+def _to_xml(lconf, econf, log):
+    """
+    Convert to Settlers XML format
+    """
+    lconf.pyt("parser/to_settlers_xml",
+              p._minicorpus_path(lconf),
+              _attelo_result_path(lconf, econf),
+              "--output",
+              _attelo_result_path(lconf, econf) + ".settlers-xml")
 
 
 def _pipeline(lconf, econf):
@@ -118,6 +122,9 @@ def _pipeline(lconf, econf):
     _stage("0700-decoding",
            lambda x, y: _decode(x, econf, y),
            None)
+    _stage("0800-xml",
+           lambda x, y: _to_xml(x, econf, y),
+           "Converting (conll + corpus -> settlers xml)")
 
 
 # ---------------------------------------------------------------------
@@ -196,7 +203,7 @@ def main(args):
         with open(lconf.soclog, 'ab') as fout:
             print(incoming.strip(), file=fout)
         _pipeline(lconf, econf)
-        results_file = _attelo_result_path(lconf, econf) + "2"
+        results_file = _attelo_result_path(lconf, econf) + ".settlers-xml"
         with open(results_file, 'rb') as fin:
             socket.send(fin.read())
         if not args.incremental:
