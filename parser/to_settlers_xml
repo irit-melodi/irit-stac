@@ -1,0 +1,239 @@
+#!/usr/bin/env python
+
+# Author: Eric Kow
+# License: CeCILL-B (French BSD3-like)
+
+"""
+Combine atttelo parse results with parts of the corpus into a
+single XML document
+"""
+
+from __future__ import print_function
+from collections import namedtuple, defaultdict
+import argparse
+import copy
+import csv
+import sys
+import xml.etree.cElementTree as ET
+
+from educe.annotation import Span
+from educe.stac.learning import features
+from educe.stac.util.args import read_corpus
+from educe.stac.util.context import Context
+import educe.corpus
+import educe.learning.keys
+import educe.glozz
+import educe.stac
+import educe.util
+from educe.stac.util import prettifyxml
+
+from stac import settlers_xml as stx
+
+
+class Background(namedtuple('Background',
+                            'contexts dialogues')):
+    "contextual information needed to translate an edu"
+    pass
+
+
+class LightTurn(namedtuple('LightTurn', 'anno edus')):
+    """
+    light wrapper around turn annotation object
+    and edus contained within it
+    """
+    @classmethod
+    def sorted_first(cls, turns):
+        """
+        returns turns sorted by their starting span
+        (ambiguous if multiple turns have same starting span)
+        """
+        return sorted(turns,
+                      key=lambda t: t.anno.text_span().char_start)
+
+    def to_stx(self):
+        "to Settlers XML object"
+
+        turn_id = self.anno.local_id()
+        stx_edus = [x.to_stx() for x in self.edus]
+        return stx.ChatMessage(identifier=turn_id,
+                               edus=stx_edus)
+
+
+class LightEdu(namedtuple('LightEdu', 'anno doc context parents')):
+    """
+    light wrapper around edu annotation object
+    and links to parent annotations
+    """
+    def to_stx(self):
+        "to Settlers XML object"
+
+        span = self.anno.text_span()
+
+        feats = self.anno.features
+
+        s_act = stx.SurfaceAct.from_string(feats.get('Surface_act'))
+
+        da_type = stx.DialogueActType.from_string(self.anno.type)
+        resources = None  # FIXME
+        d_act = stx.DialogueAct(da_type, resources)
+
+        ds_pairs = [stx.DsPair(p.local_id(),
+                               stx.RelationLabel.from_string(l))
+                    for p, l in self.parents]
+
+        return stx.Edu(identifier=self.anno.local_id(),
+                       span=span,
+                       text=self.doc.text(span),
+                       speaker=self.context.speaker(),
+                       surface_act=s_act,
+                       dialogue_act=d_act,
+                       ds_pairs=ds_pairs)
+
+
+# ---------------------------------------------------------------------
+#
+# ---------------------------------------------------------------------
+
+
+def _read_conll(instream):
+    """
+    Iterator for an attelo conll file
+    """
+    return csv.reader(instream, dialect=csv.excel_tab)
+
+
+def _unannotated_key(key):
+    """
+    Given a corpus key, return a copy of that equivalent key
+    in the unannotated portion of the corpus (the parser
+    outputs objects that are based in unannotated)
+    """
+    ukey = copy.copy(key)
+    ukey.stage = 'unannotated'
+    ukey.annotator = None
+    return ukey
+
+
+def _dialogue_map(corpus):
+    """
+    Return a dictionary mapping 'friendly' dialogue ids that we would
+    have given to attelo (via feature extraction) to the actual
+    documents
+    """
+    dialogues = {}
+    for key in corpus:
+        doc = corpus[key]
+        ukey = _unannotated_key(key)
+        for anno in filter(educe.stac.is_dialogue, doc.units):
+            anno_id = features.friendly_dialogue_id(ukey, anno.text_span())
+            dialogues[anno_id] = (doc, anno.identifier())
+    return dialogues
+
+
+def _get_anno(doc, anno_id):
+    """
+    Return the annotation object associated with the given
+    global annotation ID
+    """
+    ukey = _unannotated_key(doc.origin)
+    matches = [x for x in doc.units
+               if ukey.mk_global_id(x.local_id()) == anno_id]
+    if len(matches) > 1 is None:
+        raise Exception('More than one annotation has global id [%s]'
+                        % anno_id)
+    elif not matches:
+        raise Exception('Found no annotations with global id [%s]'
+                        % anno_id)
+    else:
+        return matches[0]
+
+
+def _extract_edu(background, row):
+    """
+    Given a row of CONLL output from attelo, return an EDU
+    and a list of [(String, EDU)] objects representing links
+    from parents
+    """
+    [global_id, group_id] = row[:2]
+    doc, _ = background.dialogues[group_id]
+    anno = _get_anno(doc, global_id)
+    links = []
+    for i in range(4, len(row), 2):
+        parent_id = row[i]
+        if parent_id not in ['', '0']:
+            parent = _get_anno(doc, parent_id)
+            drel = row[i + 1]
+            links.append((parent, drel))
+    context = background.contexts[anno]
+    return LightEdu(anno, doc, context, links)
+
+
+def _extract(background, rows):
+    """
+    Extract and regroup the important information from
+    attelo CONLL rows ::
+
+        [String] -> [LightTurn]
+
+    Note also that each row corresponds to an EDU, so
+    there sholud be fewer-to-equal results as they will
+    be reorganised into rows
+    """
+    l_edus = [_extract_edu(background, x) for x in rows]
+    tdict = defaultdict(list)
+    for l_edu in l_edus:
+        turn = background.contexts[l_edu.anno].turn
+        tdict[turn].append(l_edu)
+    l_turns = [LightTurn(k, v) for k, v in tdict.items()]
+    return LightTurn.sorted_first(l_turns)
+
+
+def _to_xml(l_turns):
+    """
+    Convert to XML tree ::
+
+        [LightTurn] -> ET.ElementTree
+    """
+    frag = stx.GameFragment(x.to_stx() for x in l_turns)
+    return frag.to_xml()
+
+
+# ----------------------------------------------------------------------
+# options
+# ----------------------------------------------------------------------
+
+
+def mk_argparser():
+    """
+    Subcommand flags.
+    """
+    psr = argparse.ArgumentParser(description='convert parsing pipeline '
+                                  'output to XML')
+    psr.add_argument('corpus', metavar='DIR',
+                     help='Corpus dir (eg. data/pilot)')
+    psr.add_argument('input', nargs='?', type=argparse.FileType('rb'),
+                     default=sys.stdin)
+    psr.add_argument('--output', nargs='?', type=argparse.FileType('wb'),
+                     default=sys.stdout)
+    return psr
+
+# ---------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------
+
+
+def main(args):
+    "main"
+
+    corpus = read_corpus(args,
+                         preselected={"stage": ["units"]})
+    background = Background(contexts=Context.for_corpus(corpus),
+                            dialogues=_dialogue_map(corpus))
+    conll = _read_conll(args.input)
+    l_turns = _extract(background, conll)
+    print(prettifyxml.prettify(_to_xml(l_turns), indent=" "),
+          file=args.output)
+
+
+if __name__ == "__main__":
+    main(mk_argparser().parse_args())
