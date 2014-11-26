@@ -234,7 +234,6 @@ def _dialogue_acts(lconf, log):
     corpus_dir = _minicorpus_path(lconf)
     model_path = snap_dialogue_act_model_path(lconf)
     lconf.pyt("parser/dialogue-acts", "annotate",
-              "-C", lconf.abspath(ATTELO_CONFIG_FILE),
               corpus_dir,
               lconf.abspath(LEX_DIR),
               "--model", model_path,

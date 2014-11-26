@@ -155,7 +155,6 @@ def _do_corpus(lconf):
 
     # learn dialogue acts (no learner choice)
     call(["code/parser/dialogue-acts", "learn",
-          "-C", ATTELO_CONFIG_FILE,
           _data_path(lconf, "just-edus"),
           "--output", lconf.snap_dir])
     os.rename(snap_dialogue_act_model_path(lconf, raw=True),
