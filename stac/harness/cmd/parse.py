@@ -29,6 +29,7 @@ from ..pipeline import\
     minicorpus_path,\
     minicorpus_stage_path,\
     parsed_bname,\
+    resource_np_path,\
     seg_path,\
     stub_name,\
     unannotated_stub_path,\
@@ -136,6 +137,20 @@ def _unit_annotations(lconf, log):
               stderr=log)
 
 
+def _resource_extraction(lconf, log):
+    """
+    Using a previously predicted dialogue act model,
+    guess dialogue acts for all the EDUs
+    """
+    corpus_dir = minicorpus_path(lconf)
+    cmd = ["stac-learning", "resource-nps",
+           corpus_dir,
+           lconf.abspath(LEX_DIR),
+           "--output",
+           resource_np_path(lconf)]
+    call(cmd, stderr=log)
+
+
 def _feature_extraction(lconf, log):
     """
     Extract features from our input glozz file
@@ -237,6 +252,8 @@ CORE_STAGES = \
            "Sentence parsing (if slow, is starting parser server)"),
      Stage("0500-unit-annotations", _unit_annotations,
            "Unit-level annotation (dialogue acts, addressees)"),
+     Stage("0550-resource", _resource_extraction,
+           "Resource extraction"),
      Stage("0600-features", _feature_extraction,
            "Feature extraction")]
 

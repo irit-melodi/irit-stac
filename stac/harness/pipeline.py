@@ -157,6 +157,14 @@ def features_path(lconf):
     return lconf.tmp("extracted-features.csv")
 
 
+def resource_np_path(lconf):
+    """
+    path to temporary minicorpus dir mimicking structure
+    of actual corpus
+    """
+    return lconf.tmp('resource-nps.conll')
+
+
 def parsed_bname(lconf, econf):
     """
     short name for virtual author consisting of dataset used to
