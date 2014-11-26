@@ -17,6 +17,7 @@ import sys
 import xml.etree.cElementTree as ET
 
 from educe.annotation import Span
+from educe.stac.annotation import addressees
 from educe.stac.learning import features
 from educe.stac.util.args import read_corpus
 from educe.stac.util.context import Context
@@ -85,6 +86,7 @@ class LightEdu(namedtuple('LightEdu', 'anno doc context parents')):
                        span=span,
                        text=self.doc.text(span),
                        speaker=self.context.speaker(),
+                       addressees=addressees(self.anno),
                        surface_act=s_act,
                        dialogue_act=d_act,
                        ds_pairs=ds_pairs)

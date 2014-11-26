@@ -60,6 +60,7 @@ class Edu(namedtuple('Edu',
                       'span',
                       'text',
                       'speaker',
+                      'addressees',
                       'surface_act',
                       'dialogue_act',
                       'ds_pairs'])):
@@ -73,6 +74,14 @@ class Edu(namedtuple('Edu',
         node.append(text_elem("start", str(self.span.char_start)))
         node.append(text_elem("end", str(self.span.char_end)))
         node.append(text_elem("speaker", self.speaker))
+        addr_node = ET.SubElement(node, "addressees")
+        if self.addressees is None:
+            ET.SubElement(addr_node, "addressee_unknown")
+        elif "All" in self.addressees:
+            ET.SubElement(addr_node, "addressee_all")
+        else:
+            for addr in self.addressees:
+                addr_node.append(text_elem("addressee", addr))
         node.append(text_elem("text", self.text))
         node.append(self.surface_act.to_xml())
         node.append(self.dialogue_act.to_xml())
