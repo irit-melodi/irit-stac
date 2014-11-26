@@ -32,7 +32,7 @@ from stac import settlers_xml as stx
 
 
 class Background(namedtuple('Background',
-                            'contexts dialogues')):
+                            'contexts dialogues resources')):
     "contextual information needed to translate an edu"
     pass
 
@@ -60,7 +60,8 @@ class LightTurn(namedtuple('LightTurn', 'anno edus')):
                                edus=stx_edus)
 
 
-class LightEdu(namedtuple('LightEdu', 'anno doc context parents')):
+class LightEdu(namedtuple('LightEdu',
+                          'anno doc context parents resources')):
     """
     light wrapper around edu annotation object
     and links to parent annotations
@@ -75,8 +76,7 @@ class LightEdu(namedtuple('LightEdu', 'anno doc context parents')):
         s_act = stx.SurfaceAct.from_string(feats.get('Surface_act'))
 
         da_type = stx.DialogueActType.from_string(self.anno.type)
-        resources = None  # FIXME
-        d_act = stx.DialogueAct(da_type, resources)
+        d_act = stx.DialogueAct(da_type, self.resources)
 
         ds_pairs = [stx.DsPair(p.local_id(),
                                stx.RelationLabel.from_string(l))
@@ -159,6 +159,8 @@ def _extract_edu(background, row):
     [global_id, group_id] = row[:2]
     doc, _ = background.dialogues[group_id]
     anno = _get_anno(doc, global_id)
+    anno_units_global_id = anno.identifier()
+    resources = background.resources.get(anno_units_global_id)
     links = []
     for i in range(4, len(row), 2):
         parent_id = row[i]
@@ -167,15 +169,15 @@ def _extract_edu(background, row):
             drel = row[i + 1]
             links.append((parent, drel))
     context = background.contexts[anno]
-    return LightEdu(anno, doc, context, links)
+    return LightEdu(anno, doc, context, links, resources)
 
 
 def _extract(background, rows):
     """
     Extract and regroup the important information from
-    attelo CONLL rows ::
+    attelo and resource extractor CONLL rows ::
 
-        [String] -> [LightTurn]
+        (Background, [String], [String) -> [LightTurn]
 
     Note also that each row corresponds to an EDU, so
     there sholud be fewer-to-equal results as they will
@@ -188,6 +190,28 @@ def _extract(background, rows):
         tdict[turn].append(l_edu)
     l_turns = [LightTurn(k, v) for k, v in tdict.items()]
     return LightTurn.sorted_first(l_turns)
+
+
+def _extract_resources(resources):
+    """
+    Extract abstract resource annotation from the CONLL
+    style output in our resource predictor. Return a
+    dictionary from global edu ids to resources::
+
+        [String] -> Dict String [Resource]
+
+    Note that each row corresponds to a resource NP and
+    may contain more than one resource
+    """
+    findings = defaultdict(list)
+    for row in resources:
+        edu_id = row[4]
+        for rtype in row[5:10]:
+            if rtype != '-':
+                resource = stx.Resource(rtype=stx.ResourceType[rtype],
+                                        status=stx.ResourceStatus.unknown_status)
+                findings[edu_id].append(resource)
+    return findings
 
 
 def _to_xml(l_turns):
@@ -215,6 +239,8 @@ def mk_argparser():
                      help='Corpus dir (eg. data/pilot)')
     psr.add_argument('input', nargs='?', type=argparse.FileType('rb'),
                      default=sys.stdin)
+    psr.add_argument('--resources',
+                     type=argparse.FileType('rb'))
     psr.add_argument('--output', nargs='?', type=argparse.FileType('wb'),
                      default=sys.stdout)
     return psr
@@ -229,8 +255,13 @@ def main(args):
 
     corpus = read_corpus(args,
                          preselected={"stage": ["units"]})
+    if args.resources:
+        rconll = _read_conll(args.resources)
+    else:
+        rconll = []
     background = Background(contexts=Context.for_corpus(corpus),
-                            dialogues=_dialogue_map(corpus))
+                            dialogues=_dialogue_map(corpus),
+                            resources=_extract_resources(rconll))
     conll = _read_conll(args.input)
     l_turns = _extract(background, conll)
     print(prettifyxml.prettify(_to_xml(l_turns), indent=" "),
