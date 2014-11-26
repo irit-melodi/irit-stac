@@ -7,11 +7,9 @@
 Learn and predict dialogue acts from EDU feature vectors
 """
 
-from collections import namedtuple
 import argparse
 import copy
 import cPickle
-import os
 
 from Orange.classification import Classifier
 import Orange
@@ -25,12 +23,6 @@ import educe.stac.learning.features as stac_features
 import educe.stac
 from educe.stac.util.output import save_document
 
-LEARNER = Orange.classification.bayes.NaiveLearner(adjust_threshold=True)
-
-# ---------------------------------------------------------------------
-#
-# ---------------------------------------------------------------------
-
 
 def load_model(filename):
     """
@@ -40,29 +32,9 @@ def load_model(filename):
         return cPickle.load(fstream)
 
 
-def save_model(filename, model):
-    """
-    Dump model into a file
-    """
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    with open(filename, "wb") as fstream:
-        cPickle.dump(model, fstream)
-
 # ---------------------------------------------------------------------
 # arguments and main
 # ---------------------------------------------------------------------
-
-Features = namedtuple('Features', 'grouping label source')
-
-
-def args_to_data(args):
-    """
-    Given the (parsed) command line arguments, return the data in
-    table form
-    """
-    return Orange.data.Table(args.data)
 
 
 def predict_dialogue_act(model, vector):
@@ -70,17 +42,6 @@ def predict_dialogue_act(model, vector):
     Predict the dialogue act associated with a given feature vector
     """
     return model(vector, Classifier.GetValue)
-
-
-def command_save_models(args):
-    """
-    Top-level command: build a model using all the input data and
-    dump it to disk
-    """
-    data = args_to_data(args)
-    model = LEARNER(data)
-    model_file = os.path.join(args.output, "dialogue-acts.model")
-    save_model(model_file, model)
 
 
 def mk_instance(domain, vec):
@@ -151,8 +112,8 @@ def _output_key(key):
 def command_annotate(args):
     """
     Top-level command: given a dialogue act model, and a corpus with some
-    Glozz documents, perform dialogue act annotation on them and dump Glozz
-    documents in the output directory
+    Glozz documents, perform dialogue act annotation on them, and simple
+    addressee detection, and dump Glozz documents in the output directory
     """
     inputs, model = _read_annotate_inputs(args)
     domain = model_domain(model)
@@ -188,13 +149,6 @@ def main():
                              default=None,
                              required=True,
                              help="output directory")
-
-    # learn command
-    cmd_learn = subparsers.add_parser('learn',
-                                      parents=[common_args])
-    cmd_learn.add_argument("data", metavar="FILE",
-                           help="csv file, one EDU per row")
-    cmd_learn.set_defaults(func=command_save_models)
 
     # annotate command
     cmd_anno = subparsers.add_parser('annotate', parents=[common_args])

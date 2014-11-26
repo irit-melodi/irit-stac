@@ -8,6 +8,7 @@ build models for standalone parser
 from __future__ import print_function
 from os import path as fp
 from collections import namedtuple
+import cPickle
 import os
 import sys
 
@@ -18,11 +19,13 @@ from attelo.args import\
     DEFAULT_RFC
 from attelo.io import read_data
 import attelo.cmd as att
+import Orange.data
 
 from attelo.harness.util import\
     call, force_symlink
 
 from ..local import\
+    DIALOGUE_ACT_LEARNER,\
     SNAPSHOTS, EVALUATION_CORPORA, MODELERS, ATTELO_CONFIG_FILE
 from ..util import\
     exit_ungathered, latest_tmp, latest_snap, link_files,\
@@ -136,6 +139,17 @@ def _learn(lconf, dconf, econf):
     args.cleanup()
 
 
+def _save_dialogue_act_model(lconf):
+    """
+    Build a model from the single EDU features and save to disk
+    """
+    data = Orange.data.Table(_data_path(lconf, "just-edus"))
+    model = DIALOGUE_ACT_LEARNER(data)
+    model_file = snap_dialogue_act_model_path(lconf, raw=True)
+    with open(model_file, "wb") as fstream:
+        cPickle.dump(model, fstream)
+
+
 def _do_corpus(lconf):
     "Build models for a corpus"
     print(_corpus_banner(lconf), file=sys.stderr)
@@ -153,10 +167,8 @@ def _do_corpus(lconf):
         print(_model_banner(econf, lconf), file=sys.stderr)
         _learn(lconf, dconf, econf)
 
-    # learn dialogue acts (no learner choice)
-    call(["code/parser/dialogue-acts", "learn",
-          _data_path(lconf, "just-edus"),
-          "--output", lconf.snap_dir])
+    # dialogue acts model
+    _save_dialogue_act_model(lconf)
     os.rename(snap_dialogue_act_model_path(lconf, raw=True),
               snap_dialogue_act_model_path(lconf, raw=False))
 

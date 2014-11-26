@@ -15,6 +15,8 @@ from attelo.harness.config import\
     LearnerConfig,\
     DecoderConfig,\
     EvaluationConfig
+import Orange
+
 
 LOCAL_TMP = 'TMP'
 """Things we may want to hold on to (eg. for weeks), but could
@@ -96,6 +98,13 @@ Limited extracted EDUs to those separated by at most WINDOW EDUs.
 Adjacent EDUs are separated by 0.
 
 Note that you can set this to -1 to disable windowing algother.
+"""
+
+
+DIALOGUE_ACT_LEARNER =\
+    Orange.classification.bayes.NaiveLearner(adjust_threshold=True)
+"""
+Classifier to use for dialogue acts
 """
 
 
