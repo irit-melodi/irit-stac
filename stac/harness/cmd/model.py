@@ -8,6 +8,7 @@ build models for standalone parser
 from __future__ import print_function
 from os import path as fp
 from collections import namedtuple
+import argparse
 import cPickle
 import os
 import sys
@@ -19,6 +20,7 @@ from attelo.args import\
     DEFAULT_RFC
 from attelo.io import read_data
 import attelo.cmd as att
+import attelo.cmd.learn
 import Orange.data
 
 from attelo.harness.util import\
@@ -32,6 +34,7 @@ from ..util import\
     snap_model_path, snap_dialogue_act_model_path
 
 NAME = 'model'
+
 
 #pylint: disable=pointless-string-statement
 LoopConfig = namedtuple("LoopConfig",
@@ -73,8 +76,7 @@ def _corpus_banner(lconf):
 # ---------------------------------------------------------------------
 
 
-# pylint: disable=too-many-instance-attributes, too-few-public-methods
-class FakeLearnArgs(object):
+class FakeLearnArgs(argparse.Namespace):
     """
     Fake argparse object (to be subclassed)
     Things in common between attelo learn/decode
@@ -83,32 +85,28 @@ class FakeLearnArgs(object):
         model_file_a = snap_model_path(lconf, econf, "attach")
         model_file_r = snap_model_path(lconf, econf, "relate")
 
-        self.config = ATTELO_CONFIG_FILE
-        self.data_attach = _data_path(lconf, "edu-pairs"),
-        self.data_relations = _data_path(lconf, "relations")
-        self.attachment_model = model_file_a
-        self.relation_model = model_file_r
-        self.fold_file = None
-        self.fold = None
-        self.threshold = None
-        self.use_prob = None
-        self.heuristics = DEFAULT_HEURISTIC
-        self.rfc = DEFAULT_RFC
-        self.quiet = False
+        argv = [_data_path(lconf, "edu-pairs"),
+                _data_path(lconf, "relations"),
+                "--config", ATTELO_CONFIG_FILE,
+                "--attachment-model",  model_file_a,
+                "--relation-model", model_file_r,
+                "--learner", econf.learner.attach]
 
-        self.decoder = econf.decoder.decoder\
-            if econf.decoder is not None else DEFAULT_DECODER
-        self.learner = econf.learner.attach
-        self.relation_learner = econf.learner.relate
-        self.nit = DEFAULT_NIT
-        self.averaging = False
+        if econf.learner.relate is not None:
+            argv.extend(["--relation-learner", econf.learner.relate])
+
+        if econf.decoder is not None:
+            argv.extend(["--decoder", econf.decoder.decoder])
+
+        psr = argparse.ArgumentParser()
+        attelo.cmd.learn.config_argparser(psr)
+        psr.parse_args(argv, self)
 
     # pylint: disable=no-self-use
     def cleanup(self):
         "Tidy up any open file handles, etc"
         return
     # pylint: enable=no-self-use
-# pylint: enable=too-many-instance-attributes, too-few-public-methods
 
 
 # ---------------------------------------------------------------------
@@ -134,6 +132,7 @@ def _learn(lconf, dconf, econf):
     """
     Run the learner unless the model files already exist
     """
+
     args = FakeLearnArgs(lconf, econf)
     att.learn.main_for_harness(args, dconf.attach, dconf.relate)
     args.cleanup()
