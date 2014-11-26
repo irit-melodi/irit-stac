@@ -226,14 +226,14 @@ def _sentence_parse(lconf, log):
               stderr=log)
 
 
-def _dialogue_acts(lconf, log):
+def _unit_annotations(lconf, log):
     """
     Using a previously predicted dialogue act model,
     guess dialogue acts for all the EDUs
     """
     corpus_dir = _minicorpus_path(lconf)
     model_path = snap_dialogue_act_model_path(lconf)
-    lconf.pyt("parser/dialogue-acts", "annotate",
+    lconf.pyt("stac/unit_annotations.py",
               corpus_dir,
               lconf.abspath(LEX_DIR),
               "--model", model_path,
@@ -357,8 +357,8 @@ def _pipeline(lconf, evaluations=None):
            "POS tagging")
     _stage("0400-parsing", _sentence_parse,
            "Sentence parsing (if slow, is starting parser server)")
-    _stage("0500-dialogue-acts", _dialogue_acts,
-           "Dialogue act annotation")
+    _stage("0500-unit-annotations", _unit_annotations,
+           "Unit-level annotation (dialogue acts, addressees)")
     _stage("0600-features", _feature_extraction,
            "Feature extraction")
     _stage("0700-decoding",

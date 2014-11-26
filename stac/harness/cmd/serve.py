@@ -115,8 +115,8 @@ def _pipeline(lconf, econf):
            "POS tagging")
     _stage("0400-parsing", p._sentence_parse,
            "Sentence parsing (if slow, is starting parser server)")
-    _stage("0500-dialogue-acts", p._dialogue_acts,
-           "Dialogue act annotation")
+    _stage("0500-unit-annotations", p._unit_annotations,
+           "Unit-level annotation (dialogue acts, addressees)")
     _stage("0600-features", p._feature_extraction,
            "Feature extraction")
     _stage("0700-decoding",

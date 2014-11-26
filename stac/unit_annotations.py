@@ -24,14 +24,6 @@ import educe.stac
 from educe.stac.util.output import save_document
 
 
-def load_model(filename):
-    """
-    Load model into memory from file
-    """
-    with open(filename, "rb") as fstream:
-        return cPickle.load(fstream)
-
-
 # ---------------------------------------------------------------------
 # arguments and main
 # ---------------------------------------------------------------------
@@ -50,7 +42,7 @@ def mk_instance(domain, vec):
     """
 
     def get_val(feat):
-        "get the value associated with a (meta) feature"
+        "get the value associated with a feature"
         val_ = vec[feat.name]
         val = val_.encode('utf-8') if isinstance(val_, unicode) else val_
         if isinstance(feat, Orange.feature.Continuous):
@@ -94,7 +86,8 @@ def _read_annotate_inputs(args):
     args.ignore_cdus = False
     args.debug = False
     inputs = stac_features.read_corpus_inputs(args, 'unannotated')
-    model = load_model(args.model)
+    with open(args.model, "rb") as fstream:
+        model = cPickle.load(fstream)
     return inputs, model
 
 
@@ -107,6 +100,20 @@ def _output_key(key):
     key2.stage = 'units'
     key2.annotator = 'simple-da'
     return key2
+
+
+def annotate_edu(model, domain, inputs, current, edu):
+    """
+    Modify an edu by guessing its dialogue act and addressee
+    """
+    vec = stac_features.SingleEduKeysForSingleExtraction(inputs)
+    vec.fill(current, edu)
+    instance = mk_instance(domain, vec)
+    addressees = guess_addressees_for_edu(current.contexts,
+                                          current.players,
+                                          edu)
+    edu.type = str(predict_dialogue_act(model, instance))
+    set_addressees(edu, addressees)
 
 
 def command_annotate(args):
@@ -126,14 +133,7 @@ def command_annotate(args):
         current = stac_features.mk_env(inputs, people, k, True).current
         edus = [unit for unit in doc.units if educe.stac.is_edu(unit)]
         for edu in edus:
-            vec = stac_features.SingleEduKeysForSingleExtraction(inputs)
-            vec.fill(current, edu)
-            instance = mk_instance(domain, vec)
-            addressees = guess_addressees_for_edu(current.contexts,
-                                                  current.players,
-                                                  edu)
-            edu.type = str(predict_dialogue_act(model, instance))
-            set_addressees(edu, addressees)
+            annotate_edu(model, domain, inputs, current, edu)
         save_document(args.output, _output_key(k), doc)
 
 
@@ -141,27 +141,23 @@ def main():
     "channel to subcommands"
 
     usage = "%(prog)s [options] data_file"
-    parser = argparse.ArgumentParser(usage=usage)
-    subparsers = parser.add_subparsers()
+    psr = argparse.ArgumentParser(usage=usage)
 
-    common_args = argparse.ArgumentParser(add_help=False)
-    common_args.add_argument("--output", "-o", metavar="DIR",
-                             default=None,
-                             required=True,
-                             help="output directory")
+    psr = argparse.ArgumentParser(add_help=False)
+    psr.add_argument("corpus", default=None, metavar="DIR",
+                     help="corpus to annotate (live mode assumed)")
+    psr.add_argument('resources', metavar='DIR',
+                     help='Resource dir (eg. data/resources/lexicon)')
+    psr.add_argument("--model", default=None, required=True,
+                     help="provide saved model for prediction of "
+                     "dialogue acts")
+    psr.add_argument("--output", "-o", metavar="DIR",
+                     default=None,
+                     required=True,
+                     help="output directory")
+    psr.set_defaults(func=command_annotate)
 
-    # annotate command
-    cmd_anno = subparsers.add_parser('annotate', parents=[common_args])
-    cmd_anno.add_argument("corpus", default=None, metavar="DIR",
-                          help="corpus to annotate (live mode assumed)")
-    cmd_anno.add_argument('resources', metavar='DIR',
-                          help='Resource dir (eg. data/resources/lexicon)')
-    cmd_anno.add_argument("--model", default=None, required=True,
-                          help="provide saved model for prediction of "
-                          "dialogue acts")
-    cmd_anno.set_defaults(func=command_annotate)
-
-    args = parser.parse_args()
+    args = psr.parse_args()
     args.func(args)
 
 if __name__ == "__main__":
