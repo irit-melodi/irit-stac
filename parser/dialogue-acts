@@ -19,6 +19,8 @@ import Orange.data
 import Orange.data.io
 import Orange.feature
 
+from educe.stac.annotation import set_addressees
+from educe.stac.learning.addressee import guess_addressees_for_edu
 import educe.stac.learning.features as stac_features
 import educe.stac
 from educe.stac.util.output import save_document
@@ -166,7 +168,11 @@ def command_annotate(args):
             vec = stac_features.SingleEduKeysForSingleExtraction(inputs)
             vec.fill(current, edu)
             instance = mk_instance(domain, vec)
+            addressees = guess_addressees_for_edu(current.contexts,
+                                                  current.players,
+                                                  edu)
             edu.type = str(predict_dialogue_act(model, instance))
+            set_addressees(edu, addressees)
         save_document(args.output, _output_key(k), doc)
 
 
