@@ -8,6 +8,14 @@ XML communication between JSettlers and the parsing pipeline
 Note that we model objects here that may seem to overlap with
 what Educe etc provide; but here they are quite specific to
 settlers XML
+
+Places where this differs from the DTD (2014-11-26):
+
+    * resources are assumed to be under a single (optional)
+      resources node
+    * we have an unknown_status category of resources
+    * we have a parent game fragment node for multiple events
+
 """
 
 from collections import namedtuple
@@ -155,8 +163,10 @@ class Resource(namedtuple('Resource',
     @classmethod
     def multi_to_xml(cls, resources):
         """
-        Settlers XML for a resource pack
+        Settlers XML for a resource pack (or None if no resources)
         """
+        if resources is None:
+            return None
         rnode = ET.Element("resources")
         resources = resources or []
         for rstatus in ResourceStatus:
@@ -272,7 +282,9 @@ class DialogueAct(object):
         # pylint: disable=no-member
         act = self.da_type.to_xml()
         node.append(act)
-        node.append(Resource.multi_to_xml(self.resources))
+        resource_node = Resource.multi_to_xml(self.resources)
+        if resource_node is not None:
+            node.append(resource_node)
         # pylint: enable=no-member
         return node
 
