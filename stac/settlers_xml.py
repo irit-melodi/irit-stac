@@ -107,13 +107,87 @@ class DsPair(namedtuple('DsPair',
         return node
 
 
+# pylint: disable=no-init
+# no-init ok because enumeration
+class ResourceType(Enum):
+    "One of the five tradable Catan resources"
+    clay = 1
+    ore = 2
+    sheep = 3
+    wheat = 4
+    wood = 5
+
+    def to_xml(self):
+        "to Settlers XML element"
+        node = ET.Element("res_type")
+        ET.SubElement(node, self.name)
+        return node
+
+
 # pylint: disable=invalid-name
-Resource = Enum('Resource', 'clay ore sheep wheat wood')
+ResourceStatus = Enum('ResourceStatus',
+                      ['unknown_status',
+                       'giveable',
+                       'not_giveable',
+                       'receivable',
+                       'not_receivable'])
 # pylint: enable=invalid-name
 
 
-# pylint: disable=no-init
-# no-init ok because enumeration
+class Resource(namedtuple('Resource',
+                          'rtype status')):
+    """
+    a single resource unit
+
+    :type rtype: stx.Resource
+    :type status: ResourceStatus or None if unknown
+    """
+    def to_xml(self):
+        "to Settlers XML element"
+        node = ET.Element("resource")
+        node.append(self.rtype.to_xml())
+        num_min = ET.SubElement(node, "min_number")
+        ET.SubElement(num_min, "unknown")
+        num_max = ET.SubElement(node, "max_number")
+        ET.SubElement(num_max, "unknown")
+        return node
+
+    @classmethod
+    def multi_to_xml(cls, resources):
+        """
+        Settlers XML for a resource pack
+        """
+        rnode = ET.Element("resources")
+        resources = resources or []
+        for rstatus in ResourceStatus:
+            status_node = ET.SubElement(rnode, rstatus.name)
+            sresources = [r for r in resources if
+                          r.status == rstatus]
+            if sresources:
+                status_node.append(cls.and_resources(sresources))
+        return rnode
+
+
+    @classmethod
+    def and_resources(cls, resources):
+        """
+        Given a non-empty list of resource elements,
+        return an XML element for their conjunction in
+        the form of a resource expression ::
+
+            [Resource] -> Element
+        """
+        if not resources:
+            raise ValueError('must have non-empty list of resources')
+        elif len(resources) == 1:
+            return resources[0].to_xml()
+        else:
+            node = ET.Element('and_res')
+            node.append(resources[0].to_xml())
+            node.append(cls.and_resources(resources[1:]))
+            return node
+
+
 class SurfaceAct(Enum):
     "what form the EDU has: assertion, request..."
     assertion = 1
@@ -198,6 +272,7 @@ class DialogueAct(object):
         # pylint: disable=no-member
         act = self.da_type.to_xml()
         node.append(act)
+        node.append(Resource.multi_to_xml(self.resources))
         # pylint: enable=no-member
         return node
 
