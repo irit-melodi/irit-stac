@@ -6,6 +6,7 @@ server version of parse (soclog in, ??? out)
 """
 
 from __future__ import print_function
+from functools import wraps
 from os import path as fp
 import tempfile
 import zmq
@@ -19,10 +20,14 @@ from attelo.harness.config import\
 from . import parse as p
 from ..util import\
     latest_snap,\
-    snap_model_path, snap_dialogue_act_model_path,\
-    merge_csv
+    snap_model_path
 from ..local import\
     _mk_econf_name, ATTELO_CONFIG_FILE
+from ..pipeline import\
+    Stage, run_pipeline, check_3rd_party,\
+    features_path,\
+    minicorpus_path,\
+    parsed_bname
 
 NAME = 'serve'
 _DEBUG = 0
@@ -37,7 +42,7 @@ def _result_path(lconf, econf, parent=None):
     Path to directory where we are saving results
     """
     parent = parent or lconf.tmp("parsed")
-    return fp.join(parent, p._parsed_bname(lconf, econf))
+    return fp.join(parent, parsed_bname(lconf, econf))
 
 
 def _attelo_result_path(lconf, econf, parent=None):
@@ -60,19 +65,9 @@ def _decode_one(lconf, econf, log):
            "-R", snap_model_path(lconf, econf, "relate"),
            "-d", econf.decoder.decoder,
            "-o", parsed_dir,
-           p._features_path(lconf),
-           p._features_path(lconf)]
+           features_path(lconf),
+           features_path(lconf)]
     call(cmd, cwd=parsed_dir, stderr=log)
-
-
-def _decode(lconf, econf, log):
-    "Decode the input using all the model/learner combos we know"
-
-    with p._stac_msg("Decoding (dataset: %s, learner: %s, decoder: %s)" %
-                   (lconf.dataset,
-                    econf.learner.name,
-                    econf.decoder.name)):
-        _decode_one(lconf, econf, log)
 
 
 def _to_xml(lconf, econf, log):
@@ -80,51 +75,33 @@ def _to_xml(lconf, econf, log):
     Convert to Settlers XML format
     """
     lconf.pyt("parser/to_settlers_xml",
-              p._minicorpus_path(lconf),
+              minicorpus_path(lconf),
               _attelo_result_path(lconf, econf),
               "--output",
-              _attelo_result_path(lconf, econf) + ".settlers-xml")
+              _attelo_result_path(lconf, econf) + ".settlers-xml",
+              stdout=log)
 
 
 def _pipeline(lconf, econf):
     """
     All of the parsing process
     """
+    def with_econf(function):
+        "inject the evaluation conf into a pipeline stage"
+        @wraps(function)
+        def wrapper(lcf, log):
+            "run with econf"
+            return function(lcf, econf, log)
+        return wrapper
 
-    logdir = lconf.tmp("logs")
-
-    def _stage(logname, stage_fn, msg):
-        """run a parsing stage
-
-        :type stage_fn: lconf -> filepath -> ()
-        """
-        logpath = fp.join(logdir, logname + ".txt")
-        with p._stac_msg(msg or "", quiet=msg is None):
-            with open(logpath, 'w') as log:
-                stage_fn(lconf, log)
-
-    makedirs(logdir)
-
-    _stage("0100-extract_annot", p._soclog_to_csv,
-           "Converting (soclog -> stac csv)")
-    _stage("0150-segmentation", p._segment_into_edus,
-           "Segmenting")
-    _stage("0200-csv2glozz", p._segmented_to_glozz,
-           "Converting (stac csv -> glozz)")
-    _stage("0300-pos-tagging", p._postag,
-           "POS tagging")
-    _stage("0400-parsing", p._sentence_parse,
-           "Sentence parsing (if slow, is starting parser server)")
-    _stage("0500-unit-annotations", p._unit_annotations,
-           "Unit-level annotation (dialogue acts, addressees)")
-    _stage("0600-features", p._feature_extraction,
-           "Feature extraction")
-    _stage("0700-decoding",
-           lambda x, y: _decode(x, econf, y),
-           None)
-    _stage("0800-xml",
-           lambda x, y: _to_xml(x, econf, y),
-           "Converting (conll + corpus -> settlers xml)")
+    decode_msg = "Decoding (dataset: %s, learner: %s, decoder: %s)" %\
+        (lconf.dataset, econf.learner.name, econf.decoder.name)
+    stages = p.CORE_STAGES +\
+        [Stage("0700-decoding", with_econf(_decode_one),
+               decode_msg),
+         Stage("0800-xml", with_econf(_to_xml),
+               "Converting (conll + corpus -> settlers xml)")]
+    run_pipeline(lconf, stages)
 
 
 # ---------------------------------------------------------------------
@@ -185,17 +162,17 @@ def main(args):
     You shouldn't need to call this yourself if you're using
     `config_argparser`
     """
-    p._check_3rd_party()
+    check_3rd_party()
 
     learner = LearnerConfig.simple("maxent")
     decoder = DecoderConfig.simple("locallyGreedy")
     econf = EvaluationConfig(name=_mk_econf_name(learner, decoder),
                              learner=learner,
                              decoder=decoder)
-#pylint: disable=no-member
+# pylint: disable=no-member
     context = zmq.Context()
     socket = context.socket(zmq.REP)
-#pylint: enable=no-member
+# pylint: enable=no-member
     socket.bind("tcp://*:{}".format(args.port))
     lconf = _reset_parser(args)
     while True:
