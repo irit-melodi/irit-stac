@@ -206,10 +206,12 @@ def _extract_resources(resources):
     findings = defaultdict(list)
     for row in resources:
         edu_id = row[4]
+        rstatus = stx.ResourceStatus[row[10]] if len(row) > 10\
+            else stx.ResourceStatus.unknown_status
         for rtype in row[5:10]:
             if rtype != '-':
                 resource = stx.Resource(rtype=stx.ResourceType[rtype],
-                                        status=stx.ResourceStatus.unknown_status)
+                                        status=rstatus)
                 findings[edu_id].append(resource)
     return findings
 
