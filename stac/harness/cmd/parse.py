@@ -85,7 +85,7 @@ def _segmented_to_glozz(lconf, log):
 
     Return a corpus directory
     """
-    lconf.pyt("csv2glozz/csvtoglozz.py",
+    lconf.pyt("intake/csvtoglozz.py",
               "-f", seg_path(lconf),
               "--start", "1000",
               stderr=log,
@@ -244,7 +244,7 @@ CORE_STAGES = \
            "Converting (soclog -> stac csv)"),
      Stage("0150-segmentation", _segment_into_edus,
            "Segmenting"),
-     Stage("0200-csv2glozz", _segmented_to_glozz,
+     Stage("0200-csvtoglozz", _segmented_to_glozz,
            "Converting (stac csv -> glozz)"),
      Stage("0300-pos-tagging", _postag,
            "POS tagging"),
