@@ -9,7 +9,6 @@ This is *not* self-contained.  It currently calls scripts in
 
 * /code/txt2csv
 * /code/segmentation
-* /code/csv2glozz
 
 ## Usage
 
