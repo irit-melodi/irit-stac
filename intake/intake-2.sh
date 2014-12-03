@@ -46,8 +46,8 @@ mkdir -p sanity-check
 UNSEGMENTED_DIR=$(abspath ${INPUT_DNAME}/../unsegmented)
 cp ${UNSEGMENTED_DIR}/${INPUT_BNAME}.soclog.csv sanity-check/unsegmented.csv
 grep -v '^[[:space:]]*$' $INPUT_FILE          > sanity-check/segmented.csv
-python $CODE_DIR/csv2glozz/csvtoglozz.py -f sanity-check/unsegmented.csv
-python $CODE_DIR/csv2glozz/csvtoglozz.py -f sanity-check/segmented.csv
+python "$CODE_DIR/intake/csvtoglozz.py" -f sanity-check/unsegmented.csv
+python "$CODE_DIR/intake/csvtoglozz.py" -f sanity-check/segmented.csv
 view_ac sanity-check/unsegmented.ac > sanity-check/unsegmented.txt
 view_ac sanity-check/segmented.ac   > sanity-check/segmented.txt
 diff sanity-check/unsegmented.txt sanity-check/segmented.txt > sanity-check/differences.txt || :
@@ -67,7 +67,7 @@ mv ${INPUT_DNAME}/${INPUT_BNAME}_*.soclog.seg.csv sections
 echo >&2 '== Writing Glozz am/ac files == [unannotated/*.{ac,aa}]'
 for i in sections/*.soclog.seg.csv; do
     echo $i
-    python $CODE_DIR/csv2glozz/csvtoglozz.py -f $i
+    python "$CODE_DIR/intake/csvtoglozz.py" -f "$i"
 done
 mv sections/*.{aa,ac} unannotated
 
