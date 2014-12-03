@@ -196,6 +196,25 @@ def read_events(previous, current, turns):
     # FIXME: I don't understand why we only collect the last trade
     # what's the motivation behind this? there are certainly cases
     # where we have more than one prior trade
+    #
+    # I think this this is a bug. It might be motivated by an idea
+    # that you only have one trade in a negotiation or a dice-roll,
+    # but there's two reasons why this can't be:
+    #
+    # * a player may trade with more than person in their turn
+    # * we may have more than one dice roll in a dialogue
+    #
+    # But fixing this could be a bit tricky because
+    #
+    # - a dialogue is triggered by a dice roll
+    # - its trades come before the trigger
+    # - the dice rolls and resource distributions come
+    #   at or after the trigger
+    #
+    # The triggers establish a cap on how far back we search
+    # for trades; in addition to returning all trades up to the
+    # the previous trigger, we should make sure that the
+    # before/after view is consistent
     return Events(rolls=[x for x in after if 'rolled a' in x],
                   resources=[x for x in after if 'gets' in x],
                   trades=trades[-1] if trades else None)
@@ -425,19 +444,21 @@ def process_turns(turns):
     for i, turn in enumerate(turns):
         if turn.emitter != "Server":
             dialoguetext = process_player_turn(root, dialoguetext, turn)
-        elif "rolled a" in turn.rawtext:  # dialogue right boundary
+        elif "rolled a" in turn.rawtext:
+            # dialogue right boundary
             # hence, a dialogue is between the beginning and such a text (minus
             # server's turns), or between such a text + 1 and another such text
             # (minus server's turns).
-            event = read_events(i_old, i, turns)
-            i_old = i
-
             span = Span(left=prev_dialogue.right if prev_dialogue else 0,
                         right=len(dialoguetext) - 1)
             prev_dialogue = span
 
-            # ignore consecutive dice rolls
-            if span.left != span.right:
+            if span.left == span.right:
+                i_old = i
+                # ignore consecutive dice rolls
+            else:
+                event = read_events(i_old, i, turns)
+                i_old = i
                 # Generate the actual annotation !
                 append_dialogue(root, event, span)
 
