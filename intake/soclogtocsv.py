@@ -31,6 +31,8 @@ corresponds to either a single game event, or a player chat event
 
 from __future__ import print_function
 from collections import namedtuple, OrderedDict
+from enum import Enum
+from itertools import chain
 import argparse
 import codecs
 import re
@@ -54,17 +56,92 @@ TEST2 = ("2011:10:10:16:37:53:803:+0100:SOCGameTextMsg:"
 # backwards compatibility in my opinion
 YUCK = u' '
 
+
+# pylint: disable=no-init, too-few-public-methods
+class Gen(Enum):
+    """
+    distinction between various generations of the script where we
+    have already done some annotations and need turn ids to be
+    stable when moving from one version to another
+    """
+    first = 1
+    second = 2
+# pylint: enable=no-init, too-few-public-methods
+
+EVENTS = {Gen.first: ['traded',
+                      'gets',
+                      'rolled',
+                      'built',
+                      'made an offer to trade'],
+          Gen.second: ['robber',
+                       'stole',
+                       'discarded',
+                       'needs to discard',
+                       'played a']}
+
+PRIVATE_MESSAGE = re.compile(r'^You stole|stole .* from you')
+
 SERVER = re.compile(r"(?P<name>Server)\|text="
-                    r"(?P<event>.+(traded|gets|rolled|built|"
-                    r"made an offer to trade).+$)")
+                    r"(?P<event>.+(" +
+                    r'|'.join(chain.from_iterable(EVENTS.values())) +
+                    r").+$)")
+
 PLAYER = re.compile(r"player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
                     r"(?P<state>.+)\|text=(?P<text>.+)\]$")
 
 
-class SoclogEntry(namedtuple('SoclogEntry',
-                             'timestamp speaker text state')):
-    "interesting entry in the soclog file"
-    pass
+class TurnCounter(object):
+    """
+    counter for turn identifiers (which work a bit like
+    software version ids eg. 3.4.9)
+    """
+
+    def __init__(self):
+        self._top = 0
+        self._stack = []
+
+    def push(self):
+        'open a subcounter'
+        self._stack.append(self._top)
+        self._top = 0
+
+    def pop(self):
+        'return to the previous counter'
+        if len(self._stack) > 0:
+            self._top = self._stack.pop()
+        else:
+            raise Exception('Cannot pop counter {}'.format(self))
+
+    def incr(self):
+        'increase the counter'
+        self._top += 1
+
+    def __len__(self):
+        'stack depth'
+        return 1 + len(self._stack)
+
+    def __str__(self):
+        version = self._stack + [self._top]
+        return '.'.join(str(x) for x in version)
+
+    def incr_at_gen(self, gen):
+        'increment this counter according to the current generation'
+        # we may want to generalise this to arbitrary generations
+        # later
+        if gen == Gen.first and len(self) == 1:
+            self.incr()
+        elif gen == Gen.first and len(self) == 2:
+            self.pop()
+            self.incr()
+        elif gen == Gen.second and len(self) == 1:
+            self.push()
+            self.incr()
+        elif gen == Gen.second and len(self) == 2:
+            self.incr()
+        else:
+            oops = ('impossible: incompatible generation ({})'
+                    'and counter ({}) combo')
+            raise Exception(oops.format(gen, self))
 
 
 class State(namedtuple('State',
@@ -122,16 +199,33 @@ def parse_state(snippet):
             nums = num_match.group(1).split(',')
             buildups[key] = nums
             continue
-        oops = 'Unknown key value pair ({}: {}) in state'
+        oops = 'IMPOSSIBLE: Unknown key value pair ({}: {}) in state'
         raise Exception(oops.format(key, value, snippet))
     return State(resources, buildups)
 
 
-def parse_line(turn_id, line):
+def guess_generation(event):
+    """
+    Given an event string, determine what generation of this
+    script it corresponds to
+    """
+    for gen_key, gen_events in EVENTS.items():
+        if any(x in event for x in gen_events):
+            gen = gen_key
+            break
+    else:
+        oops = 'IMPOSSIBLE: matched unknown event {}'
+        raise Exception(oops.format(event))
+    return gen
+
+
+def parse_line(ctr, line):
     """
     From a soclog line to either None or a Turn ::
 
-        String -> Either None Turn
+        (TurnCounter, String) -> IO (Either None Turn)
+
+    Note that this mutates the turn counter object
     """
     line = line.strip()
     timestamp = line.split(":+", 1)[0]
@@ -140,7 +234,7 @@ def parse_line(turn_id, line):
     match1 = SERVER.search(line)
     match2 = PLAYER.search(line) if not match1 else None
 
-    def mk_turn(speaker, text, state=None):
+    def mk_turn(turn_id, speaker, text, state=None):
         'convenience helper to construct Turn object'
         state = state or EMPTY_STATE
         return stac_csv.Turn(number=turn_id,
@@ -153,11 +247,20 @@ def parse_line(turn_id, line):
                              comment=YUCK)
 
     if match1:
-        return mk_turn(match1.group("name"),
-                       match1.group("event"))
+        event = match1.group("event")
+        gen = guess_generation(event)
+        if PRIVATE_MESSAGE.search(event):
+            # skip private messages
+            return None
+        ctr.incr_at_gen(gen)
+        return mk_turn(str(ctr),
+                       match1.group("name"),
+                       event)
     elif match2:
+        ctr.incr_at_gen(Gen.first)
         state = parse_state(match2.group("state"))
-        return mk_turn(match2.group("name"),
+        return mk_turn(str(ctr),
+                       match2.group("name"),
                        match2.group("text"),
                        state)
     else:
@@ -168,11 +271,10 @@ def soclog_to_turns(lines):
     """
     Generator from soclog lines to Turn objects
     """
-    turn_counter = 1
+    ctr = TurnCounter()
     for line in lines:
-        turn = parse_line(turn_counter, line)
+        turn = parse_line(ctr, line)
         if turn is not None:
-            turn_counter += 1
             yield turn
 
 
