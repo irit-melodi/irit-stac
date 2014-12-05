@@ -53,27 +53,13 @@ import sys
 import time
 
 from educe.stac.util.prettifyxml import prettify
+from educe.stac.util.csv import Turn
 
 
 class Span(namedtuple('Span', 'left right')):
     """
     Simple l/r pair
     """
-
-
-class Turn(namedtuple('Turn',
-                      ['number',
-                       'timestamp',
-                       'emitter',
-                       'res',
-                       'builds',
-                       'rawtext',
-                       'annot',
-                       'comment'])):
-    """
-    High-level representation of a turn
-    """
-    pass
 
 
 class Events(namedtuple('Events',
