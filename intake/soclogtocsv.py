@@ -75,6 +75,12 @@ EVENTS = {Gen.first: ['traded',
                       'made an offer to trade'],
           Gen.second: ['robber',
                        'stole',
+                       # private by rights but treating as public
+                       # because it's so useful
+                       "can't end your turn yet",
+                       'Type *ADDTIME* to',
+                       'game will expire in',
+                       'has won the game',
                        'discarded',
                        'needs to discard',
                        'played a']}
