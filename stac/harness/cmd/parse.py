@@ -188,9 +188,6 @@ def _decode_one(lconf, econf, log):
     # single file for whole input
     parsed_dir = lconf.tmp("parsed")
     makedirs(parsed_dir)
-    parsed_csv = parsed_subpath(parsed_dir) + ".csv"
-    merge_csv(glob.glob(fp.join(tmp_parsed_dir, "*.csv")),
-              parsed_csv)
 
     # units/foo
     src_units_dir = minicorpus_stage_path(lconf, "units")
@@ -207,10 +204,10 @@ def _decode_one(lconf, econf, log):
     # discourse/foo
     discourse_dir = minicorpus_stage_path(lconf, "discourse",
                                           result=True)
-    lconf.pyt("parser/parse-to-glozz",
-              unannotated_dir_path(lconf),
-              parsed_csv,
-              parsed_subpath(discourse_dir))
+#    lconf.pyt("parser/parse-to-glozz",
+#              unannotated_dir_path(lconf),
+#              parsed_csv,
+#              parsed_subpath(discourse_dir))
 
     # unannotated
     force_symlink(unannotated_dir_path(lconf),
