@@ -9,7 +9,7 @@ In the future we may move this to a proper configuration file.
 
 import itertools
 
-from educe.stac.sanity.main import STAC_REVIEWERS
+import educe.stac.corpus
 
 from attelo.harness.config import\
     LearnerConfig,\
@@ -56,7 +56,7 @@ LEX_DIR = "data/resources/lexicon"
 Lexicons used to help feature extraction
 """
 
-ANNOTATORS = "(?i)" + "|".join(STAC_REVIEWERS)
+ANNOTATORS = educe.stac.corpus.METAL_STR
 """
 Which annotators to read from during feature extraction
 """
