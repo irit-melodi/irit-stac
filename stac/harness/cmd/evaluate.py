@@ -14,9 +14,8 @@ import os
 import sys
 
 from attelo.args import\
-    args_to_decoder, args_to_phrasebook, args_to_threshold
-from attelo.decoding import\
-    DataAndModel, DecoderConfig
+    args_to_decoder, args_to_phrasebook
+from attelo.decoding import DataAndModel
 from attelo.io import\
     read_data, load_model
 import attelo.cmd as att
@@ -318,14 +317,9 @@ def _decode(lconf, dconf, econf, fold):
                               load_model(args.attachment_model))
         relate = DataAndModel(fold_relate,
                               load_model(args.relation_model))
-        threshold = args_to_threshold(attach.model, decoder,
-                                      requested=args.threshold)
-        config = DecoderConfig(phrasebook=phrasebook,
-                               threshold=threshold,
-                               post_labelling=False,
-                               use_prob=args.use_prob)
 
-        att.decode.main_for_harness(args, config, decoder, attach, relate)
+        att.decode.main_for_harness(args, phrasebook, decoder,
+                                    attach, relate)
 
 
 def _generate_fold_file(lconf, dconf):
