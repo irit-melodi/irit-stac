@@ -112,7 +112,7 @@ class FakeEvalArgs(CliArgs):
         argv = [_eval_csv_path(lconf, "edu-pairs"),
                 _eval_csv_path(lconf, "relations"),
                 "--config", ATTELO_CONFIG_FILE,
-                "--fold", fold,
+                "--fold", str(fold),
                 "--fold-file", lconf.fold_file,
                 "--attachment-model", model_file_a,
                 "--relation-model", model_file_r]
