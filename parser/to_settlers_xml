@@ -75,10 +75,22 @@ class LightEdu(pout.LightEdu):
                        dialogue_act=d_act,
                        ds_pairs=ds_pairs)
 
-
 # ---------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------
+
+
+def _extract_edu(background, row):
+    '''
+    Extract an edu from the CONLL file that we can convert
+    to XML
+    '''
+    ledu = pout.extract_edu(background, row)
+    return LightEdu(ledu.anno,
+                    ledu.doc,
+                    ledu.context,
+                    ledu.parents,
+                    ledu.resources)
 
 
 def _extract(background, rows):
@@ -92,7 +104,7 @@ def _extract(background, rows):
     there sholud be fewer-to-equal results as they will
     be reorganised into rows
     """
-    l_edus = [pout.extract_edu(background, x) for x in rows]
+    l_edus = [_extract_edu(background, x) for x in rows]
     tdict = defaultdict(list)
     for l_edu in l_edus:
         turn = background.contexts[l_edu.anno].turn
