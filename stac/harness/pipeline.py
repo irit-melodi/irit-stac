@@ -172,6 +172,23 @@ def parsed_bname(lconf, econf):
     """
     return ".".join([lconf.dataset, econf.name])
 
+
+def result_path(lconf, econf, parent=None):
+    """
+    Path to directory where we are saving results
+    """
+    parent = parent or lconf.tmp("parsed")
+    return fp.join(parent, parsed_bname(lconf, econf))
+
+
+def attelo_result_path(lconf, econf, parent=None):
+    """
+    Path to attelo graph file
+    """
+    return fp.join(result_path(lconf, econf, parent),
+                   "graph.conll")
+
+
 # ---------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------

@@ -4,19 +4,6 @@
 # Author: Eric Kow
 # License: BSD3
 
-import argparse
-import collections
-import codecs
-import shutil
-import os
-
-from educe.annotation import RelSpan, Relation
-import educe.corpus
-import educe.glozz
-import educe.stac
-import educe.stac.util.csv as stac_csv
-import educe.util
-
 """
 Help visualise output of a discourse parser.  Concretely, augment unannotated
 Glozz files with attachments/relations from some CSV file, producing a copy of
@@ -33,60 +20,51 @@ Quick start
     cd Stac
     python code/parser/parse-to-glozz\
            flat-dir-with-glozz-files\
-           parse.csv\
+           graph.conll\
            output-dir
     glozz-graph --live --png output-dir output-dir-png
 """
 
-# ----------------------------------------------------------------------
-# csv header
-# ----------------------------------------------------------------------
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
 
-# TODO : consider refactoring this with the rel-info script
-k_doc    = 'm#document'
-k_subdoc = 'm#subdocument'
-k_dialogue = 'm#dialogue'
-k_id_du1 = 'm#id_DU1'
-k_id_du2 = 'm#id_DU2'
-k_label  = 'c#CLASS'
+import argparse
+import shutil
+import os
 
-# TODO: should really refactor with rel-info script
-def friendly_dialogue_id(k, dialogue):
-    sp    = dialogue.span
-    bname = os.path.basename(educe.stac.id_to_path(k))
-    return '%s_%04d_%04d' % (bname, sp.char_start, sp.char_end)
+from educe.annotation import RelSpan, Relation
+import educe.corpus
+import educe.glozz
+import educe.stac
+import educe.stac.util.glozz as stac_glozz
+from educe.stac.util.context import Context
+import educe.util
+
+import stac.conll as pout
 
 # ----------------------------------------------------------------------
 # helpers
 # ----------------------------------------------------------------------
 
 
-def from_global_id(gid):
+def mk_relation(tstamp, parent, child, label):
     """
-    Given an educe.annotation global identifier, return its local equivalent
-    assumed to be the last two parts of an underscore delimited string
-    """
-    # implementation of this function is somewhat evil,
-    # take the last two components
-    parts = gid.split("_")
-    return "_".join(parts[-2:])
+    Given a document and two light edus, create a relation
+    instance betweenthem
 
-
-def mk_relation(doc, row, counter):
     """
-    Note that this relies on global state
-    """
-    t1 = from_global_id(row[k_id_du1])
-    t2 = from_global_id(row[k_id_du2])
-    span = RelSpan(t1, t2)
-    label = row[k_label]
+    span = RelSpan(parent.local_id(),
+                   child.local_id())
+    label = label
     annotator = 'stacparser'
-    rel_id = annotator + '_' + str(counter)
+    date = tstamp.next()
+    rel_id = stac_glozz.anno_id_from_tuple((annotator, date))
     features = {}
     metadata = {}
     metadata['author'] = annotator
-    metadata['creation-date'] = str(counter)
-    return Relation(rel_id=rel_id, span=span,
+    metadata['creation-date'] = str(date)
+    return Relation(rel_id=rel_id,
+                    span=span,
                     rtype=label,
                     features=features,
                     metadata=metadata)
@@ -95,50 +73,58 @@ def mk_relation(doc, row, counter):
 # options
 # ----------------------------------------------------------------------
 
-arg_parser = argparse.ArgumentParser(description='Display features related to relations.')
-arg_parser.add_argument('input', metavar='DIR',
-                        help='Glozz files (flat structure)')
-arg_parser.add_argument('parse', metavar='FILE',
-                        help='Attelo output (.csv file)')
-arg_parser.add_argument('output', metavar='DIR',
-                        help='Output directory')
-args=arg_parser.parse_args()
+
+def config_argparser(psr):
+    '''
+    augment argparser with flags for this utility
+    '''
+    psr.add_argument('input', metavar='DIR',
+                     help='Glozz files (flat structure)')
+    psr.add_argument('parse', metavar='FILE',
+                     type=argparse.FileType('rb'),
+                     help='Attelo output (.csv file)')
+    psr.add_argument('output', metavar='DIR',
+                     help='Output directory')
 
 # ---------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------
 
-reader = educe.stac.LiveInputReader(args.input)
-anno_files = reader.files()
-corpus     = reader.slurp(anno_files, verbose=True)
 
-key_for_dialogue = {}
-for k in corpus:
-    doc = corpus[k]
-    for x in doc.units:
-        if x.type != 'Dialogue': continue
-        dia_id = friendly_dialogue_id(k, x)
-        key_for_dialogue[dia_id] = k
+def main():
+    'main loop'
 
-# build dictionary from FileId to relations in that document
-relations = collections.defaultdict(list)
-with codecs.open(args.parse, 'r,', 'utf-8') as f:
-    csv_reader = stac_csv.Utf8DictReader(f)
-    for counter, row in enumerate(csv_reader, 1):
-        dialogue = row[k_dialogue]
-        if dialogue in key_for_dialogue:
-            k = key_for_dialogue[dialogue]
-            if row[k_label] not in ["UNRELATED", "UNRELATED2"]:
-                rel = mk_relation(corpus[k], row, counter)
-                relations[k].append(rel)
-        else:
-            raise(Exception("Unknown dialogue " + dialogue))
+    psr = argparse.ArgumentParser(description='Display features '
+                                  'related to relations.')
+    config_argparser(psr)
+    args = psr.parse_args()
 
-for k in corpus:
-    doc = corpus[k]
-    doc.relations.extend(relations[k])
-    basename = os.path.join(args.output, k.doc)
+    reader = educe.stac.LiveInputReader(args.input)
+    anno_files = reader.files()
+    corpus = reader.slurp(anno_files, verbose=True)
+
+    background = pout.Background(contexts=Context.for_corpus(corpus),
+                                 dialogues=pout.dialogue_map(corpus),
+                                 resources={})
+
+    tstamp = stac_glozz.PseudoTimestamper()
+
+    # build dictionary from FileId to relations in that document
+    for row in pout.read_conll(args.parse):
+        lchild = pout.extract_edu(background, row)
+        doc = lchild.doc.origin
+        for parent, label in lchild.parents:
+            rel = mk_relation(tstamp, parent, lchild.anno, label)
+            lchild.doc.relations.append(rel)
+
     if not os.path.exists(args.output):
         os.makedirs(args.output)
-    educe.glozz.write_annotation_file(basename + '.aa', doc)
-    shutil.copyfile(anno_files[k][1], basename + '.ac')
+
+    for key in corpus:
+        doc = corpus[key]
+        basename = os.path.join(args.output, key.doc)
+        educe.glozz.write_annotation_file(basename + '.aa', doc)
+        shutil.copyfile(anno_files[key][1], basename + '.ac')
+
+if __name__ == '__main__':
+    main()

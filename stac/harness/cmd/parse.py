@@ -7,7 +7,6 @@ parse a soclog file
 
 from __future__ import print_function
 from os import path as fp
-import glob
 import os
 import shutil
 import tempfile
@@ -23,23 +22,22 @@ from ..local import\
     TAGGER_JAR, LEX_DIR,\
     EVALUATIONS, ATTELO_CONFIG_FILE
 from ..pipeline import\
-    LoopConfig, stac_msg, Stage, run_pipeline,\
-    check_3rd_party,\
-    features_path,\
-    minicorpus_path,\
-    minicorpus_stage_path,\
-    parsed_bname,\
-    resource_np_path,\
-    seg_path,\
-    stub_name,\
-    unannotated_stub_path,\
-    unannotated_dir_path,\
-    unseg_path
-
+    (LoopConfig, stac_msg, Stage, run_pipeline,
+     check_3rd_party,
+     features_path,
+     minicorpus_path,
+     minicorpus_stage_path,
+     parsed_bname,
+     resource_np_path,
+     attelo_result_path,
+     seg_path,
+     stub_name,
+     unannotated_stub_path,
+     unannotated_dir_path,
+     unseg_path)
 from ..util import\
-    latest_snap,\
-    snap_model_path, snap_dialogue_act_model_path,\
-    merge_csv
+    (latest_snap,
+     snap_model_path, snap_dialogue_act_model_path)
 
 
 NAME = 'parse'
@@ -204,10 +202,10 @@ def _decode_one(lconf, econf, log):
     # discourse/foo
     discourse_dir = minicorpus_stage_path(lconf, "discourse",
                                           result=True)
-#    lconf.pyt("parser/parse-to-glozz",
-#              unannotated_dir_path(lconf),
-#              parsed_csv,
-#              parsed_subpath(discourse_dir))
+    lconf.pyt("parser/parse-to-glozz",
+              unannotated_dir_path(lconf),
+              attelo_result_path(lconf, econf, lconf.tmp("tmp-parsed")),
+              parsed_subpath(discourse_dir))
 
     # unannotated
     force_symlink(unannotated_dir_path(lconf),

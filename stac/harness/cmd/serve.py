@@ -24,10 +24,10 @@ from ..util import\
 from ..local import\
     _mk_econf_name, ATTELO_CONFIG_FILE
 from ..pipeline import\
-    Stage, run_pipeline, check_3rd_party,\
-    features_path,\
-    minicorpus_path,\
-    parsed_bname
+    (Stage, run_pipeline, check_3rd_party,
+     features_path,
+     minicorpus_path,
+     result_path, attelo_result_path)
 
 NAME = 'serve'
 _DEBUG = 0
@@ -37,27 +37,11 @@ _DEBUG = 0
 # ---------------------------------------------------------------------
 
 
-def _result_path(lconf, econf, parent=None):
-    """
-    Path to directory where we are saving results
-    """
-    parent = parent or lconf.tmp("parsed")
-    return fp.join(parent, parsed_bname(lconf, econf))
-
-
-def _attelo_result_path(lconf, econf, parent=None):
-    """
-    Path to attelo graph file
-    """
-    return fp.join(_result_path(lconf, econf, parent),
-                   "graph.conll")
-
-
 def _decode_one(lconf, econf, log):
     """
     Run the decoder on a single config and convert the output
     """
-    parsed_dir = _result_path(lconf, econf)
+    parsed_dir = result_path(lconf, econf)
     makedirs(parsed_dir)
     cmd = ["attelo", "decode",
            "-C", lconf.abspath(ATTELO_CONFIG_FILE),
@@ -76,9 +60,9 @@ def _to_xml(lconf, econf, log):
     """
     lconf.pyt("parser/to_settlers_xml",
               minicorpus_path(lconf),
-              _attelo_result_path(lconf, econf),
+              attelo_result_path(lconf, econf),
               "--output",
-              _attelo_result_path(lconf, econf) + ".settlers-xml",
+              attelo_result_path(lconf, econf) + ".settlers-xml",
               stdout=log)
 
 
@@ -180,7 +164,7 @@ def main(args):
         with open(lconf.soclog, 'ab') as fout:
             print(incoming.strip(), file=fout)
         _pipeline(lconf, econf)
-        results_file = _attelo_result_path(lconf, econf) + ".settlers-xml"
+        results_file = attelo_result_path(lconf, econf) + ".settlers-xml"
         with open(results_file, 'rb') as fin:
             socket.send(fin.read())
         if not args.incremental:
