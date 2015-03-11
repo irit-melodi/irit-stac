@@ -27,6 +27,7 @@ from ..pipeline import\
      check_3rd_party,
      decode,
      minicorpus_path,
+     minicorpus_doc_path,
      minicorpus_stage_path,
      parsed_bname,
      resource_np_path,
@@ -180,11 +181,18 @@ def _format_decoder_output(lconf, log):
     Convert decoder output to Glozz (for visualisation really)
     and copy it to resultcorpus
     """
-    for econf in STANDALONE_EVALUATIONS:
-        # unannotated
-        force_symlink(unannotated_dir_path(lconf),
-                      unannotated_dir_path(lconf, result=True))
+    makedirs(minicorpus_doc_path(lconf, result=True))
+    # unannotated
+    force_symlink(unannotated_dir_path(lconf),
+                  unannotated_dir_path(lconf, result=True))
 
+    # parsed, postagged
+    for section in ["parsed", "pos-tagged"]:
+        force_symlink(minicorpus_stage_path(lconf, section),
+                      minicorpus_stage_path(lconf, section,
+                                            result=True))
+
+    for econf in STANDALONE_EVALUATIONS:
         # units/foo
         src_units_dir = minicorpus_stage_path(lconf, "units")
         tgt_units_dir = minicorpus_stage_path(lconf, "units",
@@ -199,12 +207,6 @@ def _format_decoder_output(lconf, log):
                   attelo_result_path(lconf, econf),
                   minicorpus_path(lconf, result=True),
                   stderr=log)
-
-        # parsed, postagged
-        for section in ["parsed", "pos-tagged"]:
-            force_symlink(minicorpus_stage_path(lconf, section),
-                          minicorpus_stage_path(lconf, section,
-                                                result=True))
 
 
 def _graph(lconf, log):
