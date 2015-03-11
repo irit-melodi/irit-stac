@@ -12,9 +12,8 @@ This is the STAC codebase.
 ## Sandboxing
 
 If you are attempting to use the development version of this code
-(ie. from SVN), I highly recommend using a sandbox environment.
-We have two versions below, one for Anaconda users (on Mac),
-and one for standard Python users via virtualenv.
+(ie. from SVN), I highly recommend using a sandbox environment,
+particularly Anaconda (miniconda on Linux)
 
 ### For Anaconda users
 
@@ -22,7 +21,7 @@ Anaconda users get slightly different instructions because virtualenv
 doesn't yet seem to work well with it (at least with the versions we've
 tried). Instead of using virtualenv, you could try something like this
 
-    conda create -n stac --clone $HOME/anaconda
+    conda create -n stac scipy pip
 
 If that doesn't work, make sure your anaconda version is up to date,
 and try `/anaconda` instead of `$HOME/anaconda`.
@@ -31,18 +30,6 @@ Note that whenever you want to use STAC things, you would need to run
 this command
 
     source activate stac
-
-### For standard Python users
-
-The virtualenv equivalent works a bit more like the follow:
-
-    mkdir $HOME/.virtualenvs
-    virtualenv $HOME/.virtualenvs/stac --no-site-packages
-
-Whenever you want to use STAC things, you would need to run this
-command
-
-    source $HOME/.virtualenvs/stac/bin/activate
 
 ## Installation (basics, development mode)
 
@@ -53,7 +40,7 @@ processed by pip
 
 1. Switch into your STAC virtualenv
 
-       source $HOME/.virtualenvs/stac/bin/activate
+       source activate stac
 
 2. Install megam (for learning experiments only [Toulouse]).
    This might be tricky if you're on a Mac.

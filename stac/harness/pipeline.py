@@ -6,26 +6,37 @@ Support for parser pipeline
 """
 
 from collections import namedtuple
+from os import path as fp
 import re
 import sys
 
 from attelo.harness.util import call, makedirs
-from attelo.io import Torpor
+from attelo.io import (Torpor, load_data_pack, load_model)
+import attelo.harness.decode as ath_decode
+from joblib import (Parallel)
 
-from os import path as fp
+from .local import (TAGGER_JAR, TRAINING_CORPUS)
+from .path import (attelo_doc_model_paths,
+                   vocab_path)
+from .util import (concat_i, latest_snap)
 
-from .local import TAGGER_JAR
+# pylint: disable=too-few-public-methods
 
 
-# pylint: disable=pointless-string-statement
-class LoopConfig(object):
-    "that which is common to outerish loops"
+class PipelineConfig(object):
+    """
+    An object which behaves enough like LoopConfig for the
+    purposes of the parsing pipeline that we can dig up the
+    input files it needs to get by
+    """
 
-    def __init__(self, soclog, snap_dir, tmp_dir):
+    def __init__(self, soclog, tmp_dir):
         self.soclog = soclog
-        self.snap_dir = fp.abspath(snap_dir)
+        self.snap_dir = fp.abspath(latest_snap())
+        self.eval_dir = self.snap_dir  # compatibility with LoopConfig
+        self.scratch_dir = self.snap_dir  # compatibility with LoopConfig
         self.tmp_dir = fp.abspath(tmp_dir)
-        self.dataset = "all"
+        self.dataset = fp.basename(TRAINING_CORPUS)
         harness_dir = fp.dirname(fp.dirname(fp.abspath(__file__)))
         self.root_dir = fp.dirname(fp.dirname(harness_dir))
 
@@ -47,7 +58,6 @@ class LoopConfig(object):
         abs_script = self.abspath(fp.join("code", script))
         cmd = ["python", abs_script] + list(args)
         call(cmd, **kwargs)
-# pylint: enable=pointless-string-statement
 
 
 class Stage(namedtuple('Stage',
@@ -94,7 +104,7 @@ def run_pipeline(lconf, stages):
 def stub_name(lconf_or_soclog):
     "return a short filename component from a soclog path"
     soclog = lconf_or_soclog.soclog\
-        if isinstance(lconf_or_soclog, LoopConfig) else lconf_or_soclog
+        if isinstance(lconf_or_soclog, PipelineConfig) else lconf_or_soclog
     stub = fp.splitext(fp.basename(soclog))[0]
     stub = re.sub(r'-', '_', stub)
     return stub
@@ -150,13 +160,6 @@ def unannotated_stub_path(lconf):
                    stub_name(lconf) + "_0")
 
 
-def features_path(lconf):
-    """
-    features extracted from the input soclog
-    """
-    return lconf.tmp("extracted-features.csv")
-
-
 def resource_np_path(lconf):
     """
     path to temporary minicorpus dir mimicking structure
@@ -170,23 +173,62 @@ def parsed_bname(lconf, econf):
     short name for virtual author consisting of dataset used to
     parse the file and the learner/decoder config
     """
-    return ".".join([lconf.dataset, econf.name])
+    return ".".join([lconf.dataset, econf.key])
 
 
-def result_path(lconf, econf, parent=None):
+def result_path(lconf, econf):
     """
     Path to directory where we are saving results
     """
-    parent = parent or lconf.tmp("parsed")
+    parent = lconf.tmp("parsed")
     return fp.join(parent, parsed_bname(lconf, econf))
 
 
-def attelo_result_path(lconf, econf, parent=None):
+def attelo_result_path(lconf, econf):
     """
     Path to attelo graph file
     """
-    return fp.join(result_path(lconf, econf, parent),
-                   "graph.conll")
+    return result_path(lconf, econf)
+
+
+# ---------------------------------------------------------------------
+# decoding
+# ---------------------------------------------------------------------
+
+
+def _get_decoding_jobs(dpack, lconf, econf):
+    """
+    Run the decoder on a single config and convert the output
+    """
+    makedirs(lconf.tmp("parsed"))
+    output_path = attelo_result_path(lconf, econf)
+    model_paths = attelo_doc_model_paths(lconf,
+                                         econf.learner,
+                                         None)
+    models = model_paths.fmap(load_model)
+    return ath_decode.jobs(dpack,
+                           models,
+                           econf.decoder.payload,
+                           econf.settings.mode,
+                           output_path)
+
+
+def decode(lconf, evaluations):
+    "Decode the input using all the model/learner combos we know"
+
+    fpath = minicorpus_path(lconf) + '.relations.sparse'
+    with open(vocab_path(lconf)) as lines:
+        num_features = len(list(lines))
+    dpack = load_data_pack(fpath + '.edu_input',
+                           fpath + '.pairings',
+                           fpath,
+                           n_features=num_features)
+    decoder_jobs = concat_i(_get_decoding_jobs(dpack, lconf, econf)
+                            for econf in evaluations)
+    Parallel(n_jobs=-1)(decoder_jobs)
+    for econf in evaluations:
+        output_path = attelo_result_path(lconf, econf)
+        ath_decode.concatenate_outputs(dpack, output_path)
 
 
 # ---------------------------------------------------------------------

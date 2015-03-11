@@ -11,15 +11,27 @@ single XML document
 from __future__ import print_function
 from collections import namedtuple, defaultdict
 import argparse
+import csv
 import sys
 
-from educe.stac.annotation import addressees
+from educe.stac.annotation import addressees, is_edu
 from educe.stac.util.args import read_corpus
 from educe.stac.util.context import Context
 from educe.stac.util import prettifyxml
 
 from stac import settlers_xml as stx
-from stac import conll as pout
+from stac import attelo_out as pout
+
+# pylint: disable=too-few-public-methods
+
+
+class Background(namedtuple('Background',
+                            'contexts resources')):
+    '''
+    contextual information needed to translate an edu;
+    resources can be set to `{}`
+    '''
+    pass
 
 
 class LightTurn(namedtuple('LightTurn', 'anno edus')):
@@ -45,7 +57,8 @@ class LightTurn(namedtuple('LightTurn', 'anno edus')):
                                edus=stx_edus)
 
 
-class LightEdu(pout.LightEdu):
+class LightEdu(namedtuple('LightEdu',
+                          'anno doc context parents resources')):
     """
     light wrapper around edu annotation object
     and links to parent annotations
@@ -80,20 +93,7 @@ class LightEdu(pout.LightEdu):
 # ---------------------------------------------------------------------
 
 
-def _extract_edu(background, row):
-    '''
-    Extract an edu from the CONLL file that we can convert
-    to XML
-    '''
-    ledu = pout.extract_edu(background, row)
-    return LightEdu(ledu.anno,
-                    ledu.doc,
-                    ledu.context,
-                    ledu.parents,
-                    ledu.resources)
-
-
-def _extract(background, rows):
+def _extract(doc, background, predictions):
     """
     Extract and regroup the important information from
     attelo and resource extractor CONLL rows ::
@@ -104,9 +104,22 @@ def _extract(background, rows):
     there sholud be fewer-to-equal results as they will
     be reorganised into rows
     """
-    l_edus = [_extract_edu(background, x) for x in rows]
+    edus = {x.identifier(): x for x in doc.units if is_edu(x)}
+    parents = defaultdict(list)
+    for id_parent, id_child, label in predictions:
+        if label == 'UNRELATED' or id_parent == 'ROOT':
+            continue
+        parents[id_child].append((edus[id_parent], label))
+
+    #l_edus = [_extract_edu(background, x) for x in rows]
     tdict = defaultdict(list)
-    for l_edu in l_edus:
+    for eid, anno in sorted(edus.items(),
+                            key=lambda (k, v): v.text_span()):
+        l_edu = LightEdu(anno,
+                         doc,
+                         background.contexts[anno],
+                         parents[eid],
+                         background.resources.get(eid))
         turn = background.contexts[l_edu.anno].turn
         tdict[turn].append(l_edu)
     l_turns = [LightTurn(k, v) for k, v in tdict.items()]
@@ -147,6 +160,12 @@ def _to_xml(l_turns):
     return frag.to_xml()
 
 
+def read_tsv(instream):
+    """
+    Iterator for a STAC/educe conll file
+    """
+    return csv.reader(instream, dialect=csv.excel_tab)
+
 # ----------------------------------------------------------------------
 # options
 # ----------------------------------------------------------------------
@@ -179,14 +198,14 @@ def main(args):
     corpus = read_corpus(args,
                          preselected={"stage": ["units"]})
     if args.resources:
-        rconll = pout.read_conll(args.resources)
+        rconll = read_tsv(args.resources)
     else:
         rconll = []
-    background = pout.Background(contexts=Context.for_corpus(corpus),
-                                 dialogues=pout.dialogue_map(corpus),
-                                 resources=_extract_resources(rconll))
-    conll = pout.read_conll(args.input)
-    l_turns = _extract(background, conll)
+    background = Background(contexts=Context.for_corpus(corpus),
+                            resources=_extract_resources(rconll))
+    doc = corpus.values()[0]
+    decoder_output = read_tsv(args.input)
+    l_turns = _extract(doc, background, decoder_output)
     print(prettifyxml.prettify(_to_xml(l_turns), indent=" "),
           file=args.output)
 

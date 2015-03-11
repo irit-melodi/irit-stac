@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stac",
-    version="2014.08.11",
+    version="2015.03.05",
     author="Philippe Muller, Stergos Afantenos, Pascal Denis, Eric Kow",
     author_email="eric@erickow.com",
     packages=find_packages(exclude=['guapi', 'guapi.*']),
@@ -17,6 +17,6 @@ setup(
     install_requires=["educe",
                       "attelo",
                       "enum34",
-                      "sh",
-                      "pyzmq"]
+                      "pyzmq",
+                      "six"]
 )

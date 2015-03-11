@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH --job-name=report
+#SBATCH --output=irit-stac-evaluate-end-%j.out
+# uncomment and edit to get email report
+##SBATCH --mail-type=END
+##SBATCH --mail-user=<== FILL THIS OUT
+STAC=$HOME/Stac
+set -e
+source "$STAC/code/cluster/env"
+irit-stac evaluate --end
+echo 'DONE! irit-stac evaluate --end'

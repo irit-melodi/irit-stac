@@ -7,170 +7,77 @@ build models for standalone parser
 
 from __future__ import print_function
 from os import path as fp
-from collections import namedtuple
-import argparse
-import cPickle
 import os
 import sys
 
-from attelo.args import\
-    DEFAULT_DECODER,\
-    DEFAULT_HEURISTIC,\
-    DEFAULT_NIT,\
-    DEFAULT_RFC
-from attelo.io import read_data
-import attelo.cmd as att
-import attelo.cmd.learn
-import Orange.data
+from attelo.harness.util import (call, force_symlink)
+from attelo.io import (load_data_pack, Torpor)
 
-from attelo.harness.util import\
-    call, force_symlink
-
-from ..local import\
-    DIALOGUE_ACT_LEARNER,\
-    SNAPSHOTS, EVALUATION_CORPORA, MODELERS, ATTELO_CONFIG_FILE
-from ..util import\
-    exit_ungathered, latest_tmp, latest_snap, link_files,\
-    snap_model_path, snap_dialogue_act_model_path
+from ..learn import (mk_combined_models)
+from ..local import (DIALOGUE_ACT_LEARNER,
+                     SNAPSHOTS,
+                     TRAINING_CORPUS)
+from ..loop import (LoopConfig,
+                    DataConfig)
+from ..path import (edu_input_path,
+                    eval_model_path,
+                    eval_data_path,
+                    pairings_path,
+                    features_path)
+from ..util import (exit_ungathered, sanity_check_config,
+                    latest_tmp, latest_snap, link_files)
+import stac.unit_annotations as stac_unit
 
 NAME = 'model'
 
 
-#pylint: disable=pointless-string-statement
-LoopConfig = namedtuple("LoopConfig",
-                        ["snap_dir",
-                         "dataset"])
-"that which is common to outerish loops"
-
-
-DataConfig = namedtuple("DataConfig", "attach relate")
-"data tables we have read"
-#pylint: enable=pointless-string-statement
-
 # ---------------------------------------------------------------------
-# user feedback
+#
 # ---------------------------------------------------------------------
 
-
-def _model_banner(econf, lconf):
+def _create_snapshot_dir(data_dir):
     """
-    Which combo of eval parameters are we running now?
-    """
-    rname = econf.learner.relate
-    learner_str = econf.learner.attach + (":" + rname if rname else "")
-    return "\n".join(["----------" * 3,
-                      "%s" % lconf.dataset,
-                      "learner(s): %s" % learner_str,
-                      "----------" * 3])
-
-
-def _corpus_banner(lconf):
-    "banner to announce the corpus"
-    return "\n".join(["==========" * 7,
-                      lconf.dataset,
-                      "==========" * 7])
-
-
-# ---------------------------------------------------------------------
-# attelo config
-# ---------------------------------------------------------------------
-
-
-class FakeLearnArgs(argparse.Namespace):
-    """
-    Fake argparse object (to be subclassed)
-    Things in common between attelo learn/decode
-    """
-    def __init__(self, lconf, econf):
-        model_file_a = snap_model_path(lconf, econf, "attach")
-        model_file_r = snap_model_path(lconf, econf, "relate")
-
-        argv = [_data_path(lconf, "edu-pairs"),
-                _data_path(lconf, "relations"),
-                "--config", ATTELO_CONFIG_FILE,
-                "--attachment-model",  model_file_a,
-                "--relation-model", model_file_r,
-                "--learner", econf.learner.attach]
-
-        if econf.learner.relate is not None:
-            argv.extend(["--relation-learner", econf.learner.relate])
-
-        if econf.decoder is not None:
-            argv.extend(["--decoder", econf.decoder.decoder])
-
-        psr = argparse.ArgumentParser()
-        attelo.cmd.learn.config_argparser(psr)
-        psr.parse_args(argv, self)
-
-    # pylint: disable=no-self-use
-    def cleanup(self):
-        "Tidy up any open file handles, etc"
-        return
-    # pylint: enable=no-self-use
-
-
-# ---------------------------------------------------------------------
-# model building
-# ---------------------------------------------------------------------
-
-
-def _data_path(lconf, ext):
-    """
-    Path to data file in the evaluation dir
-    """
-    return os.path.join(lconf.snap_dir,
-                        "%s.%s.csv" % (lconf.dataset, ext))
-
-
-def _decode_output_path(lconf, econf):
-    "Model for a given loop/eval config and fold"
-    return os.path.join(lconf.snap_dir,
-                        ".".join(["output", econf.name]))
-
-
-def _learn(lconf, dconf, econf):
-    """
-    Run the learner unless the model files already exist
+    Instantiate a snapshot dir and return its path
     """
 
-    args = FakeLearnArgs(lconf, econf)
-    att.learn.main_for_harness(args, dconf.attach, dconf.relate)
-    args.cleanup()
+    bname = fp.basename(os.readlink(data_dir))
+    snap_dir = fp.join(SNAPSHOTS, bname)
+    if not fp.exists(snap_dir):
+        os.makedirs(snap_dir)
+        link_files(data_dir, snap_dir)
+        force_symlink(bname, latest_snap())
+    with open(fp.join(snap_dir, "versions-model.txt"), "w") as stream:
+        call(["pip", "freeze"], stdout=stream)
+    return snap_dir
 
 
-def _save_dialogue_act_model(lconf):
-    """
-    Build a model from the single EDU features and save to disk
-    """
-    data = Orange.data.Table(_data_path(lconf, "just-edus"))
-    model = DIALOGUE_ACT_LEARNER(data)
-    model_file = snap_dialogue_act_model_path(lconf, raw=True)
-    with open(model_file, "wb") as fstream:
-        cPickle.dump(model, fstream)
+def _mk_dialogue_act_model(lconf):
+    "Learn and save the dialogue acts model"
+    mpath = eval_model_path(lconf,
+                            DIALOGUE_ACT_LEARNER,
+                            None,
+                            'dialogue-acts')
+    fpath = eval_data_path(lconf,
+                           'dialogue-acts.sparse')
+    with Torpor('Learning dialogue acts model'):
+        stac_unit.learn_and_save(DIALOGUE_ACT_LEARNER.payload,
+                                 fpath, mpath)
 
 
 def _do_corpus(lconf):
-    "Build models for a corpus"
-    print(_corpus_banner(lconf), file=sys.stderr)
-
-    attach_file = _data_path(lconf, "edu-pairs")
-    relate_file = _data_path(lconf, "relations")
-    if not os.path.exists(attach_file):
+    "Run evaluation on a corpus"
+    edus_file = edu_input_path(lconf)
+    if not os.path.exists(edus_file):
         exit_ungathered()
-    data_attach, data_relate =\
-        read_data(attach_file, relate_file, verbose=True)
-    dconf = DataConfig(attach=data_attach,
-                       relate=data_relate)
 
-    for econf in MODELERS:
-        print(_model_banner(econf, lconf), file=sys.stderr)
-        _learn(lconf, dconf, econf)
-
-    # dialogue acts model
-    _save_dialogue_act_model(lconf)
-    os.rename(snap_dialogue_act_model_path(lconf, raw=True),
-              snap_dialogue_act_model_path(lconf, raw=False))
-
+    dpack = load_data_pack(edus_file,
+                           pairings_path(lconf),
+                           features_path(lconf),
+                           verbose=True)
+    dconf = DataConfig(pack=dpack,
+                       folds=None)
+    mk_combined_models(lconf, dconf)
+    _mk_dialogue_act_model(lconf)
 
 # ---------------------------------------------------------------------
 # main
@@ -185,42 +92,34 @@ def config_argparser(psr):
     are to be added.
     """
     psr.set_defaults(func=main)
-    psr.add_argument("--resume",
-                     default=False, action="store_true",
-                     help="resume previous interrupted evaluation")
+    psr.add_argument("--n-jobs", type=int,
+                     default=-1,
+                     help="number of jobs (-1 for max [DEFAULT], "
+                     "2+ for parallel, "
+                     "1 for sequential but using parallel infrastructure, "
+                     "0 for fully sequential)")
 
 
-def _create_snapshot_dir(data_dir):
-    """
-    Instantiate a snapshot dir and return its path
-    """
-
-    bname = fp.basename(os.readlink(data_dir))
-    snap_dir = fp.join(SNAPSHOTS, bname)
-    if not fp.exists(snap_dir):
-        os.makedirs(snap_dir)
-        link_files(data_dir, snap_dir)
-        force_symlink(bname, latest_snap())
-    return snap_dir
-
-
-def main(_):
+def main(args):
     """
     Subcommand main.
 
     You shouldn't need to call this yourself if you're using
     `config_argparser`
     """
+    sys.setrecursionlimit(10000)
+    sanity_check_config()
     data_dir = latest_tmp()
-    if not os.path.exists(data_dir):
+    if not fp.exists(data_dir):
         exit_ungathered()
     snap_dir = _create_snapshot_dir(data_dir)
 
-    with open(os.path.join(snap_dir, "versions-model.txt"), "w") as stream:
-        call(["pip", "freeze"], stdout=stream)
-
-    for corpus in EVALUATION_CORPORA:
-        dataset = os.path.basename(corpus)
-        lconf = LoopConfig(snap_dir=snap_dir,
-                           dataset=dataset)
-        _do_corpus(lconf)
+    dataset = fp.basename(TRAINING_CORPUS)
+    lconf = LoopConfig(eval_dir=snap_dir,
+                       scratch_dir=snap_dir,
+                       folds=None,
+                       stage=None,
+                       fold_file=None,
+                       n_jobs=args.n_jobs,
+                       dataset=dataset)
+    _do_corpus(lconf)

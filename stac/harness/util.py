@@ -6,17 +6,17 @@
 Miscellaneous utility functions
 """
 
+from collections import (Counter)
 import os
+import hashlib
+import itertools
 import sys
-from os import path as fp
-
-# pylint: disable=no-name-in-module
-from sh import head, tail
-# pylint: enable=no-name-in-module
 
 from attelo.harness.util import timestamp
+from joblib import Parallel
 
-from .local import LOCAL_TMP, SNAPSHOTS
+from .local import (LOCAL_TMP, SNAPSHOTS,
+                    EVALUATIONS)
 
 
 def current_tmp():
@@ -40,6 +40,26 @@ def latest_snap():
     return os.path.join(SNAPSHOTS, "latest")
 
 
+def concat_i(itr):
+    """
+    Walk an iterable of iterables as a single one
+    """
+    return itertools.chain.from_iterable(itr)
+
+
+def md5sum_file(path, blocksize=65536):
+    """
+    Read a file and return its md5 sum
+    """
+    hasher = hashlib.md5()
+    with open(path, 'rb') as afile:
+        buf = afile.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(blocksize)
+    return hasher.hexdigest()
+
+
 def link_files(src_dir, tgt_dir):
     """
     Hard-link all files from the source directory into the
@@ -53,47 +73,58 @@ def link_files(src_dir, tgt_dir):
         if os.path.isfile(data_file):
             os.link(data_file, eval_file)
 
+# ---------------------------------------------------------------------
+# config
+# ---------------------------------------------------------------------
+
 
 def exit_ungathered():
     """
     You don't seem to have run the gather command
     """
     sys.exit("""No data to run experiments on.
-Please run `irit-rst-dt gather`""")
+Please run `irit-stac gather`""")
 
 
-def merge_csv(csv_files, output_csv):
+def sanity_check_config():
     """
-    Concatenate multiple csv files (assumed to have the same
-    header)
-
-    There should be at least one file to work with
+    Die if there's anything odd about the config
     """
-    if not csv_files:
-        raise ValueError("need non-empty list of csv files")
-    any_csv = csv_files[0]
-    with open(output_csv, "w") as combined:
-        head("-n", "1", any_csv, _out=combined)
-        for csv_file in csv_files:
-            tail("-n", "+2", csv_file, _out=combined)
-
+    conf_counts = Counter(econf.key for econf in EVALUATIONS)
+    bad_confs = [k for k, v in conf_counts.items() if v > 1]
+    if bad_confs:
+        oops = ("Sorry, there's an error in your configuration.\n"
+                "I don't dare to start evaluation until you fix it.\n"
+                "ERROR! -----------------vvvv---------------------\n"
+                "The following configurations more than once:{}\n"
+                "ERROR! -----------------^^^^^--------------------"
+                "").format("\n".join(bad_confs))
+        sys.exit(oops)
 
 # ---------------------------------------------------------------------
-# paths
+# parallel
 # ---------------------------------------------------------------------
 
 
-def snap_model_path(lconf, econf, mtype):
-    "(snap directory) model for a given loop/eval config"
+def parallel(lconf, n_jobs=None, verbose=None):
+    """
+    Run some delayed jobs in parallel (or sequentially
+    depending on our settings)
+    """
+    n_jobs = n_jobs or lconf.n_jobs
+    verbose = verbose or 5
 
-    lname = econf.learner.name
-    return fp.join(lconf.snap_dir,
-                   "%s.%s.%s.model" % (lconf.dataset, lname, mtype))
+    def sequential(jobs):
+        """
+        run jobs in truly sequential fashion without any of
+        this parallel nonsense
+        """
+        # pylint: disable=star-args
+        for func, args, kwargs in jobs:
+            func(*args, **kwargs)
+        # pylint: enable=star-args
 
-
-def snap_dialogue_act_model_path(lconf, raw=False):
-    "(snap directory) Model for a given dataset"
-
-    prefix = "" if raw else "%s." % lconf.dataset
-    return fp.join(lconf.snap_dir,
-                   prefix + "dialogue-acts.model")
+    if n_jobs == 0:
+        return sequential
+    else:
+        return Parallel(n_jobs=n_jobs, verbose=verbose)

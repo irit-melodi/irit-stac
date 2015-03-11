@@ -1,0 +1,51 @@
+#!/bin/bash
+
+STAC=$HOME/Stac
+cd "$STAC"
+
+mkdir -p OLD-LOGS
+mv irit-stac-evaluate-*.out OLD-LOGS
+
+EVALUATE_FLAGS=("$@")
+#EVALUATE_FLAGS=(--resume)
+cd "$STAC"
+if [ ! -e "$STAC"/code/cluster/env ]; then
+    echo >&2 "Please set up your cluster/env script"
+    echo >&2 "(copy from example and edit)"
+    exit 1
+fi
+
+
+function j_sbatch {
+    sbatch "$@" | sed -e 's/Submitted batch job //'
+}
+
+function mk_deps {
+    for job in "$@"; do
+       dep_str="${dep_str+$dep_str:}$job"
+    done
+    echo "${dep_str+afterok:}$dep_str"
+}
+
+set -e
+source "$STAC/code/cluster/env"
+# create the evaluation folder
+sjobs+=($(j_sbatch "$STAC"/code/cluster/evaluate.script --start "${EVALUATE_FLAGS[@]}"))
+sjob_str=$(mk_deps "${sjobs[@]}")
+
+# generate the global model
+# (only needed for reporting discriminating features)
+# we launch this first only because it's very slow
+# so we might as well start working on it early on
+jobs+=($(j_sbatch --dependency="$sjob_str"\
+    "$STAC"/code/cluster/evaluate.script --combined-models "${EVALUATE_FLAGS[@]}"))
+# request a job for each fold; doing them one by one hogs all ten nodes of the
+# cluster, but it's not so obnoxious as in the RST DT case because they tend to
+# finish very quickly and get out of the way
+for f in $(seq 0 9); do
+    jobs+=($(j_sbatch --dependency="$sjob_str"\
+        "$STAC"/code/cluster/evaluate.script --folds $f "${EVALUATE_FLAGS[@]}"))
+done
+# generate the report when all folds are done
+job_str=$(mk_deps "${jobs[@]}")
+sbatch --dependency="$job_str" "$STAC"/code/cluster/report.script

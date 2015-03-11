@@ -11,20 +11,21 @@ import os
 import shutil
 import tempfile
 
+from attelo.harness.util import (makedirs, call, force_symlink)
 import sh
 
-
-from attelo.harness.util import\
-    makedirs, call, force_symlink
-
-from ..local import\
-    CORENLP_SERVER_DIR, CORENLP_ADDRESS,\
-    TAGGER_JAR, LEX_DIR,\
-    EVALUATIONS, ATTELO_CONFIG_FILE
+from ..local import (CORENLP_SERVER_DIR, CORENLP_ADDRESS,
+                     TAGGER_JAR, LEX_DIR,
+                     DIALOGUE_ACT_LEARNER,
+                     EVALUATIONS)
+from ..path import (eval_data_path,
+                    eval_model_path,
+                    vocab_path)
 from ..pipeline import\
-    (LoopConfig, stac_msg, Stage, run_pipeline,
+    (PipelineConfig,
+     Stage, run_pipeline,
      check_3rd_party,
-     features_path,
+     decode,
      minicorpus_path,
      minicorpus_stage_path,
      parsed_bname,
@@ -35,13 +36,15 @@ from ..pipeline import\
      unannotated_stub_path,
      unannotated_dir_path,
      unseg_path)
-from ..util import\
-    (latest_snap,
-     snap_model_path, snap_dialogue_act_model_path)
 
 
 NAME = 'parse'
 _DEBUG = 0
+
+
+STANDALONE_EVALUATIONS = [e for e in EVALUATIONS
+                          if e.learner.key != 'oracle' and
+                          e.settings.intra is None]
 
 
 # ---------------------------------------------------------------------
@@ -126,11 +129,20 @@ def _unit_annotations(lconf, log):
     guess dialogue acts for all the EDUs
     """
     corpus_dir = minicorpus_path(lconf)
-    model_path = snap_dialogue_act_model_path(lconf)
+    ext = 'dialogue-acts'
+    d_model_path = eval_model_path(lconf,
+                                   DIALOGUE_ACT_LEARNER,
+                                   None,
+                                   ext)
+    d_features_path = eval_data_path(lconf, ext) + '.sparse'
+    d_vocab_path = d_features_path + '.vocab'
+
     lconf.pyt("stac/unit_annotations.py",
               corpus_dir,
               lconf.abspath(LEX_DIR),
-              "--model", model_path,
+              "--model", d_model_path,
+              "--vocab", d_vocab_path,
+              "--labels", d_features_path,
               "--output", corpus_dir,
               stderr=log)
 
@@ -155,74 +167,44 @@ def _feature_extraction(lconf, log):
     """
     corpus_dir = minicorpus_path(lconf)
     cmd = ["stac-learning", "extract",
-           "--parsing", "--experimental",
+           "--parsing",
+           "--vocab", vocab_path(lconf),
            corpus_dir,
            lconf.abspath(LEX_DIR),
            lconf.tmp_dir]
     call(cmd, stderr=log)
 
 
-def _decode_one(lconf, econf, log):
+def _format_decoder_output(lconf, log):
     """
-    Run the decoder on a single config and convert the output
+    Convert decoder output to Glozz (for visualisation really)
+    and copy it to resultcorpus
     """
-    def parsed_subpath(parent):
-        "subdirectory for parser output of some sort"
-        return fp.join(parent, parsed_bname(lconf, econf))
+    for econf in STANDALONE_EVALUATIONS:
+        # unannotated
+        force_symlink(unannotated_dir_path(lconf),
+                      unannotated_dir_path(lconf, result=True))
 
-    tmp_parsed_dir = parsed_subpath(lconf.tmp("tmp-parsed"))
-    makedirs(tmp_parsed_dir)
-    cmd = ["attelo", "decode",
-           "-C", lconf.abspath(ATTELO_CONFIG_FILE),
-           "-A", snap_model_path(lconf, econf, "attach"),
-           "-R", snap_model_path(lconf, econf, "relate"),
-           "-d", econf.decoder.decoder,
-           "-o", tmp_parsed_dir,
-           features_path(lconf),
-           features_path(lconf)]
-    call(cmd, cwd=tmp_parsed_dir, stderr=log)
+        # units/foo
+        src_units_dir = minicorpus_stage_path(lconf, "units")
+        tgt_units_dir = minicorpus_stage_path(lconf, "units",
+                                              result=True)
+        makedirs(tgt_units_dir)
+        force_symlink(fp.join(src_units_dir, 'simple-da'),
+                      fp.join(tgt_units_dir, parsed_bname(lconf, econf)))
 
-    # combine mini csv files from each dialogue into
-    # single file for whole input
-    parsed_dir = lconf.tmp("parsed")
-    makedirs(parsed_dir)
+        # discourse
+        lconf.pyt("parser/parse-to-glozz",
+                  minicorpus_path(lconf),
+                  attelo_result_path(lconf, econf),
+                  minicorpus_path(lconf, result=True),
+                  stderr=log)
 
-    # units/foo
-    src_units_dir = minicorpus_stage_path(lconf, "units")
-    tgt_units_dir = minicorpus_stage_path(lconf, "units",
-                                          result=True)
-    makedirs(tgt_units_dir)
-    force_symlink(fp.join(src_units_dir, 'simple-da'),
-                  parsed_subpath(tgt_units_dir))
-    for section in ["parsed", "pos-tagged"]:
-        force_symlink(minicorpus_stage_path(lconf, section),
-                      minicorpus_stage_path(lconf, section,
-                                            result=True))
-
-    # discourse/foo
-    discourse_dir = minicorpus_stage_path(lconf, "discourse",
-                                          result=True)
-    lconf.pyt("parser/parse-to-glozz",
-              unannotated_dir_path(lconf),
-              attelo_result_path(lconf, econf, lconf.tmp("tmp-parsed")),
-              parsed_subpath(discourse_dir))
-
-    # unannotated
-    force_symlink(unannotated_dir_path(lconf),
-                  unannotated_dir_path(lconf, result=True))
-
-
-def _decode(lconf, log, evaluations=None):
-    "Decode the input using all the model/learner combos we know"
-
-    evaluations = evaluations or EVALUATIONS
-    for econf in evaluations:
-        template = "Decoding (dataset: %s, learner: %s, decoder: %s)"
-        with stac_msg(template %
-                      (lconf.dataset,
-                       econf.learner.name,
-                       econf.decoder.name)):
-            _decode_one(lconf, econf, log)
+        # parsed, postagged
+        for section in ["parsed", "pos-tagged"]:
+            force_symlink(minicorpus_stage_path(lconf, section),
+                          minicorpus_stage_path(lconf, section,
+                                                result=True))
 
 
 def _graph(lconf, log):
@@ -253,15 +235,17 @@ CORE_STAGES = \
            "Feature extraction")]
 
 
-def _pipeline(lconf, evaluations=None):
+def _pipeline(lconf):
     """
     All of the parsing process
     """
 
     stages = CORE_STAGES +\
         [Stage("0700-decoding",
-               lambda x, y: _decode(x, y, evaluations=evaluations),
-               None),
+               lambda x, _: decode(x, STANDALONE_EVALUATIONS),
+               "Decoding"),
+         Stage("0750-formatting", _format_decoder_output,
+               "Formatting output"),
          Stage("0800-graphs", _graph, "Drawing graphs")]
     run_pipeline(lconf, stages)
 
@@ -332,8 +316,7 @@ def main(args):
     `config_argparser`
     """
     check_3rd_party()
-    lconf = LoopConfig(soclog=args.soclog,
-                       snap_dir=latest_snap(),
-                       tmp_dir=_mk_parser_temp(args))
+    lconf = PipelineConfig(soclog=args.soclog,
+                           tmp_dir=_mk_parser_temp(args))
     _pipeline(lconf)
     _copy_results(lconf, args.output)

@@ -5,26 +5,24 @@ irit-rst-dt subcommands
 # Author: Eric Kow
 # License: CeCILL-B (French BSD3)
 
-from . import\
-    clean,\
-    count,\
-    evaluate,\
-    features,\
-    gather,\
-    model,\
-    parse,\
-    serve,\
-    stop,\
-    tmp
+from . import (clean,
+               count,
+               evaluate,
+               gather,
+               model,
+               parse,
+               serve,
+               stop)
+
 
 SUBCOMMANDS =\
-    [gather,
-     evaluate,
-     model,
-     parse,
-     features,
-     count,
-     clean,
-     serve,
-     stop,
-     tmp]
+    [
+        gather,
+        evaluate,
+        count,
+        clean,
+        model,
+        parse,
+        serve,
+        stop,
+    ]

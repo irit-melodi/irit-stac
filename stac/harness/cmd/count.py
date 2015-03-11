@@ -11,7 +11,7 @@ from os import path as fp
 from attelo.harness.util import call
 from educe.stac.util.args import get_output_dir, announce_output_dir
 
-from ..local import ANNOTATORS, TRAINING_CORPORA
+from ..local import ANNOTATORS, TRAINING_CORPUS
 
 NAME = 'count'
 
@@ -35,10 +35,7 @@ def main(args):
     You shouldn't need to call this yourself if you're using
     `config_argparser`
     """
-    corpora = TRAINING_CORPORA +\
-        ['data/socl-season2-annotated-only',
-         'data/combined-annotated-only',
-         'data/combined']  # provisional virtual corpora for counting
+    corpora = [TRAINING_CORPUS]
     odir = get_output_dir(args)
     for corpus in corpora:
         ofilename = fp.join(odir, fp.basename(corpus) + ".txt")

@@ -6,68 +6,37 @@
 
 """
 Help visualise output of a discourse parser.  Concretely, augment unannotated
-Glozz files with attachments/relations from some CSV file, producing a copy of
-each aa file in an output directory.
+Glozz files with attachments/relations from some attelo output file,
+producing a copy of each aa file in an output directory.
 
-As a minimum, each row of a CSV file has as a minimum the identifiers for the
-document/subdocument, for two EDUs, and a relation label.  EDUs which do not
-have attachments should be omitted from this file.  The name of the header must
-be as in the csv header section of this script.
+Note that we assume standard STAC corpus conventions for file layout.
+Output files are placed in the discourse stage.
 
 Quick start
 -----------
 
     cd Stac
     python code/parser/parse-to-glozz\
-           flat-dir-with-glozz-files\
-           graph.conll\
+           corpus-dir\
+           attelo-output-file\
            output-dir
-    glozz-graph --live --png output-dir output-dir-png
+    stac-util graph output-dir output-dir-png
 """
 
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
+from os import path as fp
 import argparse
-import shutil
-import os
 
-from educe.annotation import RelSpan, Relation
 import educe.corpus
 import educe.glozz
 import educe.stac
 import educe.stac.util.glozz as stac_glozz
-from educe.stac.util.context import Context
-import educe.util
+import educe.stac.util.output as stac_output
+from attelo.io import (load_predictions)
 
-import stac.conll as pout
-
-# ----------------------------------------------------------------------
-# helpers
-# ----------------------------------------------------------------------
-
-
-def mk_relation(tstamp, parent, child, label):
-    """
-    Given a document and two light edus, create a relation
-    instance betweenthem
-
-    """
-    span = RelSpan(parent.local_id(),
-                   child.local_id())
-    label = label
-    annotator = 'stacparser'
-    date = tstamp.next()
-    rel_id = stac_glozz.anno_id_from_tuple((annotator, date))
-    features = {}
-    metadata = {}
-    metadata['author'] = annotator
-    metadata['creation-date'] = str(date)
-    return Relation(rel_id=rel_id,
-                    span=span,
-                    rtype=label,
-                    features=features,
-                    metadata=metadata)
+import stac.attelo_out as pout
 
 # ----------------------------------------------------------------------
 # options
@@ -79,9 +48,8 @@ def config_argparser(psr):
     augment argparser with flags for this utility
     '''
     psr.add_argument('input', metavar='DIR',
-                     help='Glozz files (flat structure)')
+                     help='Glozz files (corpus structure)')
     psr.add_argument('parse', metavar='FILE',
-                     type=argparse.FileType('rb'),
                      help='Attelo output (.csv file)')
     psr.add_argument('output', metavar='DIR',
                      help='Output directory')
@@ -94,37 +62,32 @@ def config_argparser(psr):
 def main():
     'main loop'
 
-    psr = argparse.ArgumentParser(description='Display features '
-                                  'related to relations.')
+    psr = argparse.ArgumentParser(description='Convert attelo output to Glozz')
     config_argparser(psr)
     args = psr.parse_args()
 
-    reader = educe.stac.LiveInputReader(args.input)
-    anno_files = reader.files()
+    predictions = load_predictions(args.parse)
+    # slurp only the docs that appear in our predictions
+    reader = educe.stac.Reader(args.input)
+    doc_subdocs = frozenset(pout.split_id(pid)[0] for pid, _, _ in predictions)
+
+    def is_interesting(key):
+        "if a given corpus key is one we want for parse-to-glozz"
+        right_doc = (key.doc, key.subdoc) in doc_subdocs
+        right_stage = key.stage == 'unannotated'
+        return right_doc and right_stage
+    anno_files = {k: v for k, v in reader.files().items()
+                  if is_interesting(k)}
     corpus = reader.slurp(anno_files, verbose=True)
 
-    background = pout.Background(contexts=Context.for_corpus(corpus),
-                                 dialogues=pout.dialogue_map(corpus),
-                                 resources={})
-
     tstamp = stac_glozz.PseudoTimestamper()
+    corpus2 = pout.copy_discourse_corpus(corpus,
+                                         fp.basename(args.parse))
+    pout.add_predictions(tstamp, corpus2, predictions)
+    pout.remove_unseen_edus(corpus2, predictions)
 
-    # build dictionary from FileId to relations in that document
-    for row in pout.read_conll(args.parse):
-        lchild = pout.extract_edu(background, row)
-        doc = lchild.doc.origin
-        for parent, label in lchild.parents:
-            rel = mk_relation(tstamp, parent, lchild.anno, label)
-            lchild.doc.relations.append(rel)
-
-    if not os.path.exists(args.output):
-        os.makedirs(args.output)
-
-    for key in corpus:
-        doc = corpus[key]
-        basename = os.path.join(args.output, key.doc)
-        educe.glozz.write_annotation_file(basename + '.aa', doc)
-        shutil.copyfile(anno_files[key][1], basename + '.ac')
+    for key, doc in corpus2.items():
+        stac_output.save_document(args.output, key, doc)
 
 if __name__ == '__main__':
     main()

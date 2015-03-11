@@ -6,28 +6,20 @@ server version of parse (soclog in, ??? out)
 """
 
 from __future__ import print_function
-from functools import wraps
 from os import path as fp
 import tempfile
 import zmq
 
-from attelo.harness.util import\
-    makedirs, call
-from attelo.harness.config import\
-    LearnerConfig, DecoderConfig, EvaluationConfig
-
+from attelo.harness.util import makedirs
 
 from . import parse as p
-from ..util import\
-    latest_snap,\
-    snap_model_path
-from ..local import\
-    _mk_econf_name, ATTELO_CONFIG_FILE
-from ..pipeline import\
-    (Stage, run_pipeline, check_3rd_party,
-     features_path,
-     minicorpus_path,
-     result_path, attelo_result_path)
+from ..local import (BEST_EVALUATION)
+from ..pipeline import (PipelineConfig,
+                        Stage, run_pipeline,
+                        check_3rd_party,
+                        decode,
+                        minicorpus_path,
+                        attelo_result_path)
 
 NAME = 'serve'
 _DEBUG = 0
@@ -37,56 +29,30 @@ _DEBUG = 0
 # ---------------------------------------------------------------------
 
 
-def _decode_one(lconf, econf, log):
-    """
-    Run the decoder on a single config and convert the output
-    """
-    parsed_dir = result_path(lconf, econf)
-    makedirs(parsed_dir)
-    cmd = ["attelo", "decode",
-           "-C", lconf.abspath(ATTELO_CONFIG_FILE),
-           "-A", snap_model_path(lconf, econf, "attach"),
-           "-R", snap_model_path(lconf, econf, "relate"),
-           "-d", econf.decoder.decoder,
-           "-o", parsed_dir,
-           features_path(lconf),
-           features_path(lconf)]
-    call(cmd, cwd=parsed_dir, stderr=log)
+def xml_output_path(lconf):
+    "final output of the server"
+    return attelo_result_path(lconf, BEST_EVALUATION) + ".settlers-xml"
 
 
-def _to_xml(lconf, econf, log):
+def _to_xml(lconf, log):
     """
     Convert to Settlers XML format
     """
     lconf.pyt("parser/to_settlers_xml",
               minicorpus_path(lconf),
-              attelo_result_path(lconf, econf),
-              "--output",
-              attelo_result_path(lconf, econf) + ".settlers-xml",
+              attelo_result_path(lconf, BEST_EVALUATION),
+              "--output", xml_output_path(lconf),
               stdout=log)
 
 
-def _pipeline(lconf, econf):
-    """
-    All of the parsing process
-    """
-    def with_econf(function):
-        "inject the evaluation conf into a pipeline stage"
-        @wraps(function)
-        def wrapper(lcf, log):
-            "run with econf"
-            return function(lcf, econf, log)
-        return wrapper
-
-    decode_msg = "Decoding (dataset: %s, learner: %s, decoder: %s)" %\
-        (lconf.dataset, econf.learner.name, econf.decoder.name)
-    stages = p.CORE_STAGES +\
-        [Stage("0700-decoding", with_econf(_decode_one),
-               decode_msg),
-         Stage("0800-xml", with_econf(_to_xml),
-               "Converting (conll + corpus -> settlers xml)")]
-    run_pipeline(lconf, stages)
-
+SERVER_STAGES = p.CORE_STAGES +\
+    [
+        Stage("0700-decoding",
+              lambda lcf, _: decode(lcf, [BEST_EVALUATION]),
+              "Decoding"),
+        Stage("0800-xml", _to_xml,
+              "Converting (-> settlers xml)"),
+    ]
 
 # ---------------------------------------------------------------------
 # main
@@ -134,9 +100,8 @@ def _reset_parser(args):
     tmp_dir = _mk_server_temp(args)
     soclog = fp.join(tmp_dir, "soclog")
     open(soclog, 'wb').close()
-    return p.LoopConfig(soclog=soclog,
-                        snap_dir=latest_snap(),
-                        tmp_dir=tmp_dir)
+    return PipelineConfig(soclog=soclog,
+                          tmp_dir=tmp_dir)
 
 
 def main(args):
@@ -148,11 +113,6 @@ def main(args):
     """
     check_3rd_party()
 
-    learner = LearnerConfig.simple("maxent")
-    decoder = DecoderConfig.simple("locallyGreedy")
-    econf = EvaluationConfig(name=_mk_econf_name(learner, decoder),
-                             learner=learner,
-                             decoder=decoder)
 # pylint: disable=no-member
     context = zmq.Context()
     socket = context.socket(zmq.REP)
@@ -163,9 +123,8 @@ def main(args):
         incoming = socket.recv()
         with open(lconf.soclog, 'ab') as fout:
             print(incoming.strip(), file=fout)
-        _pipeline(lconf, econf)
-        results_file = attelo_result_path(lconf, econf) + ".settlers-xml"
-        with open(results_file, 'rb') as fin:
+        run_pipeline(lconf, SERVER_STAGES)
+        with open(xml_output_path(lconf), 'rb') as fin:
             socket.send(fin.read())
         if not args.incremental:
             lconf = _reset_parser(args)

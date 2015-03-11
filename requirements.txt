@@ -4,6 +4,6 @@
 --allow-unverified pydot
 --allow-unverified python-graph-core
 --allow-unverified python-graph-dot
--e git+https://github.com/kowey/educe.git#egg=educe
--e git+https://github.com/kowey/attelo.git#egg=attelo
+-e git+https://github.com/kowey/educe.git@scikit#egg=educe
+-e git+https://github.com/kowey/attelo.git@scikit#egg=attelo
 -e .
