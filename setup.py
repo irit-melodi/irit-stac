@@ -8,12 +8,12 @@ harness seems fairly STAC-specific
 from setuptools import setup, find_packages
 
 setup(
-    name="stac",
-    version="2015.03.05",
-    author="Philippe Muller, Stergos Afantenos, Pascal Denis, Eric Kow",
+    name="irit-stac",
+    version="2015.3.24",
+    author="IRIT Melodi team",
     author_email="eric@erickow.com",
     packages=find_packages(exclude=['guapi', 'guapi.*']),
-    scripts=["cleanup/sanity-check", "irit-stac"],
+    scripts=["irit-stac"],
     install_requires=["educe",
                       "attelo",
                       "enum34",
