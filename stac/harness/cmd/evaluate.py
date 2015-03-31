@@ -178,7 +178,6 @@ def _do_fold(lconf, dconf, fold):
     parallel(lconf)(decoder_jobs)
     for econf in EVALUATIONS:
         post_decode(lconf, dconf, econf, fold)
-    fold_dir = fold_dir_path(lconf, fold)
     mk_fold_report(lconf, dconf, fold)
 
 
@@ -294,9 +293,8 @@ def main(args):
         exit_ungathered()
     eval_dir, scratch_dir = _create_eval_dirs(args, data_dir, args.jumpstart)
 
-    dataset = os.path.basename(TRAINING_CORPUS)
-    fold_file = os.path.join(eval_dir,
-                             "folds-%s.json" % dataset)
+    dataset = fp.basename(TRAINING_CORPUS)
+    fold_file = fp.join(eval_dir, "folds-%s.json" % dataset)
 
     lconf = LoopConfig(eval_dir=eval_dir,
                        scratch_dir=scratch_dir,
