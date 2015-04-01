@@ -1,0 +1,100 @@
+accordingly  ; result
+additionally ; parallel continuation
+after   ; flashback
+afterward ; narration
+also  ; parallel
+alternatively ; alternation
+although ; contrast  background
+and 
+as ; explanation explanation* background
+as a result ; result result*
+as an alternative ; alternation
+as if ; elaboration contrast
+as long as ; parallel
+as soon as
+as though
+as well ; parallel
+because  ; explanation
+before ; narration
+before and after
+besides  ; contrasts
+but ; contrast 
+by comparison ; contrast
+by contrast  ; contrast
+by then ; narration
+consequently  ; result result*
+conversely  ; contrast
+earlier ; narration flashback
+either:or ; contrast
+else ; alternation
+except ; contrast
+finally   ; continuation
+for ; explanation
+for example   ; elaboration
+for instance  ; elaboration
+further	; continuation
+furthermore  ; continuation
+hence    ; result
+however  ; contrast
+if   ; conditional contrast
+if and when  ; conditional
+if:then   ; conditional
+in addition ; continuation parallel
+in contrast  ; contrast
+in fact ; contrast elaboration
+in other words ; elaboration
+in particular ; elaboration
+in short ; elaboration  elaboration
+in sum ; generalization elaboration
+in the end  ; continuation narration result
+in turn  continuation
+indeed ;  continuation
+insofar as  ; explanation
+instead  ; alternation
+later  ; narration
+lest  ; disjunction
+likewise  ; parallel continuation
+meantime ; background
+meanwhile ; background
+moreover ; continuation
+much as ; contrast
+neither:nor ; contrast
+nevertheless ; contrast
+next ; narration
+nonetheless  ; contrast
+nor ; contrast 
+now that  ; explanation result
+on the contrary  ; contrast
+on the one hand:on the other hand ; contrast
+on the other hand  ; contrast
+once  ; narration
+or  ; alternation
+otherwise  ; contrast  conditional
+overall  ; elaboration
+plus ; continuation
+previously ; flashback
+rather   ; contrast
+regardless  ; contrast
+separately  ; continuation
+similarly  ; parallel continuation
+simultaneously
+since  ; explanation
+so  ; result
+so that  ; result
+specifically  ; elaboration elaboration*
+still  ; contrast 
+then  ; narration
+thereafter ; narration
+thereby  ; result
+therefore  ; result
+though  ; contrast
+thus  ; result
+till 
+ultimately  ; narration
+unless  ; alternation
+until  ; narration
+when  ; narration 
+when and if  ; conditional
+whereas ; contrast
+while ; background
+yet  ; contrast

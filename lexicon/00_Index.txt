@@ -1,0 +1,18 @@
+Lexical resources for the Stac project 
+=============================================
+
+
+The following lexicon have all the format: 
+item:type:pos:extra_info
+
+- opinion.txt: item expressing an opinion
+- trade.txt: trade verbs, with coarse argument classes
+- stac_domain: stac specific lexicon (resources) 
+- dialog: dialog specific markers
+- stac_referential.txt: referential expressions (mostly pronouns)
+- modifiers: negation/modals
+
+Other
+-------
+- pdtb_markers.txt: flat marker list from PDTB annotation manual. one item per line. split constructions are noted part1:part2 (ex: either:or)
+
