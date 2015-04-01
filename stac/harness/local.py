@@ -53,7 +53,7 @@ is used in more than one corpus, but we can revisit this scheme as
 needed.
 """
 
-LEX_DIR = "data/resources/lexicon"
+LEX_DIR = "lexicon"
 """
 Lexicons used to help feature extraction
 """
