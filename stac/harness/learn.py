@@ -1,11 +1,17 @@
-'''Building models from features
-'''
+# Author: Eric Kow
+# License: CeCILL-B (French BSD3-like)
+
+
+"""
+Building models from features
+"""
 
 from __future__ import print_function
 from os import path as fp
 import os
 import sys
 
+from attelo.fold import (select_training)
 from attelo.learning import (Task)
 from attelo.table import (for_intra, select_window)
 from attelo.util import (Team)
@@ -59,13 +65,15 @@ def delayed_learn(lconf, dconf, rconf, fold, include_intra):
     """
     if fold is None:
         parent_dir = combined_dir_path(lconf)
-        get_subpack_ = lambda d: d
+        get_subpack = lambda d: d
     else:
         parent_dir = fold_dir_path(lconf, fold)
-        get_subpack_ = lambda d: d.training(dconf.folds, fold)
+        get_subpack = lambda d: select_training(d, dconf.folds, fold)
 
-    get_subpack = lambda d: select_window(get_subpack_(d),
-                                          None if WINDOW < -1 else WINDOW)
+    if WINDOW <= -1:
+        narrow = lambda d: d
+    else:
+        narrow = lambda d: select_window(d, WINDOW)
 
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
@@ -77,7 +85,8 @@ def delayed_learn(lconf, dconf, rconf, fold, include_intra):
         jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.attach))
         jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.relate))
     if include_intra:
-        subpack = for_intra(get_subpack(dconf.pack))
+        subpack = {k: for_intra(narrow(v))
+                   for k, v in get_subpack(dconf.pack).items()}
         paths = attelo_sent_model_paths(lconf, rconf, fold)
         jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.attach))
         jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.relate))

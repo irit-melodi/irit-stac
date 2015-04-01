@@ -6,9 +6,11 @@ from __future__ import print_function
 from enum import Enum
 from os import path as fp
 
+from attelo.fold import (select_testing)
 from attelo.graph import (diff_all, graph_all,
                           GraphSettings)
 from attelo.io import (Torpor, load_predictions)
+from attelo.util import (concat_l)
 from joblib import (Parallel, delayed)
 
 from .local import (GRAPH_DOCS,
@@ -27,11 +29,12 @@ class GraphDiffMode(Enum):
     diff_intra = 3
 
 
-def to_predictions(dpack):
+def to_predictions(mpack):
     """
-    Convert a datapack to a list of predictions
+    Convert a multipack to a list of predictions
     """
     return [(x1.id, x2.id, dpack.get_label(t))
+            for dpack in mpack.values()
             for ((x1, x2), t) in zip(dpack.pairings,
                                      dpack.target)]
 
@@ -89,7 +92,8 @@ def _mk_gold_graphs(lconf, dconf):
                       quiet=True)
 
     predictions = to_predictions(dconf.pack)
-    graph_all(dconf.pack.edus, predictions, settings, output_dir)
+    edus = concat_l(dpack.edus for dpack in dconf.pack.values())
+    graph_all(edus, predictions, settings, output_dir)
 
 
 def mk_graphs(lconf, dconf):
@@ -100,9 +104,10 @@ def mk_graphs(lconf, dconf):
 
     with Torpor('creating graphs for fold {}'.format(fold),
                 sameline=False):
-        pack = dconf.pack.testing(dconf.folds, fold)
-        gold = to_predictions(pack)
+        test_pack = select_testing(dconf.pack, dconf.folds, fold)
+        edus = concat_l(dpack.edus for dpack in test_pack.values())
+        gold = to_predictions(test_pack)
         jobs = []
         for econf in DETAILED_EVALUATIONS:
-            jobs.extend(_mk_econf_graphs(lconf, pack.edus, gold, econf, fold))
+            jobs.extend(_mk_econf_graphs(lconf, edus, gold, econf, fold))
         Parallel(n_jobs=-1)(jobs)

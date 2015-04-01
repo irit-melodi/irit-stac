@@ -11,7 +11,7 @@ import re
 import sys
 
 from attelo.harness.util import call, makedirs
-from attelo.io import (Torpor, load_data_pack, load_model)
+from attelo.io import (Torpor, load_multipack, load_model)
 import attelo.harness.decode as ath_decode
 from joblib import (Parallel)
 
@@ -196,7 +196,7 @@ def attelo_result_path(lconf, econf):
 # ---------------------------------------------------------------------
 
 
-def _get_decoding_jobs(dpack, lconf, econf):
+def _get_decoding_jobs(mpack, lconf, econf):
     """
     Run the decoder on a single config and convert the output
     """
@@ -206,7 +206,7 @@ def _get_decoding_jobs(dpack, lconf, econf):
                                          econf.learner,
                                          None)
     models = model_paths.fmap(load_model)
-    return ath_decode.jobs(dpack,
+    return ath_decode.jobs(mpack,
                            models,
                            econf.decoder.payload,
                            econf.settings.mode,
@@ -219,16 +219,16 @@ def decode(lconf, evaluations):
     fpath = minicorpus_path(lconf) + '.relations.sparse'
     with open(vocab_path(lconf)) as lines:
         num_features = len(list(lines))
-    dpack = load_data_pack(fpath + '.edu_input',
+    mpack = load_multipack(fpath + '.edu_input',
                            fpath + '.pairings',
                            fpath,
                            n_features=num_features)
-    decoder_jobs = concat_i(_get_decoding_jobs(dpack, lconf, econf)
+    decoder_jobs = concat_i(_get_decoding_jobs(mpack, lconf, econf)
                             for econf in evaluations)
     Parallel(n_jobs=-1)(decoder_jobs)
     for econf in evaluations:
         output_path = attelo_result_path(lconf, econf)
-        ath_decode.concatenate_outputs(dpack, output_path)
+        ath_decode.concatenate_outputs(mpack, output_path)
 
 
 # ---------------------------------------------------------------------

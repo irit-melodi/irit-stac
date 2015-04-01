@@ -10,6 +10,7 @@ from __future__ import print_function
 from os import path as fp
 import sys
 
+from attelo.fold import (select_testing)
 from attelo.io import (load_model)
 from attelo.decoding.intra import (IntraInterPair)
 from attelo.harness.util import (makedirs)
@@ -62,7 +63,7 @@ def delayed_decode(lconf, dconf, econf, fold):
     output_path = decode_output_path(lconf, econf, fold)
     makedirs(fp.dirname(output_path))
 
-    subpack = dconf.pack.testing(dconf.folds, fold)
+    subpack = select_testing(dconf.pack, dconf.folds, fold)
     doc_model_paths = attelo_doc_model_paths(lconf, econf.learner, fold)
     intra_flag = econf.settings.intra
     if intra_flag is not None:
@@ -95,6 +96,6 @@ def post_decode(lconf, dconf, econf, fold):
         return
 
     print(_eval_banner(econf, lconf, fold), file=sys.stderr)
-    subpack = dconf.pack.testing(dconf.folds, fold)
+    subpack = select_testing(dconf.pack, dconf.folds, fold)
     ath_decode.concatenate_outputs(subpack,
                                    decode_output_path(lconf, econf, fold))

@@ -11,7 +11,7 @@ import glob
 import os
 import sys
 
-from attelo.io import (load_data_pack,
+from attelo.io import (load_multipack,
                        load_fold_dict, save_fold_dict)
 from attelo.harness.util import\
     timestamp, call, force_symlink
@@ -147,12 +147,12 @@ def _create_eval_dirs(args, data_dir, jumpstart):
 # ---------------------------------------------------------------------
 
 
-def _generate_fold_file(lconf, dpack):
+def _generate_fold_file(lconf, mpack):
     """
     Generate the folds file
     """
     rng = mk_rng()
-    fold_dict = attelo.fold.make_n_fold(dpack, 10, rng)
+    fold_dict = attelo.fold.make_n_fold(mpack, 10, rng)
     save_fold_dict(fold_dict, lconf.fold_file)
 
 
@@ -199,15 +199,15 @@ def _do_corpus(lconf):
 
     has_stripped = (lconf.stage in [ClusterStage.end, ClusterStage.start]
                     and fp.exists(features_path(lconf, stripped=True)))
-    dpack = load_data_pack(edus_file,
+    mpack = load_multipack(edus_file,
                            pairings_path(lconf),
                            features_path(lconf, stripped=has_stripped),
                            verbose=True)
 
     if _is_standalone_or(lconf, ClusterStage.start):
-        _generate_fold_file(lconf, dpack)
+        _generate_fold_file(lconf, mpack)
 
-    dconf = DataConfig(pack=dpack,
+    dconf = DataConfig(pack=mpack,
                        folds=load_fold_dict(lconf.fold_file))
 
     if _is_standalone_or(lconf, ClusterStage.main):

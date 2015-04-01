@@ -74,7 +74,8 @@ def _mk_model_summary(lconf, dconf, rconf, fold):
             print(attelo.report.show_discriminating_features(discr),
                   file=fout)
 
-    labels = dconf.pack.labels
+    dpack0 = dconf.pack.values()[0]
+    labels = dpack0.labels
     vocab = load_vocab(vocab_path(lconf))
     # doc level discriminating features
     if True:

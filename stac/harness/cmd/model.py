@@ -11,7 +11,7 @@ import os
 import sys
 
 from attelo.harness.util import (call, force_symlink)
-from attelo.io import (load_data_pack, Torpor)
+from attelo.io import (load_multipack, Torpor)
 
 from ..learn import (mk_combined_models)
 from ..local import (DIALOGUE_ACT_LEARNER,
@@ -70,11 +70,11 @@ def _do_corpus(lconf):
     if not os.path.exists(edus_file):
         exit_ungathered()
 
-    dpack = load_data_pack(edus_file,
+    mpack = load_multipack(edus_file,
                            pairings_path(lconf),
                            features_path(lconf),
                            verbose=True)
-    dconf = DataConfig(pack=dpack,
+    dconf = DataConfig(pack=mpack,
                        folds=None)
     mk_combined_models(lconf, dconf)
     _mk_dialogue_act_model(lconf)
