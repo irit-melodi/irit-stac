@@ -4,8 +4,6 @@ import codecs
 import pprint
 import commands,sys
 import re,math,itertools
-from nltk.tokenize import PunktWordTokenizer as tk
-from nltk.stem.wordnet import WordNetLemmatizer as lemm
 
 '''
 The purpose of this program is to parse a soclog.txt (cleaned up by Philippe) and to generate a CSV file.
@@ -54,71 +52,6 @@ class Turn:
 		self.__items = []
 		self.__quantities = []
 		self.annotations = [line.split("|")[6]]
-	def parse(self, text):
-		"""
-		Only useful for parsing the Server's turns. Unused in practice.
-		The method takes a text as input and initializes the private game-related attributes.
-		"""
-		tokens = []
-		dumps = [tokens.append(tk().tokenize(text.split(".")[:-1][i].strip(" "))) for i in range(0,len(text.split(".")[:-1]))]
-		#tokens = list(itertools.chain(*tokens))
-		if self.emitter == "Server":
-			for i in range(0,len(tokens)):
-				are_several = False
-				is_trade = False
-				if (tokens[i][0] != "No" or tokens[i][1] != "player") and tokens[i][1] != "rolled":
-					self.__players.append(tokens[i][0])
-					if tokens[i][3] == u"offer":
-						are_several = True
-						is_trade = False
-						self.__actions.append("offer")
-						self.__items.append("what: "+lemm().lemmatize(tokens[i][7]))
-						self.__items.append("for: "+lemm().lemmatize(tokens[i][10]))
-						if tokens[i][6] in ["a", "an"]:
-							self.__quantities.append("1")
-						else:
-							self.__quantities.append(tokens[i][6])
-						if tokens[i][9] in ["a", "an"]:
-							self.__quantities.append("1")
-						else:
-							self.__quantities.append(tokens[i][9])
-					elif tokens[i][1] == u"traded":
-						are_several = True
-						is_trade = True
-						self.__actions.append("trade")
-						self.__players.append("from: "+tokens[i][8])
-						self.__items.append("what: "+lemm().lemmatize(tokens[i][3]))
-						self.__items.append("for: "+lemm().lemmatize(tokens[i][6]))
-						if tokens[i][2] in ["a", "an"]:
-							self.__quantities.append("1")
-						else:
-							self.__quantities.append(tokens[i][2])
-						if tokens[i][5] in ["a", "an"]:
-							self.__quantities.append("1")
-						else:
-							self.__quantities.append(tokens[i][5])					
-					else:
-						are_several = False
-						is_trade = False
-						self.__actions.append(lemm().lemmatize(tokens[i][1]))
-						self.__items.append(lemm().lemmatize(tokens[i][3]))
-						if tokens[i][2] in ["a", "an"]:
-							self.__quantities.append("1")
-						else:
-							self.__quantities.append(tokens[i][2])
-						if len(tokens[i]) > 4 and tokens[i][4] == ",":
-							are_several = True
-							self.__items.append(lemm().lemmatize(tokens[i][6]))
-							if tokens[i][5] in ["a", "an"]:
-								self.__quantities.append("1")
-							else:
-								self.__quantities.append(tokens[i][5])
-					if are_several == True and is_trade == False:
-						self.annotations.append(", ".join([self.__players[-1], self.__actions[-1], '; '.join(self.__items[-2:]), '; '.join(self.__quantities[-2:])]))
-					if are_several == True and is_trade == True:
-						self.annotations.append(", ".join(['; '.join(self.__players[-2:]), self.__actions[-1], '; '.join(self.__items[-2:]), '; '.join(self.__quantities[-2:])]))
-					if are_several == False and is_trade == False:
-						self.annotations.append(", ".join([self.__players[-1], self.__actions[-1], self.__items[-1], self.__quantities[-1]]))
 
 class State:
 	"""
@@ -169,13 +102,6 @@ def wikitext2csv(filename):
 	outcsv.writerow(csvheader)
 	for i in range(0,int(dialogue.size)):
 		__annotation = "".join(dialogue.turns[i].annotations)
-		'''
-		if dialogue.turns[i].emitter == "Server":
-			dialogue.turns[i].parse(dialogue.turns[i].text)
-			__annotation = "; ".join(dialogue.turns[i].annotations[1:])
-		else:
-			__annotation = "".join(dialogue.turns[i].annotations)
-		'''
 		csvline = [dialogue.turns[i].ID.encode("utf-8"), dialogue.turns[i].timestamp.encode("utf-8"), dialogue.turns[i].emitter.encode("utf-8"), "; ".join(dialogue.turns[i].state.resources).encode("utf-8"), "; ".join(dialogue.turns[i].state.buildups).encode("utf-8"), dialogue.turns[i].text.encode("utf-8"), __annotation.encode("utf-8"), ' ']
 		outcsv.writerow(csvline)
 	outcsvfile.close()
