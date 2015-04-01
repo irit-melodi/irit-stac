@@ -38,7 +38,7 @@ class PipelineConfig(object):
         self.tmp_dir = fp.abspath(tmp_dir)
         self.dataset = fp.basename(TRAINING_CORPUS)
         harness_dir = fp.dirname(fp.dirname(fp.abspath(__file__)))
-        self.root_dir = fp.dirname(fp.dirname(harness_dir))
+        self.root_dir = fp.dirname(harness_dir)
 
     def tmp(self, relpath):
         """
@@ -55,7 +55,7 @@ class PipelineConfig(object):
 
     def pyt(self, script, *args, **kwargs):
         "call python on one of our scripts"
-        abs_script = self.abspath(fp.join("code", script))
+        abs_script = self.abspath(script)
         cmd = ["python", abs_script] + list(args)
         call(cmd, **kwargs)
 
