@@ -7,9 +7,9 @@ Miscellaneous utility functions
 """
 
 from collections import (Counter)
-import os
 import hashlib
 import itertools
+import os
 import sys
 
 from attelo.harness.util import timestamp
@@ -110,6 +110,10 @@ def parallel(lconf, n_jobs=None, verbose=None):
     """
     Run some delayed jobs in parallel (or sequentially
     depending on our settings)
+
+    This exists wholly to allow us to bypass joblib in
+    places we suspect that n_jobs=1 isn't quite the same
+    as just straight shot sequential.
     """
     n_jobs = n_jobs or lconf.n_jobs
     verbose = verbose or 5
