@@ -75,7 +75,7 @@ Note that you can set this to -1 to disable windowing algother.
 def decoder_local(settings):
     "our instantiation of the local baseline decoder"
     use_prob = settings.mode != DecodingMode.post_label
-    return LocalBaseline(0.5, use_prob)
+    return LocalBaseline(0.2, use_prob)
 
 
 def decoder_mst(settings):
