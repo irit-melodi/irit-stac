@@ -40,7 +40,7 @@ SNAPSHOTS = 'data/SNAPSHOTS'
 """Results over time we are making a point of saving"""
 
 
-TRAINING_CORPUS = 'data/FROZEN/frozen-2015-01-16'
+TRAINING_CORPUS = 'data/FROZEN/training-2015-04-02'
 """Corpora for use in building/training models and running our
 incremental experiments. Later on we should consider using the
 held-out test data for something, but let's make a point of
