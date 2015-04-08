@@ -39,14 +39,13 @@ on different aspects of the system in a shared space. One of the users
 
       ```
       cd /wherever/your/local/Stac-SVN/lives
-      rsync -avH Stac/ cluster:/projets/melodi/Stac-YOUR-USER-NAME
+      rsync -avH Stac/ cluster:/projets/melodi/$USER/Stac
       ```
 
 5. Link the STAC SVN in
 
     ```
-    cd $PROJECT_DIR # or just type path in yourself
-    ln -s $PROJECT_DIR/Stac-$USER $HOME/Stac
+    ln -s $PROJECT_DIR/$USER/Stac $HOME/Stac
     ```
 
 6. (optional) modify the requirements.txt to point to your personal educe
@@ -97,3 +96,19 @@ code/cluster/go
 
 HINT: the `cluster/go` script can accept arguments for `irit-stac
 evaluate` on the command line
+
+## Keeping data up to date (git-svn)
+
+It's a bit convoluted, but we can't access the SVN server directly
+from the cluster. Good think we have Git.
+
+We also do it this way to avoid the headaches that come from trying to
+push to a non-bare repo.  More hoops, but more predictibility
+
+0. on the cluster, set up a bare repo
+1. on the cluster, have a local Stac track the cluster bare repo
+   (might as well make it origin)
+2. on your local git-svn, set up a remote called 'cluster' pointing
+   to the bare repo
+3. push to cluster
+4. on the cluster, local Stac git pull (from the bare repo)
