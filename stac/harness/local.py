@@ -95,14 +95,20 @@ def decoder_astar(settings):
     return AstarDecoder(astar_args)
 
 
+
+def learner_oracle():
+    return Keyed('maxent', 'oracle')
+
 def learner_maxent():
     return Keyed('maxent', LogisticRegression())
 
 _LOCAL_LEARNERS = [
-    LearnerConfig(attach=Keyed('oracle', 'oracle'),
-                  relate=Keyed('oracle', 'oracle')),
+    LearnerConfig(attach=learner_oracle(),
+                  relate=learner_oracle()),
     LearnerConfig(attach=learner_maxent(),
                   relate=learner_maxent()),
+    LearnerConfig(attach=learner_maxent(),
+                  relate=learner_oracle()),
 ]
 """Straightforward attelo learner algorithms to try
 
