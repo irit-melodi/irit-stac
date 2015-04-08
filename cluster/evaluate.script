@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --output=irit-stac-evaluate-%j.out
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=30
 STAC=$HOME/irit-stac
 cd "$STAC"
 set -e
