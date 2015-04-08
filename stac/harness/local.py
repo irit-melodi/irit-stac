@@ -97,7 +97,7 @@ def decoder_astar(settings):
 
 
 def learner_oracle():
-    return Keyed('maxent', 'oracle')
+    return Keyed('oracle', 'oracle')
 
 def learner_maxent():
     return Keyed('maxent', LogisticRegression())
