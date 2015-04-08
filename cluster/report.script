@@ -4,8 +4,8 @@
 # uncomment and edit to get email report
 ##SBATCH --mail-type=END
 ##SBATCH --mail-user=<== FILL THIS OUT
-STAC=$HOME/Stac
+STAC=$HOME/irit-stac
 set -e
-source "$STAC/code/cluster/env"
+source "$STAC/cluster/env"
 irit-stac evaluate --end
 echo 'DONE! irit-stac evaluate --end'

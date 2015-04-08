@@ -3,8 +3,8 @@
 #SBATCH --output=irit-stac-gather-%j.out
 ##SBATCH --mail-type=END
 ##SBATCH --mail-user=YOUR_EMAIL_ADDRESS_HERE <=== EDIT THIS
-STAC=$HOME/Stac
-source "$STAC/code/cluster/env"
+STAC=$HOME/irit-stac
+source "$STAC/cluster/env"
 cd "$STAC"
 time irit-stac gather
 for i in TMP/latest/*.sparse; do

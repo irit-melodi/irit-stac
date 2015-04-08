@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --output=irit-stac-evaluate-%j.out
 #SBATCH --cpus-per-task=64
-STAC=$HOME/Stac
+STAC=$HOME/irit-stac
 cd "$STAC"
 set -e
-source "$STAC/code/cluster/env"
+source "$STAC/cluster/env"
 irit-stac evaluate "$@"
 echo "DONE! irit-stac evaluate $@"
