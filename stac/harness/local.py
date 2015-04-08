@@ -95,13 +95,14 @@ def decoder_astar(settings):
     return AstarDecoder(astar_args)
 
 
-LEARNER_MAXENT = Keyed('maxent', LogisticRegression())
+def learner_maxent():
+    return Keyed('maxent', LogisticRegression())
 
 _LOCAL_LEARNERS = [
     LearnerConfig(attach=Keyed('oracle', 'oracle'),
-                  relate=None),
-    LearnerConfig(attach=LEARNER_MAXENT,
-                  relate=None),
+                  relate=Keyed('oracle', 'oracle')),
+    LearnerConfig(attach=learner_maxent(),
+                  relate=learner_maxent()),
 ]
 """Straightforward attelo learner algorithms to try
 
@@ -123,7 +124,7 @@ We assume that they cannot be used relation modelling
 _CORE_DECODERS = [
     Keyed('local', decoder_local),
     Keyed('mst-left', decoder_mst),
-    Keyed('astar', decoder_astar),
+    #Keyed('astar', decoder_astar),
 ]
 
 """Attelo decoders to try in experiment
@@ -297,8 +298,8 @@ HINT: set to empty list for no graphs whatsoever
 # -------------------------------------------------------------------------------
 
 
-_BEST_LEARNER = LearnerConfig(attach=LEARNER_MAXENT,
-                              relate=None)
+_BEST_LEARNER = LearnerConfig(attach=learner_maxent(),
+                              relate=learner_maxent())
 _BEST_DECODER = _mk_keyed_decoder(Keyed('mst-left', decoder_mst),
                                   SETTINGS_BASIC)
 
@@ -311,7 +312,7 @@ BEST_EVALUATION =\
 The configuration we would like to use for the standalone parser.
 """
 
-DIALOGUE_ACT_LEARNER = LEARNER_MAXENT
+DIALOGUE_ACT_LEARNER = learner_maxent()
 """
 Classifier to use for dialogue acts
 """
