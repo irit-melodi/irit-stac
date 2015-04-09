@@ -11,6 +11,7 @@ from enum import Enum
 LoopConfig = namedtuple("LoopConfig",
                         ["eval_dir",
                          "scratch_dir",
+                         "naughty_filters",
                          "stage",
                          "folds",
                          "fold_file",
@@ -21,6 +22,7 @@ LoopConfig = namedtuple("LoopConfig",
 
 DataConfig = namedtuple("DataConfig",
                         ["pack",
+                         "vocab",
                          "folds"])
 "data tables we have read"
 # pylint: enable=pointless-string-statement

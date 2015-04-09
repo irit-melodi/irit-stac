@@ -71,6 +71,22 @@ Adjacent EDUs are separated by 0.
 Note that you can set this to -1 to disable windowing algother.
 """
 
+NAUGHTY_TURN_CONSTRAINT = False
+"""
+You probably don't want to enable this. This causes the
+turn constraint to be applied on all of the data, both
+training and testing.
+
+This is bad because you're effectively cheating by
+restricting the problem to non-tc-violating things.
+It's interesting to see of course if it's much easier
+to solve a tc'ed task; but you definitely don't want
+to treat the results as comparable
+
+It could be useful for a short term experiment, but really should
+go away soon.  Please delete me and anything to do with me if you
+see this code lying around and don't know what it's for.
+"""
 
 def decoder_local(settings):
     "our instantiation of the local baseline decoder"

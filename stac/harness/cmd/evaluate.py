@@ -12,7 +12,8 @@ import os
 import sys
 
 from attelo.io import (load_multipack,
-                       load_fold_dict, save_fold_dict)
+                       load_fold_dict, save_fold_dict,
+                       load_vocab)
 from attelo.harness.util import\
     timestamp, call, force_symlink
 from attelo.util import (mk_rng)
@@ -25,11 +26,13 @@ from ..learn import (LEARNERS,
                      delayed_learn,
                      mk_combined_models)
 from ..local import (EVALUATIONS,
+                     NAUGHTY_TURN_CONSTRAINT,
                      TRAINING_CORPUS)
 from ..path import (edu_input_path,
                     features_path,
                     fold_dir_path,
-                    pairings_path)
+                    pairings_path,
+                    vocab_path)
 from ..report import (mk_fold_report,
                       mk_global_report)
 from ..util import (concat_i,
@@ -40,6 +43,8 @@ from ..util import (concat_i,
 from ..loop import (LoopConfig,
                     DataConfig,
                     ClusterStage)
+from ..turn_constraint import (apply_turn_constraint)
+
 
 # pylint: disable=too-few-public-methods
 
@@ -258,7 +263,13 @@ def _init_corpus(lconf):
             fold_dict = load_fold_dict(lconf.fold_file)
         else:
             fold_dict = _generate_fold_file(lconf, mpack)
-        return DataConfig(pack=mpack, folds=fold_dict)
+        vocab = load_vocab(vocab_path(lconf))
+        for key in mpack:
+            if 'turn-constraint' in lconf.naughty_filters:
+                mpack[key] = apply_turn_constraint(vocab, mpack[key])
+        return DataConfig(pack=mpack,
+                          vocab=vocab,
+                          folds=fold_dict)
     elif lconf.stage == ClusterStage.start:
         if can_skip_folds:
             # if we are just running --start and the fold file already
@@ -370,8 +381,14 @@ def main(args):
     dataset = fp.basename(TRAINING_CORPUS)
     fold_file = fp.join(eval_dir, "folds-%s.json" % dataset)
 
+    naughty_filters = []
+    if NAUGHTY_TURN_CONSTRAINT:
+        naughty_filters.append('turn-constraint')
+
+
     lconf = LoopConfig(eval_dir=eval_dir,
                        scratch_dir=scratch_dir,
+                       naughty_filters=naughty_filters,
                        folds=args.folds,
                        stage=stage,
                        fold_file=fold_file,
