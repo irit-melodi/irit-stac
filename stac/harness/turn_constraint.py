@@ -36,7 +36,5 @@ class TC_LearnerConfig(LearnerConfig):
     def __new__(cls, attach, relate):
         attach = Keyed('tc_' + attach.key, attach.payload)
         relate = Keyed('tc_' + relate.key, relate.payload)
-        print('TC attach', attach)
-        print('TC relate', relate)
         return super(TC_LearnerConfig, cls).__new__(cls, attach, relate)
 # pylint: enable=invalid-name
