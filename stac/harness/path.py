@@ -88,7 +88,7 @@ def model_basename(lconf, rconf, mtype, ext):
     else:
         rsubconf = rconf.relate or rconf.attach
 
-    if rsubconf.key == 'oracle':
+    if rsubconf.payload == 'oracle':
         return 'oracle'
     else:
         template = '{dataset}.{learner}.{task}.{ext}'
