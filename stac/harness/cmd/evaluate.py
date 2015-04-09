@@ -238,7 +238,7 @@ def _load_harness_multipack(lconf):
     :rtype: Multipack
     """
     has_stripped = (lconf.stage in [ClusterStage.end, ClusterStage.start]
-                    and 'turn-constraint' not in lconf.filters
+                    and 'turn-constraint' not in lconf.naughty_filters
                     and fp.exists(features_path(lconf, stripped=True)))
     return load_multipack(edu_input_path(lconf),
                           pairings_path(lconf),
