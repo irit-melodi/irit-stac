@@ -284,6 +284,7 @@ def _init_corpus(lconf):
         # any other stage: fold files have already been
         # created so we just read them in
         return DataConfig(pack=_load_harness_multipack(lconf),
+                          vocab=load_vocab(vocab_path(lconf)),
                           folds=load_fold_dict(lconf.fold_file))
 
 
