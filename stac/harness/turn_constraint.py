@@ -7,6 +7,10 @@ out if they
 
 We rely on there being a feature 'same_speaker'
 '''
+# pylint: disable=too-few-public-methods
+
+from attelo.harness.config import (Keyed, LearnerConfig)
+
 
 SAME_SPEAKER = 'same_speaker=True'
 'boolean feature for if two EDUs share a speaker'
@@ -21,3 +25,18 @@ def apply_turn_constraint(vocab, dpack):
              if edu2.span() > edu1.span()
              or dpack.data[i, spkr_idx]]
     return dpack.selected(idxes)
+
+
+# pylint: disable=invalid-name
+class TC_LearnerConfig(LearnerConfig):
+    '''
+    Placeholder to indicate we want to apply the turn constraint as a
+    filter on the data before learning
+    '''
+    def __new__(cls, attach, relate):
+        attach = Keyed('tc_' + attach.key, attach.payload)
+        relate = Keyed('tc_' + relate.key, relate.payload)
+        print('TC attach', attach)
+        print('TC relate', relate)
+        return super(TC_LearnerConfig, cls).__new__(cls, attach, relate)
+# pylint: enable=invalid-name

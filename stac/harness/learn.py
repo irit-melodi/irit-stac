@@ -23,13 +23,15 @@ from .path import (attelo_doc_model_paths,
                    attelo_sent_model_paths,
                    combined_dir_path,
                    fold_dir_path)
+from .turn_constraint import (TC_LearnerConfig,
+                              apply_turn_constraint)
 from .util import (concat_i, parallel)
 
 
 LEARNERS = {e.learner.key: e.learner for e in EVALUATIONS}.values()
 
 
-def _get_learn_job(lconf, rconf, subpack, paths, task):
+def _get_learn_job(lconf, dconf, rconf, subpack, paths, task):
     'learn a model and write it to the given output path'
 
     if task == Task.attach:
@@ -50,6 +52,9 @@ def _get_learn_job(lconf, rconf, subpack, paths, task):
                           path=fp.relpath(output_path, lconf.scratch_dir)),
               file=sys.stderr)
     else:
+        if isinstance(rconf, TC_LearnerConfig):
+            subpack = {k: apply_turn_constraint(dconf.vocab, v)
+                       for k, v in subpack.items()}
         learn_fn = ath_learn.learn
         learners = Team(attach=rconf.attach,
                         relate=rconf.relate or rconf.attach)
@@ -82,14 +87,18 @@ def delayed_learn(lconf, dconf, rconf, fold, include_intra):
     if True:
         subpack = get_subpack(dconf.pack)
         paths = attelo_doc_model_paths(lconf, rconf, fold)
-        jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.attach))
-        jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.relate))
+        jobs.append(_get_learn_job(lconf, dconf, rconf, subpack, paths,
+                                   Task.attach))
+        jobs.append(_get_learn_job(lconf, dconf, rconf, subpack, paths,
+                                   Task.relate))
     if include_intra:
         subpack = {k: for_intra(narrow(v))
                    for k, v in get_subpack(dconf.pack).items()}
         paths = attelo_sent_model_paths(lconf, rconf, fold)
-        jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.attach))
-        jobs.append(_get_learn_job(lconf, rconf, subpack, paths, Task.relate))
+        jobs.append(_get_learn_job(lconf, dconf, rconf, subpack, paths,
+                                   Task.attach))
+        jobs.append(_get_learn_job(lconf, dconf, rconf, subpack, paths,
+                                   Task.relate))
     return [j for j in jobs if j is not None]
 
 
