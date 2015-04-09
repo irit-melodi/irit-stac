@@ -43,7 +43,7 @@ def _get_learn_job(lconf, dconf, rconf, subpack, paths, task):
     else:
         raise ValueError('Unknown learning task: {}'.format(task))
 
-    if sub_rconf.key == 'oracle':
+    if sub_rconf.payload == 'oracle':
         return None
     elif fp.exists(output_path):
         print(("reusing {key} {task} model (already built): {path}"
