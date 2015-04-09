@@ -245,6 +245,16 @@ def _load_harness_multipack(lconf):
                           verbose=True)
 
 
+def _apply_naughty_filters(lconf, vocab, mpack):
+    """Make any modifications to the multipack that we load as we see
+    fit
+    """
+    for key in mpack:
+        if 'turn-constraint' in lconf.naughty_filters:
+            mpack[key] = apply_turn_constraint(vocab, mpack[key])
+    return mpack
+
+
 def _init_corpus(lconf):
     """Start evaluation; generate folds if needed
 
@@ -264,9 +274,7 @@ def _init_corpus(lconf):
         else:
             fold_dict = _generate_fold_file(lconf, mpack)
         vocab = load_vocab(vocab_path(lconf))
-        for key in mpack:
-            if 'turn-constraint' in lconf.naughty_filters:
-                mpack[key] = apply_turn_constraint(vocab, mpack[key])
+        mpack = _apply_naughty_filters(lconf, vocab, mpack)
         return DataConfig(pack=mpack,
                           vocab=vocab,
                           folds=fold_dict)
@@ -283,9 +291,13 @@ def _init_corpus(lconf):
     else:
         # any other stage: fold files have already been
         # created so we just read them in
-        return DataConfig(pack=_load_harness_multipack(lconf),
-                          vocab=load_vocab(vocab_path(lconf)),
-                          folds=load_fold_dict(lconf.fold_file))
+        vocab = load_vocab(vocab_path(lconf))
+        mpack = _load_harness_multipack(lconf)
+        mpack = _apply_naughty_filters(lconf, vocab, mpack)
+        fold_dict = load_fold_dict(lconf.fold_file)
+        return DataConfig(pack=mpack,
+                          vocab=vocab,
+                          folds=fold_dict)
 
 
 def _do_corpus(lconf):
