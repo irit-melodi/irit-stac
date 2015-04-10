@@ -12,8 +12,7 @@ import os
 import sys
 
 from attelo.io import (load_multipack,
-                       load_fold_dict, save_fold_dict,
-                       load_vocab)
+                       load_fold_dict, save_fold_dict)
 from attelo.harness.util import\
     timestamp, call, force_symlink
 from attelo.util import (mk_rng)
@@ -27,24 +26,23 @@ from ..learn import (LEARNERS,
                      mk_combined_models)
 from ..local import (EVALUATIONS,
                      NAUGHTY_TURN_CONSTRAINT,
-                     TRAINING_CORPUS)
-from ..path import (edu_input_path,
-                    features_path,
-                    fold_dir_path,
-                    pairings_path,
-                    vocab_path)
+                     TRAINING_CORPUS,
+                     TEST_CORPUS)
+from ..path import (fold_dir_path,
+                    mpack_paths)
 from ..report import (mk_fold_report,
-                      mk_global_report)
+                      mk_global_report,
+                      mk_test_report)
 from ..util import (concat_i,
                     exit_ungathered,
                     latest_tmp,
                     parallel,
-                    sanity_check_config)
+                    sanity_check_config,
+                    test_evaluation)
 from ..loop import (LoopConfig,
                     DataConfig,
                     ClusterStage)
 from ..turn_constraint import (apply_turn_constraint)
-
 
 # pylint: disable=too-few-public-methods
 
@@ -92,7 +90,7 @@ def _link_data_files(data_dir, eval_dir):
     for fname in os.listdir(data_dir):
         data_file = os.path.join(data_dir, fname)
         eval_file = os.path.join(eval_dir, fname)
-        if os.path.isfile(data_file):
+        if fp.isfile(data_file) and not fp.exists(eval_file):
             os.link(data_file, eval_file)
 
 
@@ -164,7 +162,11 @@ def _create_eval_dirs(args, data_dir, jumpstart):
         if not fp.exists(eval_current) or not fp.exists(scratch_current):
             sys.exit("No currently running evaluation to resume!")
         else:
-            return fp.realpath(eval_current), fp.realpath(scratch_current)
+            eval_dir = fp.realpath(eval_current)
+            scratch_dir = fp.realpath(scratch_current)
+            # in case there are any new data files to link
+            _link_data_files(data_dir, eval_dir)
+            return eval_dir, scratch_dir
     else:
         eval_actual_old = fp.realpath(eval_current)
         scratch_actual_old = fp.realpath(scratch_current)
@@ -225,6 +227,17 @@ def _do_fold(lconf, dconf, fold):
     mk_fold_report(lconf, dconf, fold)
 
 
+def _do_global_decode(lconf, dconf):
+    """
+    Run decoder on test data (if available)
+    """
+    econf = test_evaluation()
+    if econf is not None:
+        decoder_jobs = delayed_decode(lconf, dconf, econf, None)
+        parallel(lconf)(decoder_jobs)
+        post_decode(lconf, dconf, econf, None)
+
+
 def _is_standalone_or(lconf, stage):
     """
     True if we are in standalone mode (do everything)
@@ -233,26 +246,39 @@ def _is_standalone_or(lconf, stage):
     return lconf.stage is None or lconf.stage == stage
 
 
-def _load_harness_multipack(lconf):
+def _load_harness_multipack(lconf, test_data=False):
     """
+    Load the multipack for our current configuration.
+
+    Load the stripped features file if we don't actually need to
+    use the features (this would only make sense on the cluster
+    where evaluation is broken up into separate stages that we
+    can fire on different nodes)
+
+    :type test_data: bool
+
     :rtype: Multipack
     """
-    has_stripped = (lconf.stage in [ClusterStage.end, ClusterStage.start]
-                    and 'turn-constraint' not in lconf.naughty_filters
-                    and fp.exists(features_path(lconf, stripped=True)))
-    return load_multipack(edu_input_path(lconf),
-                          pairings_path(lconf),
-                          features_path(lconf, stripped=has_stripped),
+    stripped_paths = mpack_paths(lconf, test_data, stripped=True)
+    if (lconf.stage in [ClusterStage.end, ClusterStage.start]
+            and fp.exists(stripped_paths[2])):
+        paths = stripped_paths
+    else:
+        paths = mpack_paths(lconf, test_data, stripped=False)
+    return load_multipack(paths[0],
+                          paths[1],
+                          paths[2],
+                          paths[3],
                           verbose=True)
 
 
-def _apply_naughty_filters(lconf, vocab, mpack):
+def _apply_naughty_filters(lconf, mpack):
     """Make any modifications to the multipack that we load as we see
     fit
     """
     for key in mpack:
         if 'turn-constraint' in lconf.naughty_filters:
-            mpack[key] = apply_turn_constraint(vocab, mpack[key])
+            mpack[key] = apply_turn_constraint(mpack[key])
     return mpack
 
 
@@ -274,10 +300,8 @@ def _init_corpus(lconf):
             fold_dict = load_fold_dict(lconf.fold_file)
         else:
             fold_dict = _generate_fold_file(lconf, mpack)
-        vocab = load_vocab(vocab_path(lconf))
-        mpack = _apply_naughty_filters(lconf, vocab, mpack)
+        mpack = _apply_naughty_filters(lconf, mpack)
         return DataConfig(pack=mpack,
-                          vocab=vocab,
                           folds=fold_dict)
     elif lconf.stage == ClusterStage.start:
         if can_skip_folds:
@@ -292,12 +316,10 @@ def _init_corpus(lconf):
     else:
         # any other stage: fold files have already been
         # created so we just read them in
-        vocab = load_vocab(vocab_path(lconf))
         mpack = _load_harness_multipack(lconf)
-        mpack = _apply_naughty_filters(lconf, vocab, mpack)
+        mpack = _apply_naughty_filters(lconf, mpack)
         fold_dict = load_fold_dict(lconf.fold_file)
         return DataConfig(pack=mpack,
-                          vocab=vocab,
                           folds=fold_dict)
 
 
@@ -305,7 +327,8 @@ def _do_corpus(lconf):
     "Run evaluation on a corpus"
     print(_corpus_banner(lconf), file=sys.stderr)
 
-    if not os.path.exists(edu_input_path(lconf)):
+    evidence_of_gathered = mpack_paths(lconf, False)[0]
+    if not fp.exists(evidence_of_gathered):
         exit_ungathered()
 
     dconf = _init_corpus(lconf)
@@ -317,9 +340,15 @@ def _do_corpus(lconf):
 
     if _is_standalone_or(lconf, ClusterStage.combined_models):
         mk_combined_models(lconf, dconf)
+        if test_evaluation() is not None:
+            test_pack = _load_harness_multipack(lconf, test_data=True)
+            test_dconf = DataConfig(pack=test_pack, folds=None)
+            _do_global_decode(lconf, test_dconf)
+            mk_test_report(lconf, test_dconf)
 
     if _is_standalone_or(lconf, ClusterStage.end):
         mk_global_report(lconf, dconf)
+
 
 # ---------------------------------------------------------------------
 # main
@@ -393,6 +422,7 @@ def main(args):
     eval_dir, scratch_dir = _create_eval_dirs(args, data_dir, args.jumpstart)
 
     dataset = fp.basename(TRAINING_CORPUS)
+    testset = None if TEST_CORPUS is None else fp.basename(TEST_CORPUS)
     fold_file = fp.join(eval_dir, "folds-%s.json" % dataset)
 
     naughty_filters = []
@@ -407,5 +437,6 @@ def main(args):
                        stage=stage,
                        fold_file=fold_file,
                        n_jobs=args.n_jobs,
-                       dataset=dataset)
+                       dataset=dataset,
+                       testset=testset)
     _do_corpus(lconf)

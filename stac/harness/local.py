@@ -54,6 +54,30 @@ is used in more than one corpus, but we can revisit this scheme as
 needed.
 """
 
+TEST_CORPUS = None
+"""Corpora for use in FINAL testing.
+
+You should probably leave this set to None until you've tuned and
+tweaked things to the point of being able to write up a paper.
+Wouldn't want to overfit to the test corpus, now would we?
+
+(If you leave this set to None, we will perform 10-fold cross
+validation on the training data)
+"""
+
+TEST_EVALUATION_KEY = None
+# TEST_EVALUATION_KEY = 'maxent-AD.L_jnt-mst'
+"""Evaluation to use for testing.
+
+Leave this to None until you think it's OK to look at the test data.
+The key should be the evaluation key from one of your EVALUATIONS,
+eg. 'maxent-C0.9-AD.L_jnt-mst'
+
+(HINT: you can join them together from the report headers)
+"""
+
+
+
 LEX_DIR = "lexicon"
 """
 Lexicons used to help feature extraction

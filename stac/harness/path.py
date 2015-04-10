@@ -23,43 +23,41 @@ def attelo_sent_model_paths(lconf, rconf, fold):
                 relate=eval_model_path(lconf, rconf, fold, "sent-relate"))
 
 
-def eval_data_path(lconf, ext):
+def eval_data_path(lconf, ext, test_data=False):
     """
     Path to data file in the evaluation dir
+
+    :param testing: grab the test data
+    :type testing: bool
     """
-    return fp.join(lconf.eval_dir,
-                   "%s.%s" % (lconf.dataset, ext))
+    dset = lconf.testset if test_data else lconf.dataset
+    return fp.join(lconf.eval_dir, "%s.%s" % (dset, ext))
 
 
-def features_path(lconf, stripped=False):
+def mpack_paths(lconf, test_data, stripped=False):
     """
-    Path to the feature file in the evaluation dir
+    Tuple of paths needed to read a datapack
+
+    * features
+    * edu input
+    * pairings
+    * vocabulary
+
+    :param test_data: if we should load the test data for
+                      the config
+    :type test_data: bool
     """
     ext = 'relations.sparse'
-    if stripped:
-        ext += '.stripped'
-    return eval_data_path(lconf, ext)
+    core_path = eval_data_path(lconf, ext, test_data=test_data)
+    return (core_path + '.edu_input',
+            core_path + '.pairings',
+            (core_path + '.stripped') if stripped else core_path,
+            core_path + '.vocab')
 
 
-def vocab_path(lconf):
-    """
-    Path to the vocab file in the evaluation dir
-    """
-    return features_path(lconf) + '.vocab'
-
-
-def edu_input_path(lconf):
-    """
-    Path to the feature file in the evaluation dir
-    """
-    return features_path(lconf) + '.edu_input'
-
-
-def pairings_path(lconf):
-    """
-    Path to the pairings file in the evaluation dir
-    """
-    return features_path(lconf) + '.pairings'
+def vocab_path(lconf, test_data):
+    "Path to just the vocabulary file"
+    return mpack_paths(lconf, test_data)[3]
 
 
 def fold_dir_basename(fold):
@@ -119,13 +117,21 @@ def decode_output_basename(econf):
 
 def decode_output_path(lconf, econf, fold):
     "Model for a given loop/eval config and fold"
-    fold_dir = fold_dir_path(lconf, fold)
-    return fp.join(fold_dir, decode_output_basename(econf))
+    if fold is None:
+        parent_dir = combined_dir_path(lconf)
+    else:
+        parent_dir = fold_dir_path(lconf, fold)
+    return fp.join(parent_dir,
+                   decode_output_basename(econf))
 
 
-def report_dir_basename(lconf):
-    "Relative directory for a report directory"
-    return "reports-%s" % lconf.dataset
+def report_dir_basename(lconf, test_data):
+    """Relative directory for a report directory
+
+    :type test_data: bool
+    """
+    dset = lconf.testset if test_data else lconf.dataset
+    return "reports-%s" % dset
 
 
 def report_parent_dir_path(lconf, fold=None):
@@ -136,20 +142,22 @@ def report_parent_dir_path(lconf, fold=None):
         return fold_dir_path(lconf, fold)
 
 
-def report_dir_path(lconf, fold=None):
+def report_dir_path(lconf, test_data, fold=None):
     """
     Path to a score file given a parent dir.
     You'll need to tack an extension onto this
+
+    :type test_data: bool
     """
     return fp.join(report_parent_dir_path(lconf, fold),
-                   report_dir_basename(lconf))
+                   report_dir_basename(lconf, test_data))
 
 
-def model_info_path(lconf, rconf, fold=None, intra=False):
+def model_info_path(lconf, rconf, test_data, fold=None, intra=False):
     """
     Path to the model output file
     """
     template = "discr-features{grain}.{learner}.txt"
-    return fp.join(report_dir_path(lconf, fold),
+    return fp.join(report_dir_path(lconf, test_data, fold=fold),
                    template.format(grain='-sent' if intra else '',
                                    learner=rconf.key))

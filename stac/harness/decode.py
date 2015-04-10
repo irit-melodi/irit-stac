@@ -20,6 +20,7 @@ import attelo.harness.decode as ath_decode
 from .path import (attelo_doc_model_paths,
                    attelo_sent_model_paths,
                    decode_output_path)
+from .util import (test_evaluation)
 
 
 def _eval_banner(econf, lconf, fold):
@@ -57,13 +58,20 @@ def delayed_decode(lconf, dconf, econf, fold):
     Return possible futures for decoding groups within
     this model/decoder combo for the given fold
     """
+    if fold is None and test_evaluation() is None:
+        return []
     if _say_if_decoded(lconf, econf, fold, stage='decoding'):
         return []
 
     output_path = decode_output_path(lconf, econf, fold)
     makedirs(fp.dirname(output_path))
 
-    subpack = select_testing(dconf.pack, dconf.folds, fold)
+    if fold is None:
+        subpack = dconf.pack
+    else:
+        subpack = select_testing(dconf.pack, dconf.folds, fold)
+
+
     doc_model_paths = attelo_doc_model_paths(lconf, econf.learner, fold)
     intra_flag = econf.settings.intra
     if intra_flag is not None:
@@ -96,6 +104,9 @@ def post_decode(lconf, dconf, econf, fold):
         return
 
     print(_eval_banner(econf, lconf, fold), file=sys.stderr)
-    subpack = select_testing(dconf.pack, dconf.folds, fold)
+    if fold is None:
+        subpack = dconf.pack
+    else:
+        subpack = select_testing(dconf.pack, dconf.folds, fold)
     ath_decode.concatenate_outputs(subpack,
                                    decode_output_path(lconf, econf, fold))

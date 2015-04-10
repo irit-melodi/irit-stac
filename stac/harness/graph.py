@@ -18,6 +18,7 @@ from .local import (GRAPH_DOCS,
 from .path import (decode_output_path,
                    fold_dir_basename,
                    report_dir_path)
+from .util import (test_evaluation)
 
 # pylint: disable=too-few-public-methods
 
@@ -52,8 +53,11 @@ def _mk_econf_graphs(lconf, edus, gold, econf, fold):
             output_bn_prefix = 'graphs-sent-gold-vs-'
         else:
             raise Exception('Unknown diff mode {}'.format(diffmode))
-        output_dir = fp.join(report_dir_path(lconf, None),
-                             output_bn_prefix + fold_dir_basename(fold),
+
+        want_test = fold is None
+        suffix = 'test' if want_test else fold_dir_basename(fold)
+        output_dir = fp.join(report_dir_path(lconf, want_test, None),
+                             output_bn_prefix + suffix,
                              econf.key)
 
         # settings
@@ -111,3 +115,14 @@ def mk_graphs(lconf, dconf):
         for econf in DETAILED_EVALUATIONS:
             jobs.extend(_mk_econf_graphs(lconf, edus, gold, econf, fold))
         Parallel(n_jobs=-1)(jobs)
+
+
+def mk_test_graphs(lconf, dconf):
+    "Generate graphs for test data"
+    econf = test_evaluation()
+    if econf is None:
+        return
+    with Torpor('creating test graphs'):
+        edus = concat_l(dpack.edus for dpack in dconf.pack.values())
+        gold = to_predictions(dconf.pack)
+        _mk_econf_graphs(lconf, edus, gold, econf, None)

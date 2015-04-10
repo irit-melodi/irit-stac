@@ -19,11 +19,9 @@ from ..local import (DIALOGUE_ACT_LEARNER,
                      TRAINING_CORPUS)
 from ..loop import (LoopConfig,
                     DataConfig)
-from ..path import (edu_input_path,
+from ..path import (mpack_paths,
                     eval_model_path,
-                    eval_data_path,
-                    pairings_path,
-                    features_path)
+                    eval_data_path)
 from ..util import (exit_ungathered, sanity_check_config,
                     latest_tmp, latest_snap, link_files)
 import stac.unit_annotations as stac_unit
@@ -66,13 +64,13 @@ def _mk_dialogue_act_model(lconf):
 
 def _do_corpus(lconf):
     "Run evaluation on a corpus"
-    edus_file = edu_input_path(lconf)
-    if not os.path.exists(edus_file):
+    paths = mpack_paths(lconf, test_data=False)
+    if not fp.exists(paths[0]):
         exit_ungathered()
-
-    mpack = load_multipack(edus_file,
-                           pairings_path(lconf),
-                           features_path(lconf),
+    mpack = load_multipack(paths[0],
+                           paths[1],
+                           paths[2],
+                           paths[3],
                            verbose=True)
     dconf = DataConfig(pack=mpack,
                        folds=None)

@@ -15,14 +15,13 @@ import shutil
 import sys
 
 from attelo.io import (load_model,
-                       load_predictions,
-                       load_vocab)
+                       load_predictions)
 from attelo.harness.report import (Slice, full_report)
 from attelo.harness.util import (makedirs)
 import attelo.score
 import attelo.report
 
-from .graph import (mk_graphs)
+from .graph import (mk_graphs, mk_test_graphs)
 from .learn import (LEARNERS)
 from .local import (DETAILED_EVALUATIONS,
                     EVALUATIONS)
@@ -30,12 +29,25 @@ from .path import (attelo_doc_model_paths,
                    attelo_sent_model_paths,
                    decode_output_path,
                    eval_model_path,
-                   features_path,
+                   mpack_paths,
                    model_info_path,
                    report_dir_basename,
-                   report_dir_path,
-                   vocab_path)
-from .util import (md5sum_file)
+                   report_dir_path)
+from .util import (md5sum_file,
+                   test_evaluation)
+
+
+
+def _report_key(econf):
+    """
+    Rework an evaluation config key so it looks nice in
+    our reports
+
+    :rtype tuple(string)
+    """
+    return (econf.learner.key,
+            econf.decoder.key[len(econf.settings.key) + 1:],
+            econf.settings.key)
 
 
 def _fold_report_slices(lconf, fold):
@@ -47,17 +59,13 @@ def _fold_report_slices(lconf, fold):
     dkeys = [econf.key for econf in DETAILED_EVALUATIONS]
     for econf in EVALUATIONS:
         p_path = decode_output_path(lconf, econf, fold)
-        enable_details = econf.key in dkeys
-        stripped_decoder_key = econf.decoder.key[len(econf.settings.key) + 1:]
-        config = (econf.learner.key,
-                  stripped_decoder_key,
-                  econf.settings.key)
-        yield Slice(fold, config,
-                    load_predictions(p_path),
-                    enable_details)
+        yield Slice(fold=fold,
+                    configuration=_report_key(econf),
+                    predictions=load_predictions(p_path),
+                    enable_details=econf.key in dkeys)
 
 
-def _mk_model_summary(lconf, dconf, rconf, fold):
+def _mk_model_summary(lconf, dconf, rconf, test_data, fold):
     "generate summary of best model features"
     _top_n = 3
 
@@ -69,14 +77,16 @@ def _mk_model_summary(lconf, dconf, rconf, fold):
                               grain='sent' if intra else 'doc'),
                   file=sys.stderr)
             return
-        output = model_info_path(lconf, rconf, fold, intra)
+        output = model_info_path(lconf, rconf, test_data,
+                                 fold=fold,
+                                 intra=intra)
         with codecs.open(output, 'wb', 'utf-8') as fout:
             print(attelo.report.show_discriminating_features(discr),
                   file=fout)
 
     dpack0 = dconf.pack.values()[0]
     labels = dpack0.labels
-    vocab = load_vocab(vocab_path(lconf))
+    vocab = dpack0.vocab
     # doc level discriminating features
     if True:
         models = attelo_doc_model_paths(lconf, rconf, fold).fmap(load_model)
@@ -93,15 +103,21 @@ def _mk_model_summary(lconf, dconf, rconf, fold):
         _write_discr(discr, True)
 
 
-def _mk_hashfile(lconf, dconf):
+def _mk_hashfile(lconf, dconf, test_data):
     "Hash the features and models files for long term archiving"
 
-    hash_me = [features_path(lconf)]
-    for fold in sorted(frozenset(dconf.folds.values())):
-        for rconf in LEARNERS:
-            models_path = eval_model_path(lconf, rconf, fold, '*')
-            hash_me.extend(sorted(glob.glob(models_path + '*')))
-    provenance_dir = fp.join(report_dir_path(lconf, None),
+    hash_me = list(mpack_paths(lconf, False))
+    if test_evaluation() is not None:
+        hash_me.extend(mpack_paths(lconf, True))
+    for rconf in LEARNERS:
+        models_path = eval_model_path(lconf, rconf, None, '*')
+        hash_me.extend(sorted(glob.glob(models_path + '*')))
+    if not test_data:
+        for fold in sorted(frozenset(dconf.folds.values())):
+            for rconf in LEARNERS:
+                models_path = eval_model_path(lconf, rconf, fold, '*')
+                hash_me.extend(sorted(glob.glob(models_path + '*')))
+    provenance_dir = fp.join(report_dir_path(lconf, test_data, None),
                              'provenance')
     makedirs(provenance_dir)
     with open(fp.join(provenance_dir, 'hashes.txt'), 'w') as stream:
@@ -115,9 +131,9 @@ def _mk_hashfile(lconf, dconf):
                   file=stream)
 
 
-def _copy_version_files(lconf):
+def _copy_version_files(lconf, test_data):
     "Hash the features and models files for long term archiving"
-    provenance_dir = fp.join(report_dir_path(lconf, None),
+    provenance_dir = fp.join(report_dir_path(lconf, test_data, None),
                              'provenance')
     makedirs(provenance_dir)
     for vpath in glob.glob(fp.join(lconf.eval_dir,
@@ -125,20 +141,20 @@ def _copy_version_files(lconf):
         shutil.copy(vpath, provenance_dir)
 
 
-def _mk_report(lconf, dconf, slices, fold):
+def _mk_report(lconf, dconf, slices, fold, test_data=False):
     """helper for report generation
 
     :type fold: int or None
     """
     rpack = full_report(dconf.pack, dconf.folds, slices)
-    rpack.dump(report_dir_path(lconf, fold))
+    rpack.dump(report_dir_path(lconf, test_data, fold))
     for rconf in LEARNERS:
         if rconf.attach.payload == 'oracle':
             pass
-        elif rconf.relate is not None and rconf.relate.payload == 'oracle':
+        elif rconf.relate.payload == 'oracle':
             pass
         else:
-            _mk_model_summary(lconf, dconf, rconf, fold)
+            _mk_model_summary(lconf, dconf, rconf, test_data, fold)
 
 
 def mk_fold_report(lconf, dconf, fold):
@@ -152,17 +168,46 @@ def mk_global_report(lconf, dconf):
     slices = itr.chain.from_iterable(_fold_report_slices(lconf, f)
                                      for f in frozenset(dconf.folds.values()))
     _mk_report(lconf, dconf, slices, None)
-    _copy_version_files(lconf)
+    _copy_version_files(lconf, False)
 
-    report_dir = report_dir_path(lconf, None)
+    report_dir = report_dir_path(lconf, False, None)
     final_report_dir = fp.join(lconf.eval_dir,
-                               report_dir_basename(lconf))
+                               report_dir_basename(lconf, False))
     mk_graphs(lconf, dconf)
-    _mk_hashfile(lconf, dconf)
+    _mk_hashfile(lconf, dconf, False)
     if fp.exists(final_report_dir):
         shutil.rmtree(final_report_dir)
     shutil.copytree(report_dir, final_report_dir)
     # this can happen if resuming a report; better copy
     # it again
     print('Report saved in ', final_report_dir,
+          file=sys.stderr)
+
+
+def mk_test_report(lconf, dconf):
+    "Generate reports for test data"
+    econf = test_evaluation()
+    if econf is None:
+        return
+
+    p_path = decode_output_path(lconf, econf, None)
+    slices = [Slice(fold=None,
+                    configuration=_report_key(econf),
+                    predictions=load_predictions(p_path),
+                    enable_details=True)]
+    _mk_report(lconf, dconf, slices, None,
+               test_data=True)
+    _copy_version_files(lconf, True)
+
+    report_dir = report_dir_path(lconf, True, None)
+    final_report_dir = fp.join(lconf.eval_dir,
+                               report_dir_basename(lconf, True))
+    mk_test_graphs(lconf, dconf)
+    _mk_hashfile(lconf, dconf, True)
+    # this can happen if resuming a report; better copy
+    # it again
+    if fp.exists(final_report_dir):
+        shutil.rmtree(final_report_dir)
+    shutil.copytree(report_dir, final_report_dir)
+    print('TEST Report saved in ', final_report_dir,
           file=sys.stderr)
