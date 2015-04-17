@@ -84,7 +84,7 @@ def model_basename(lconf, rconf, mtype, ext):
     elif 'attach' in mtype:
         rsubconf = rconf.attach
     else:
-        rsubconf = rconf.relate or rconf.attach
+        rsubconf = rconf.relate
 
     if rsubconf.payload == 'oracle':
         return 'oracle'
