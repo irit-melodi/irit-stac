@@ -29,7 +29,8 @@ from sklearn.linear_model import (LogisticRegression)
 from .attelo_cfg import (combined_key,
                          Settings,
                          KeyedDecoder)
-from .turn_constraint import (TC_LearnerConfig)
+from .turn_constraint import (TC_LearnerConfig,
+                              TC_Decoder)
 
 # PATHS
 

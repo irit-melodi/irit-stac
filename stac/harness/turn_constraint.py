@@ -38,4 +38,26 @@ class TC_LearnerConfig(LearnerConfig):
         attach = Keyed('tc_' + attach.key, attach.payload)
         relate = Keyed('tc_' + relate.key, relate.payload)
         return super(TC_LearnerConfig, cls).__new__(cls, attach, relate)
+
+
+class TC_Decoder(Decoder):
+    '''
+    Placeholder to indicate we want to apply the turn constraint as a
+    filter on the data before decoding
+    '''
+    def __init__(self, decoder):
+        self._decoder = decoder
+        self._whitelist = None
+
+    def set_mpack(self, mpack):
+        self._whitelist = set()
+        for dpack in mpack.values():
+            dpack = apply_turn_constraint(dpack)
+            self._whitelist |= set(dpack.pairings)
+
+    def decode(self, lpack):
+        idxes = [i for i, row in enumerate(lpack.pairings)
+                 if row in self._whitelist]
+        lpack = lpack.selected(idxes)
+        return self._decoder.decode(lpack)
 # pylint: enable=invalid-name
