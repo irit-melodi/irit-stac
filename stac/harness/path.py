@@ -73,7 +73,7 @@ def fold_dir_path(lconf, fold):
 
 def combined_dir_path(lconf):
     "Scratch directory for working within the global config"
-    return fp.join(lconf.scratch_dir, 'global')
+    return fp.join(lconf.scratch_dir, 'combined')
 
 
 def model_basename(lconf, rconf, mtype, ext):
