@@ -18,6 +18,9 @@ from attelo.io import (load_model,
                        load_predictions)
 from attelo.harness.report import (Slice, full_report)
 from attelo.harness.util import (makedirs)
+from attelo.table import (select_fakeroot,
+                          select_intersentential,
+                          select_intrasentential)
 import attelo.score
 import attelo.report
 
@@ -146,8 +149,24 @@ def _mk_report(lconf, dconf, slices, fold, test_data=False):
 
     :type fold: int or None
     """
-    rpack = full_report(dconf.pack, dconf.folds, slices)
-    rpack.dump(report_dir_path(lconf, test_data, fold))
+    # we could just use slices = list(slices) here but we have a
+    # bit of awkward lazy IO where it says 'scoring fold N...'
+    # the idea being that we should only really see this when it's
+    # actually scoring that fold. Hoop-jumping induced by the fact
+    # that we are now generating multiple reports on the same slices
+    slices_ = itr.tee(slices, 4)
+    rpack = full_report(dconf.pack, dconf.folds, slices_[0])
+    rdir = report_dir_path(lconf, test_data, fold)
+    rpack.dump(rdir, header='whole')
+
+    partitions = [(1, 'intra', select_intrasentential),
+                  (2, 'inter', select_intersentential),
+                  (3, 'froot', select_fakeroot)]
+    for i, header, adjust_pack in partitions:
+        rpack = full_report(dconf.pack, dconf.folds, slices_[i],
+                            adjust_pack=adjust_pack)
+        rpack.append(rdir, header=header)
+
     for rconf in LEARNERS:
         if rconf.attach.payload == 'oracle':
             pass
