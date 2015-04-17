@@ -10,17 +10,18 @@ We rely on there being a feature 'same_speaker'
 # pylint: disable=too-few-public-methods
 
 from attelo.harness.config import (Keyed, LearnerConfig)
+from attelo.decoding import (Decoder)
 
 
 SAME_SPEAKER = 'same_speaker=True'
 'boolean feature for if two EDUs share a speaker'
 
 
-def apply_turn_constraint(vocab, dpack):
+def apply_turn_constraint(dpack):
     '''
     Select edges in the datapack that obey the turn constraint
     '''
-    spkr_idx = vocab.index(SAME_SPEAKER)
+    spkr_idx = dpack.vocab.index(SAME_SPEAKER)
     idxes = [i for i, (edu1, edu2) in enumerate(dpack.pairings)
              if edu2.span() > edu1.span()
              or dpack.data[i, spkr_idx]]

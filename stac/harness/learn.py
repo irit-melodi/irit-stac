@@ -53,7 +53,7 @@ def _get_learn_job(lconf, dconf, rconf, subpack, paths, task):
               file=sys.stderr)
     else:
         if isinstance(rconf, TC_LearnerConfig):
-            subpack = {k: apply_turn_constraint(dconf.vocab, v)
+            subpack = {k: apply_turn_constraint(v)
                        for k, v in subpack.items()}
         learn_fn = ath_learn.learn
         learners = Team(attach=rconf.attach,
