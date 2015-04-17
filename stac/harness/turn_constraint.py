@@ -59,5 +59,8 @@ class TC_Decoder(Decoder):
         idxes = [i for i, row in enumerate(lpack.pairings)
                  if row in self._whitelist]
         lpack = lpack.selected(idxes)
-        return self._decoder.decode(lpack)
+        if len(lpack) > 0:
+            return self._decoder.decode(lpack)
+        else:
+            return [[]]
 # pylint: enable=invalid-name
