@@ -43,7 +43,7 @@ def to_predictions(mpack):
 def _mk_econf_graphs(lconf, edus, gold, econf, fold):
     "Return jobs generating graphs for a single configuration"
     predictions = load_predictions(decode_output_path(lconf, econf, fold))
-    for diffmode in [GraphDiffMode.solo, GraphDiffMode.diff]:
+    for diffmode in GraphDiffMode:
         # output path
         if diffmode == GraphDiffMode.solo:
             output_bn_prefix = 'graphs-'
