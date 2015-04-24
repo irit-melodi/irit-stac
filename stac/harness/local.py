@@ -26,6 +26,8 @@ from attelo.decoding.mst import (MstDecoder, MstRootStrategy)
 from attelo.decoding.intra import (IntraInterDecoder, IntraStrategy)
 from attelo.learning import (can_predict_proba)
 from sklearn.linear_model import (LogisticRegression)
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from .attelo_cfg import (combined_key,
                          Settings,
                          KeyedDecoder)
@@ -144,6 +146,16 @@ def learner_oracle():
 def learner_maxent():
     return Keyed('maxent', LogisticRegression())
 
+
+def learner_dectree():
+    "return a keyed instance of decision tree learner"
+    return Keyed('dectree', DecisionTreeClassifier())
+
+def learner_rndforest():
+    "return a keyed instance of random forest learner"
+    return Keyed('rndforest', RandomForestClassifier())
+
+
 _LOCAL_LEARNERS = [
     LearnerConfig(attach=learner_oracle(),
                   relate=learner_oracle()),
@@ -151,6 +163,8 @@ _LOCAL_LEARNERS = [
                   relate=learner_maxent()),
     LearnerConfig(attach=learner_maxent(),
                   relate=learner_oracle()),
+    LearnerConfig(attach=learner_rndforest(),
+                  relate=learner_rndforest()),
 ]
 """Straightforward attelo learner algorithms to try
 
