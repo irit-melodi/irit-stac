@@ -64,6 +64,7 @@ SNAPSHOTS = 'data/SNAPSHOTS'
 
 
 TRAINING_CORPUS = 'data/FROZEN/training-2015-04-02'
+#TRAINING_CORPUS = 'data/tiny'
 """Corpora for use in building/training models and running our
 incremental experiments. Later on we should consider using the
 held-out test data for something, but let's make a point of
