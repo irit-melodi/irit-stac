@@ -86,14 +86,11 @@ def model_basename(lconf, rconf, mtype, ext):
     else:
         rsubconf = rconf.relate
 
-    if rsubconf.payload == 'oracle':
-        return 'oracle'
-    else:
-        template = '{dataset}.{learner}.{task}.{ext}'
-        return template.format(dataset=lconf.dataset,
-                               learner=rsubconf.key,
-                               task=mtype,
-                               ext=ext)
+    template = '{dataset}.{learner}.{task}.{ext}'
+    return template.format(dataset=lconf.dataset,
+                           learner=rsubconf.key,
+                           task=mtype,
+                           ext=ext)
 
 
 def eval_model_path(lconf, rconf, fold, mtype):
@@ -104,10 +101,7 @@ def eval_model_path(lconf, rconf, fold, mtype):
         parent_dir = fold_dir_path(lconf, fold)
 
     bname = model_basename(lconf, rconf, mtype, 'model')
-    if bname == 'oracle':
-        return bname
-    else:
-        return fp.join(parent_dir, bname)
+    return fp.join(parent_dir, bname)
 
 
 def decode_output_basename(econf):

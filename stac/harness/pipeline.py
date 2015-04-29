@@ -101,6 +101,13 @@ def run_pipeline(lconf, stages):
 # ---------------------------------------------------------------------
 
 
+def latest_snap():
+    """
+    Directory for last run (usually a symlink)
+    """
+    return fp.join(SNAPSHOTS, "latest")
+
+
 def stub_name(lconf_or_soclog):
     "return a short filename component from a soclog path"
     soclog = lconf_or_soclog.soclog\
@@ -234,6 +241,20 @@ def decode(lconf, evaluations):
 # ---------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------
+
+
+def link_files(src_dir, tgt_dir):
+    """
+    Hard-link all files from the source directory into the
+    target directory (nb: files only; directories ignored)
+    This does not cost space and it makes future
+    archiving a bit more straightforward
+    """
+    for fname in os.listdir(src_dir):
+        data_file = fp.join(src_dir, fname)
+        eval_file = fp.join(tgt_dir, fname)
+        if os.path.isfile(data_file):
+            os.link(data_file, eval_file)
 
 
 def check_3rd_party():

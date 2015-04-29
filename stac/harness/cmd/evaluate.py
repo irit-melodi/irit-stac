@@ -301,8 +301,7 @@ def _init_corpus(lconf):
         else:
             fold_dict = _generate_fold_file(lconf, mpack)
         mpack = _apply_naughty_filters(lconf, mpack)
-        return DataConfig(pack=mpack,
-                          folds=fold_dict)
+        return DataConfig(pack=mpack, folds=fold_dict)
     elif lconf.stage == ClusterStage.start:
         if can_skip_folds:
             # if we are just running --start and the fold file already
@@ -319,8 +318,7 @@ def _init_corpus(lconf):
         mpack = _load_harness_multipack(lconf)
         mpack = _apply_naughty_filters(lconf, mpack)
         fold_dict = load_fold_dict(lconf.fold_file)
-        return DataConfig(pack=mpack,
-                          folds=fold_dict)
+        return DataConfig(pack=mpack, folds=fold_dict)
 
 
 def _do_corpus(lconf):

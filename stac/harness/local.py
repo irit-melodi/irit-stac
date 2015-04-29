@@ -1,4 +1,3 @@
-# pylint: disable=star-args
 """
 Paths and settings used for this experimental harness
 In the future we may move this to a proper configuration file.
@@ -58,6 +57,7 @@ needed.
 """
 
 TEST_CORPUS = None
+# TEST_CORPUS = 'tiny'
 """Corpora for use in FINAL testing.
 
 You should probably leave this set to None until you've tuned and
@@ -228,6 +228,9 @@ possibilities
 # -------------------------------------------------------------------------------
 
 
+HARNESS_NAME = 'irit-stac'
+
+
 def _is_junk(klearner, kdecoder):
     """
     Any configuration for which this function returns True
@@ -235,7 +238,7 @@ def _is_junk(klearner, kdecoder):
     """
     # intrasential head to head mode only works with mst for now
     intra_flag = kdecoder.settings.intra
-    if 'mst' not in kdecoder.key:
+    if kdecoder.key != 'mst':
         if (intra_flag is not None and
                 intra_flag.strategy == IntraStrategy.heads):
             return True
@@ -407,7 +410,6 @@ def print_evaluations():
         print(econf)
         print()
     print("\n".join(econf.key for econf in EVALUATIONS))
-
 
 if __name__ == '__main__':
     print_evaluations()

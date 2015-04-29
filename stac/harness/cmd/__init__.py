@@ -14,7 +14,6 @@ from . import (clean,
                serve,
                stop)
 
-
 SUBCOMMANDS =\
     [
         gather,

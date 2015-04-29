@@ -22,8 +22,10 @@ from ..loop import (LoopConfig,
 from ..path import (mpack_paths,
                     eval_model_path,
                     eval_data_path)
+from ..pipeline import (latest_snap,
+                        link_files)
 from ..util import (exit_ungathered, sanity_check_config,
-                    latest_tmp, latest_snap, link_files)
+                    latest_tmp)
 import stac.unit_annotations as stac_unit
 
 NAME = 'model'
