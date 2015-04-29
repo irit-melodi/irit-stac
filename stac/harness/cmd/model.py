@@ -15,6 +15,7 @@ from attelo.io import (load_multipack, Torpor)
 
 from ..learn import (mk_combined_models)
 from ..local import (DIALOGUE_ACT_LEARNER,
+                     EVALUATIONS,
                      SNAPSHOTS,
                      TRAINING_CORPUS)
 from ..loop import (LoopConfig,
@@ -76,7 +77,7 @@ def _do_corpus(lconf):
                            verbose=True)
     dconf = DataConfig(pack=mpack,
                        folds=None)
-    mk_combined_models(lconf, dconf)
+    mk_combined_models(lconf, EVALUATIONS, dconf)
     _mk_dialogue_act_model(lconf)
 
 # ---------------------------------------------------------------------

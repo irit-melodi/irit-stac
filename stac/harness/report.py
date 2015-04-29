@@ -21,15 +21,14 @@ from attelo.harness.util import (makedirs)
 from attelo.table import (select_fakeroot,
                           select_intersentential,
                           select_intrasentential)
+from attelo.util import (Team)
 import attelo.score
 import attelo.report
 
 from .graph import (mk_graphs, mk_test_graphs)
-from .learn import (LEARNERS)
 from .local import (DETAILED_EVALUATIONS,
                     EVALUATIONS)
-from .path import (attelo_doc_model_paths,
-                   attelo_sent_model_paths,
+from .path import (attelo_model_paths,
                    decode_output_path,
                    eval_model_path,
                    mpack_paths,
@@ -40,6 +39,7 @@ from .util import (md5sum_file,
                    test_evaluation)
 
 
+LEARNERS = frozenset(e.learner for e in EVALUATIONS)
 
 def _report_key(econf):
     """
@@ -49,7 +49,7 @@ def _report_key(econf):
     :rtype tuple(string)
     """
     return (econf.learner.key,
-            econf.decoder.key[len(econf.settings.key) + 1:],
+            econf.parser.key[len(econf.settings.key) + 1:],
             econf.settings.key)
 
 
@@ -90,17 +90,21 @@ def _mk_model_summary(lconf, dconf, rconf, test_data, fold):
     dpack0 = dconf.pack.values()[0]
     labels = dpack0.labels
     vocab = dpack0.vocab
+    mpaths = attelo_model_paths(lconf, rconf, fold)
     # doc level discriminating features
     if True:
-        models = attelo_doc_model_paths(lconf, rconf, fold).fmap(load_model)
+        models = Team(attach=mpaths['attach'],
+                      relate=mpaths['label']).fmap(load_model)
         discr = attelo.score.discriminating_features(models, labels, vocab,
                                                      _top_n)
         _write_discr(discr, False)
 
     # sentence-level
-    spaths = attelo_sent_model_paths(lconf, rconf, fold)
-    if fp.exists(spaths.attach) and fp.exists(spaths.relate):
-        models = spaths.fmap(load_model)
+    s_attach_path = mpaths['intra:attach']
+    s_label_path = mpaths['intra:label']
+    if fp.exists(s_attach_path) and fp.exists(s_label_path):
+        models = Team(attach=s_attach_path,
+                      relate=s_label_path).fmap(load_model)
         discr = attelo.score.discriminating_features(models, labels, vocab,
                                                      _top_n)
         _write_discr(discr, True)

@@ -21,8 +21,7 @@ import attelo.score
 import attelo.report
 
 from ..decode import (delayed_decode, post_decode)
-from ..learn import (LEARNERS,
-                     delayed_learn,
+from ..learn import (learn,
                      mk_combined_models)
 from ..local import (EVALUATIONS,
                      NAUGHTY_TURN_CONSTRAINT,
@@ -211,14 +210,9 @@ def _do_fold(lconf, dconf, fold):
     if not os.path.exists(fold_dir):
         os.makedirs(fold_dir)
 
-    # learn all models in parallel
-    include_intra = any(e.settings.intra is not None
-                        for e in EVALUATIONS)
-    learner_jobs = concat_i(delayed_learn(lconf, dconf, rconf, fold,
-                                          include_intra)
-                            for rconf in LEARNERS)
-    parallel(lconf)(learner_jobs)
-    # run all model/decoder joblets in parallel
+    # learn all models
+    for econf in EVALUATIONS:
+        learn(lconf, econf, dconf, fold)
     decoder_jobs = concat_i(delayed_decode(lconf, dconf, econf, fold)
                             for econf in EVALUATIONS)
     parallel(lconf)(decoder_jobs)
@@ -337,7 +331,7 @@ def _do_corpus(lconf):
             _do_fold(lconf, dconf, fold)
 
     if _is_standalone_or(lconf, ClusterStage.combined_models):
-        mk_combined_models(lconf, dconf)
+        mk_combined_models(lconf, EVALUATIONS, dconf)
         if test_evaluation() is not None:
             test_pack = _load_harness_multipack(lconf, test_data=True)
             test_dconf = DataConfig(pack=test_pack, folds=None)
