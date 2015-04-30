@@ -10,12 +10,13 @@ from __future__ import print_function
 import itertools as itr
 
 import educe.stac.corpus
+import numpy as np
 
 from attelo.harness.config import (EvaluationConfig,
                                    LearnerConfig,
+                                   ParserConfig,
                                    Keyed)
 
-from attelo.decoding import (DecodingMode)
 from attelo.decoding.astar import (AstarArgs,
                                    AstarDecoder,
                                    Heuristic,
@@ -37,7 +38,7 @@ from attelo.parser.intra import (HeadToHeadParser,
                                  SoftParser)
 from attelo.parser.full import (JointPipeline,
                                 PostlabelPipeline)
-
+from attelo.parser.pipeline import (Pipeline)
 
 from sklearn.linear_model import (LogisticRegression,
                                   Perceptron as SkPerceptron,
@@ -92,7 +93,7 @@ validation on the training data)
 """
 
 TEST_EVALUATION_KEY = None
-# TEST_EVALUATION_KEY = 'maxent-AD.L_jnt-mst'
+# TEST_EVALUATION_KEY = 'maxent-AD.L_jnt-mst-root'
 """Evaluation to use for testing.
 
 Leave this to None until you think it's OK to look at the test data.
@@ -132,6 +133,7 @@ def decoder_mst(settings):
     use_prob = settings.mode != DecodingMode.post_label
     return MstDecoder(MstRootStrategy.fake_root,
                       use_prob)
+
 
 def attach_learner_oracle():
     "return a keyed instance of the oracle (virtual) learner"
@@ -177,32 +179,34 @@ def label_learner_rndforest():
 LOCAL_PERC_ARGS = PerceptronArgs(iterations=20,
                                  averaging=True,
                                  use_prob=False,
-                                 aggressiveness=inf)
+                                 aggressiveness=np.inf)
 
 LOCAL_PA_ARGS = PerceptronArgs(iterations=20,
                                averaging=True,
                                use_prob=False,
-                               aggressiveness=inf)
+                               aggressiveness=np.inf)
 
 STRUCT_PERC_ARGS = PerceptronArgs(iterations=50,
                                   averaging=True,
                                   use_prob=False,
-                                  aggressiveness=inf)
+                                  aggressiveness=np.inf)
 
 STRUCT_PA_ARGS = PerceptronArgs(iterations=50,
                                 averaging=True,
                                 use_prob=False,
-                                aggressiveness=inf)
+                                aggressiveness=np.inf)
 
 _LOCAL_LEARNERS = [
     LearnerConfig(attach=attach_learner_oracle(),
                   relate=label_learner_oracle()),
     LearnerConfig(attach=attach_learner_maxent(),
                   relate=label_learner_maxent()),
-    LearnerConfig(attach=attach_learner_maxent(),
-                  relate=label_learner_oracle()),
-    LearnerConfig(attach=attach_learner_rndforest(),
-                  relate=label_learner_rndforest()),
+    LearnerConfig(attach=tc_learner(attach_learner_maxent()),
+                  relate=tc_learner(label_learner_maxent())),
+#    LearnerConfig(attach=attach_learner_maxent(),
+#                  relate=label_learner_oracle()),
+#    LearnerConfig(attach=attach_learner_rndforest(),
+#                  relate=label_learner_rndforest()),
 #    LearnerConfig(attach=Keyed('sk-perceptron',
 #                               SkPerceptron(n_iter=20)),
 #                  relate=learner_maxent()),
@@ -239,9 +243,10 @@ We assume that they cannot be used relation modelling
 
 _CORE_DECODERS = [
     Keyed('local', decoder_local),
-    Keyed('mst-left', decoder_mst_l),
+    #Keyed('mst-left', decoder_mst_l),
     Keyed('mst-root', decoder_mst),
-
+    Keyed('tc-local', mk_tc_decoder(decoder_local)),
+    Keyed('tc-mst-root', mk_tc_decoder(decoder_mst)),
     #Keyed('astar', decoder_astar),
 ]
 
@@ -253,7 +258,7 @@ Don't forget that you can parameterise the decoders ::
 """
 
 
-SETTINGS_BASIC = Settings(key='AD.L_joint',
+SETTINGS_BASIC = Settings(key='AD.L_jnt',
                           mode=DecodingMode.joint,
                           intra=None)
 
