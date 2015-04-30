@@ -15,7 +15,6 @@ from attelo.harness.util import (makedirs)
 import attelo.harness.parse as ath_parse
 
 from .path import (decode_output_path)
-from .turn_constraint import (TC_Decoder, apply_turn_constraint)
 from .util import (test_evaluation)
 
 
@@ -66,14 +65,6 @@ def delayed_decode(lconf, dconf, econf, fold):
         subpack = dconf.pack
     else:
         subpack = select_testing(dconf.pack, dconf.folds, fold)
-
-    # FIXME: this is a pretty horrible kludge: outermost decoder
-    # must be a TC_Decoder for this to be picked up.
-    # what would need to happen to do this better is to have a
-    # better story for parser/decoder composability
-    if isinstance(econf.decoder.payload, TC_Decoder):
-        print('Applying TC constraint for decoding', file=sys.stderr)
-        econf.decoder.payload.set_mpack(subpack)
 
     parser = econf.parser.payload
     return ath_parse.jobs(subpack, parser, output_path)

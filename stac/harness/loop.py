@@ -11,7 +11,6 @@ from enum import Enum
 LoopConfig = namedtuple("LoopConfig",
                         ["eval_dir",
                          "scratch_dir",
-                         "naughty_filters",
                          "stage",
                          "folds",
                          "fold_file",

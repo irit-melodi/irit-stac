@@ -24,7 +24,6 @@ from ..decode import (delayed_decode, post_decode)
 from ..learn import (learn,
                      mk_combined_models)
 from ..local import (EVALUATIONS,
-                     NAUGHTY_TURN_CONSTRAINT,
                      TRAINING_CORPUS,
                      TEST_CORPUS)
 from ..path import (fold_dir_path,
@@ -41,7 +40,6 @@ from ..util import (concat_i,
 from ..loop import (LoopConfig,
                     DataConfig,
                     ClusterStage)
-from ..turn_constraint import (apply_turn_constraint)
 
 # pylint: disable=too-few-public-methods
 
@@ -266,16 +264,6 @@ def _load_harness_multipack(lconf, test_data=False):
                           verbose=True)
 
 
-def _apply_naughty_filters(lconf, mpack):
-    """Make any modifications to the multipack that we load as we see
-    fit
-    """
-    for key in mpack:
-        if 'turn-constraint' in lconf.naughty_filters:
-            mpack[key] = apply_turn_constraint(mpack[key])
-    return mpack
-
-
 def _init_corpus(lconf):
     """Start evaluation; generate folds if needed
 
@@ -294,7 +282,6 @@ def _init_corpus(lconf):
             fold_dict = load_fold_dict(lconf.fold_file)
         else:
             fold_dict = _generate_fold_file(lconf, mpack)
-        mpack = _apply_naughty_filters(lconf, mpack)
         return DataConfig(pack=mpack, folds=fold_dict)
     elif lconf.stage == ClusterStage.start:
         if can_skip_folds:
@@ -309,10 +296,8 @@ def _init_corpus(lconf):
     else:
         # any other stage: fold files have already been
         # created so we just read them in
-        mpack = _load_harness_multipack(lconf)
-        mpack = _apply_naughty_filters(lconf, mpack)
-        fold_dict = load_fold_dict(lconf.fold_file)
-        return DataConfig(pack=mpack, folds=fold_dict)
+        return DataConfig(pack=_load_harness_multipack(lconf),
+                          folds=load_fold_dict(lconf.fold_file))
 
 
 def _do_corpus(lconf):
@@ -417,14 +402,8 @@ def main(args):
     testset = None if TEST_CORPUS is None else fp.basename(TEST_CORPUS)
     fold_file = fp.join(eval_dir, "folds-%s.json" % dataset)
 
-    naughty_filters = []
-    if NAUGHTY_TURN_CONSTRAINT:
-        naughty_filters.append('turn-constraint')
-
-
     lconf = LoopConfig(eval_dir=eval_dir,
                        scratch_dir=scratch_dir,
-                       naughty_filters=naughty_filters,
                        folds=args.folds,
                        stage=stage,
                        fold_file=fold_file,
