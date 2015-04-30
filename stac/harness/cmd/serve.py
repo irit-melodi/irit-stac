@@ -13,13 +13,14 @@ import zmq
 from attelo.harness.util import makedirs
 
 from . import parse as p
-from ..local import (BEST_EVALUATION)
 from ..pipeline import (PipelineConfig,
                         Stage, run_pipeline,
                         check_3rd_party,
                         decode,
                         minicorpus_path,
                         attelo_result_path)
+from ..util import (test_evaluation)
+
 
 NAME = 'serve'
 _DEBUG = 0
@@ -31,7 +32,7 @@ _DEBUG = 0
 
 def xml_output_path(lconf):
     "final output of the server"
-    return attelo_result_path(lconf, BEST_EVALUATION) + ".settlers-xml"
+    return attelo_result_path(lconf, test_evaluation()) + ".settlers-xml"
 
 
 def _to_xml(lconf, log):
@@ -40,7 +41,7 @@ def _to_xml(lconf, log):
     """
     lconf.pyt("parser/to_settlers_xml",
               minicorpus_path(lconf),
-              attelo_result_path(lconf, BEST_EVALUATION),
+              attelo_result_path(lconf, test_evaluation()),
               "--output", xml_output_path(lconf),
               stdout=log)
 
@@ -48,7 +49,7 @@ def _to_xml(lconf, log):
 SERVER_STAGES = p.CORE_STAGES +\
     [
         Stage("0700-decoding",
-              lambda lcf, _: decode(lcf, [BEST_EVALUATION]),
+              lambda lcf, _: decode(lcf, [test_evaluation()]),
               "Decoding"),
         Stage("0800-xml", _to_xml,
               "Converting (-> settlers xml)"),

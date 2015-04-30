@@ -462,21 +462,11 @@ HINT: set to empty list for no graphs whatsoever
 # -------------------------------------------------------------------------------
 
 
-_BEST_LEARNER = LearnerConfig(attach=learner_maxent(),
-                              relate=learner_maxent())
-_BEST_DECODER = _mk_keyed_decoder(Keyed('mst-left', decoder_mst),
-                                  SETTINGS_BASIC)
-
-BEST_EVALUATION =\
-    EvaluationConfig(key=combined_key([_BEST_LEARNER, _BEST_DECODER]),
-                     settings=_BEST_DECODER.settings,
-                     learner=_BEST_LEARNER,
-                     decoder=_BEST_DECODER)
 """
 The configuration we would like to use for the standalone parser.
 """
 
-DIALOGUE_ACT_LEARNER = learner_maxent()
+DIALOGUE_ACT_LEARNER = Keyed('maxent', LogisticRegression())
 """
 Classifier to use for dialogue acts
 """
