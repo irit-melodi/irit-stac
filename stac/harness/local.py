@@ -257,14 +257,18 @@ Don't forget that you can parameterise the decoders ::
     Keyed('astar-3-best' decoder_astar(nbest=3))
 """
 
-
-SETTINGS_BASIC = Settings(key='AD.L_jnt',
+SETTINGS_JOINT = Settings(key='AD.L_jnt',
                           mode=DecodingMode.joint,
                           intra=None)
+SETTINGS_POST = Settings(key='AD.L_pst',
+                         mode=DecodingMode.post_label,
+                         intra=None)
+SETTINGS_BASIC = SETTINGS_POST
 
 
 _SETTINGS = [
-    SETTINGS_BASIC,
+    SETTINGS_JOINT,
+    SETTINGS_POST,
     ]
 """Variants on global settings that would generally apply
 over all decoder combos.
