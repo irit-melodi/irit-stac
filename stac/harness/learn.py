@@ -28,11 +28,6 @@ def learn(lconf, econf, dconf, fold):
         parent_dir = fold_dir_path(lconf, fold)
         get_subpack = lambda d: select_training(d, dconf.folds, fold)
 
-    if WINDOW <= -1:
-        narrow = lambda d: d
-    else:
-        narrow = lambda d: select_window(d, WINDOW)
-
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
 
