@@ -71,7 +71,7 @@ def model_basename(lconf, rconf, mtype, ext):
     elif 'attach' in mtype:
         rsubconf = rconf.attach
     else:
-        rsubconf = rconf.relate
+        rsubconf = rconf.label
 
     template = '{dataset}.{learner}.{task}.{ext}'
     return template.format(dataset=lconf.dataset,

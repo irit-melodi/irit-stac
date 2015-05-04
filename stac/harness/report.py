@@ -94,7 +94,7 @@ def _mk_model_summary(lconf, dconf, rconf, test_data, fold):
     # doc level discriminating features
     if True:
         models = Team(attach=mpaths['attach'],
-                      relate=mpaths['label']).fmap(load_model)
+                      label=mpaths['label']).fmap(load_model)
         discr = attelo.score.discriminating_features(models, labels, vocab,
                                                      _top_n)
         _write_discr(discr, False)
@@ -104,7 +104,7 @@ def _mk_model_summary(lconf, dconf, rconf, test_data, fold):
     s_label_path = mpaths['intra:label']
     if fp.exists(s_attach_path) and fp.exists(s_label_path):
         models = Team(attach=s_attach_path,
-                      relate=s_label_path).fmap(load_model)
+                      label=s_label_path).fmap(load_model)
         discr = attelo.score.discriminating_features(models, labels, vocab,
                                                      _top_n)
         _write_discr(discr, True)
@@ -174,7 +174,7 @@ def _mk_report(lconf, dconf, slices, fold, test_data=False):
     for rconf in LEARNERS:
         if rconf.attach.payload == 'oracle':
             pass
-        elif rconf.relate.payload == 'oracle':
+        elif rconf.label.payload == 'oracle':
             pass
         else:
             _mk_model_summary(lconf, dconf, rconf, test_data, fold)
