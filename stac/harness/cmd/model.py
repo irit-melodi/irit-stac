@@ -15,6 +15,7 @@ from attelo.io import (load_multipack, Torpor)
 
 from ..learn import (mk_combined_models)
 from ..local import (DIALOGUE_ACT_LEARNER,
+                     EVALUATIONS,
                      SNAPSHOTS,
                      TRAINING_CORPUS)
 from ..loop import (LoopConfig,
@@ -22,8 +23,10 @@ from ..loop import (LoopConfig,
 from ..path import (mpack_paths,
                     eval_model_path,
                     eval_data_path)
+from ..pipeline import (latest_snap,
+                        link_files)
 from ..util import (exit_ungathered, sanity_check_config,
-                    latest_tmp, latest_snap, link_files)
+                    latest_tmp)
 import stac.unit_annotations as stac_unit
 
 NAME = 'model'
@@ -74,7 +77,7 @@ def _do_corpus(lconf):
                            verbose=True)
     dconf = DataConfig(pack=mpack,
                        folds=None)
-    mk_combined_models(lconf, dconf)
+    mk_combined_models(lconf, EVALUATIONS, dconf)
     _mk_dialogue_act_model(lconf)
 
 # ---------------------------------------------------------------------

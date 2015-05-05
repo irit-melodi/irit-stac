@@ -121,6 +121,8 @@ def add_predictions(tstamp, corpus, predictions):
     """
     # build dictionary from FileId to relations in that document
     for id_parent, id_child, label in predictions:
+        if id_parent == 'ROOT':
+            continue
         doc_subdoc1, local_id_parent = split_id(id_parent)
         doc_subdoc2, local_id_child = split_id(id_child)
         assert doc_subdoc1 == doc_subdoc2
@@ -145,14 +147,16 @@ def remove_unseen_edus(corpus, predictions):
     unseen = {}
     # build dictionary from FileId to relations in that document
     for id_parent, id_child, _ in predictions:
-        doc_subdoc1, local_id_parent = split_id(id_parent)
         doc_subdoc2, local_id_child = split_id(id_child)
-        assert doc_subdoc1 == doc_subdoc2
-        key, doc = guess_doc(corpus, doc_subdoc1)
+        if id_parent != 'ROOT':
+            doc_subdoc1, local_id_parent = split_id(id_parent)
+            assert doc_subdoc1 == doc_subdoc2
+        key, doc = guess_doc(corpus, doc_subdoc2)
         if key not in unseen:
             unseen[key] = set(x.local_id() for x in doc.units
                               if educe.stac.is_edu(x))
-        unseen[key].discard(local_id_parent)
+        if id_parent != 'ROOT':
+            unseen[key].discard(local_id_parent)
         unseen[key].discard(local_id_child)
 
     for key, doc in corpus.items():

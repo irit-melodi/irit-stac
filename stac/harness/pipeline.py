@@ -7,18 +7,21 @@ Support for parser pipeline
 
 from collections import namedtuple
 from os import path as fp
+import os
 import re
 import sys
 
 from attelo.harness.util import call, makedirs
-from attelo.io import (Torpor, load_multipack, load_model)
-import attelo.harness.decode as ath_decode
+from attelo.io import (Torpor, load_multipack)
+import attelo.harness.parse as ath_parse
 from joblib import (Parallel)
 
-from .local import (TAGGER_JAR, TRAINING_CORPUS)
-from .path import (attelo_doc_model_paths,
-                   vocab_path)
-from .util import (concat_i, latest_snap)
+from .local import (SNAPSHOTS,
+                    TAGGER_JAR,
+                    TRAINING_CORPUS)
+from .path import (attelo_model_paths,
+                   mpack_paths)
+from .util import (concat_i)
 
 # pylint: disable=too-few-public-methods
 
@@ -99,6 +102,13 @@ def run_pipeline(lconf, stages):
 # ---------------------------------------------------------------------
 # pipeline paths
 # ---------------------------------------------------------------------
+
+
+def latest_snap():
+    """
+    Directory for last run (usually a symlink)
+    """
+    return fp.join(SNAPSHOTS, "latest")
 
 
 def stub_name(lconf_or_soclog):
@@ -202,38 +212,48 @@ def _get_decoding_jobs(mpack, lconf, econf):
     """
     makedirs(lconf.tmp("parsed"))
     output_path = attelo_result_path(lconf, econf)
-    model_paths = attelo_doc_model_paths(lconf,
-                                         econf.learner,
-                                         None)
-    models = model_paths.fmap(load_model)
-    return ath_decode.jobs(mpack,
-                           models,
-                           econf.decoder.payload,
-                           econf.settings.mode,
-                           output_path)
+    cache = attelo_model_paths(lconf,
+                               econf.learner,
+                               None)
+    parser = econf.parser.payload
+    parser.fit([], [], cache) # we assume everything is cached
+    return ath_parse.jobs(mpack, parser, output_path)
 
 
 def decode(lconf, evaluations):
     "Decode the input using all the model/learner combos we know"
 
     fpath = minicorpus_path(lconf) + '.relations.sparse'
-    with open(vocab_path(lconf)) as lines:
-        num_features = len(list(lines))
+    vocab_path = mpack_paths(lconf, test_data=False)[3]
     mpack = load_multipack(fpath + '.edu_input',
                            fpath + '.pairings',
                            fpath,
-                           n_features=num_features)
+                           vocab_path)
     decoder_jobs = concat_i(_get_decoding_jobs(mpack, lconf, econf)
                             for econf in evaluations)
     Parallel(n_jobs=-1)(decoder_jobs)
     for econf in evaluations:
         output_path = attelo_result_path(lconf, econf)
-        ath_decode.concatenate_outputs(mpack, output_path)
+        ath_parse.concatenate_outputs(mpack, output_path)
 
 
 # ---------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------
+
+
+def link_files(src_dir, tgt_dir):
+    """
+    Hard-link all files from the source directory into the
+    target directory (nb: files only; directories ignored)
+    This does not cost space and it makes future
+    archiving a bit more straightforward
+    """
+    for fname in os.listdir(src_dir):
+        data_file = fp.join(src_dir, fname)
+        eval_file = fp.join(tgt_dir, fname)
+        if os.path.isfile(data_file):
+            os.link(data_file, eval_file)
 
 
 def check_3rd_party():

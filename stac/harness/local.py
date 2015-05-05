@@ -1,4 +1,3 @@
-# pylint: disable=star-args
 """
 Paths and settings used for this experimental harness
 In the future we may move this to a proper configuration file.
@@ -11,26 +10,51 @@ from __future__ import print_function
 import itertools as itr
 
 import educe.stac.corpus
+import numpy as np
 
 from attelo.harness.config import (EvaluationConfig,
                                    LearnerConfig,
+                                   ParserConfig,
                                    Keyed)
 
-from attelo.decoding import (DecodingMode)
 from attelo.decoding.astar import (AstarArgs,
                                    AstarDecoder,
                                    Heuristic,
                                    RfcConstraint)
 from attelo.decoding.baseline import (LocalBaseline)
 from attelo.decoding.mst import (MstDecoder, MstRootStrategy)
-from attelo.decoding.intra import (IntraInterDecoder, IntraStrategy)
-from attelo.learning import (can_predict_proba)
-from sklearn.linear_model import (LogisticRegression)
+from attelo.learning.perceptron import (Perceptron,
+                                        PerceptronArgs,
+                                        PassiveAggressive,
+                                        StructuredPerceptron,
+                                        StructuredPassiveAggressive)
+from attelo.learning.local import (SklearnAttachClassifier,
+                                   SklearnLabelClassifier)
+from attelo.learning.oracle import (AttachOracle, LabelOracle)
+
+from attelo.parser.intra import (HeadToHeadParser,
+                                 IntraInterPair,
+                                 SentOnlyParser,
+                                 SoftParser)
+from attelo.parser.full import (JointPipeline,
+                                PostlabelPipeline)
+from attelo.parser.pipeline import (Pipeline)
+
+from sklearn.linear_model import (LogisticRegression,
+                                  Perceptron as SkPerceptron,
+                                  PassiveAggressiveClassifier as
+                                  SkPassiveAggressiveClassifier)
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+
 from .attelo_cfg import (combined_key,
+                         DecodingMode,
+                         IntraStrategy,
                          Settings,
-                         KeyedDecoder)
-from .turn_constraint import (TC_LearnerConfig,
-                              TC_Decoder)
+                         IntraFlag)
+from .turn_constraint import (mk_tc_decoder,
+                              tc_learner)
 
 # PATHS
 
@@ -43,6 +67,7 @@ SNAPSHOTS = 'data/SNAPSHOTS'
 
 
 TRAINING_CORPUS = 'data/FROZEN/training-2015-04-02'
+#TRAINING_CORPUS = 'data/tiny'
 """Corpora for use in building/training models and running our
 incremental experiments. Later on we should consider using the
 held-out test data for something, but let's make a point of
@@ -56,6 +81,7 @@ needed.
 """
 
 TEST_CORPUS = None
+# TEST_CORPUS = 'tiny'
 """Corpora for use in FINAL testing.
 
 You should probably leave this set to None until you've tuned and
@@ -67,7 +93,7 @@ validation on the training data)
 """
 
 TEST_EVALUATION_KEY = None
-# TEST_EVALUATION_KEY = 'maxent-AD.L_jnt-mst'
+# TEST_EVALUATION_KEY = 'maxent-AD.L_jnt-mst-root'
 """Evaluation to use for testing.
 
 Leave this to None until you think it's OK to look at the test data.
@@ -89,79 +115,125 @@ ANNOTATORS = educe.stac.corpus.METAL_STR
 Which annotators to read from during feature extraction
 """
 
-WINDOW = 5
-"""
-Limited extracted EDUs to those separated by at most WINDOW EDUs.
-Adjacent EDUs are separated by 0.
-
-Note that you can set this to -1 to disable windowing algother.
-"""
-
-NAUGHTY_TURN_CONSTRAINT = False
-"""
-You probably don't want to enable this. This causes the
-turn constraint to be applied on all of the data, both
-training and testing.
-
-This is bad because you're effectively cheating by
-restricting the problem to non-tc-violating things.
-It's interesting to see of course if it's much easier
-to solve a tc'ed task; but you definitely don't want
-to treat the results as comparable
-
-It could be useful for a short term experiment, but really should
-go away soon.  Please delete me and anything to do with me if you
-see this code lying around and don't know what it's for.
-"""
-
 def decoder_local(settings):
     "our instantiation of the local baseline decoder"
     use_prob = settings.mode != DecodingMode.post_label
     return LocalBaseline(0.2, use_prob)
 
 
-def decoder_mst(settings):
+def decoder_mst_l(settings):
     "our instantiation of the mst decoder"
     use_prob = settings.mode != DecodingMode.post_label
     return MstDecoder(MstRootStrategy.leftmost,
                       use_prob)
 
 
-def decoder_astar(settings):
-    "our instantiation of the A* decoder"
-    astar_args = AstarArgs(heuristics=Heuristic.average,
-                           rfc=RfcConstraint.simple,
-                           beam=None,
-                           nbest=1,
-                           use_prob=settings.mode != DecodingMode.post_label)
-    return AstarDecoder(astar_args)
+def decoder_mst(settings):
+    "our instantiation of the mst decoder"
+    use_prob = settings.mode != DecodingMode.post_label
+    return MstDecoder(MstRootStrategy.fake_root,
+                      use_prob)
+
+
+def attach_learner_oracle():
+    "return a keyed instance of the oracle (virtual) learner"
+    return Keyed('oracle', AttachOracle())
+
+
+def label_learner_oracle():
+    "return a keyed instance of the oracle (virtual) learner"
+    return Keyed('oracle', LabelOracle())
 
 
 
-def learner_oracle():
-    return Keyed('oracle', 'oracle')
+def attach_learner_maxent():
+    "return a keyed instance of maxent learner"
+    return Keyed('maxent', SklearnAttachClassifier(LogisticRegression()))
 
-def learner_maxent():
-    return Keyed('maxent', LogisticRegression())
+def label_learner_maxent():
+    "return a keyed instance of maxent learner"
+    return Keyed('maxent', SklearnLabelClassifier(LogisticRegression()))
+
+
+
+def attach_learner_dectree():
+    "return a keyed instance of decision tree learner"
+    return Keyed('dectree', SklearnAttachClassifier(DecisionTreeClassifier()))
+
+
+def label_learner_dectree():
+    "return a keyed instance of decision tree learner"
+    return Keyed('dectree', SklearnLabelClassifier(DecisionTreeClassifier()))
+
+
+def attach_learner_rndforest():
+    "return a keyed instance of random forest learner"
+    return Keyed('rndforest', SklearnAttachClassifier(RandomForestClassifier()))
+
+def label_learner_rndforest():
+    "return a keyed instance of decision tree learner"
+    return Keyed('rndforest', SklearnLabelClassifier(RandomForestClassifier()))
+
+
+
+LOCAL_PERC_ARGS = PerceptronArgs(iterations=20,
+                                 averaging=True,
+                                 use_prob=False,
+                                 aggressiveness=np.inf)
+
+LOCAL_PA_ARGS = PerceptronArgs(iterations=20,
+                               averaging=True,
+                               use_prob=False,
+                               aggressiveness=np.inf)
+
+STRUCT_PERC_ARGS = PerceptronArgs(iterations=50,
+                                  averaging=True,
+                                  use_prob=False,
+                                  aggressiveness=np.inf)
+
+STRUCT_PA_ARGS = PerceptronArgs(iterations=50,
+                                averaging=True,
+                                use_prob=False,
+                                aggressiveness=np.inf)
 
 _LOCAL_LEARNERS = [
-    LearnerConfig(attach=learner_oracle(),
-                  relate=learner_oracle()),
-    LearnerConfig(attach=learner_maxent(),
-                  relate=learner_maxent()),
-    LearnerConfig(attach=learner_maxent(),
-                  relate=learner_oracle()),
+    LearnerConfig(attach=attach_learner_oracle(),
+                  relate=label_learner_oracle()),
+    LearnerConfig(attach=attach_learner_maxent(),
+                  relate=label_learner_maxent()),
+    LearnerConfig(attach=tc_learner(attach_learner_maxent()),
+                  relate=tc_learner(label_learner_maxent())),
+#    LearnerConfig(attach=attach_learner_maxent(),
+#                  relate=label_learner_oracle()),
+#    LearnerConfig(attach=attach_learner_rndforest(),
+#                  relate=label_learner_rndforest()),
+#    LearnerConfig(attach=Keyed('sk-perceptron',
+#                               SkPerceptron(n_iter=20)),
+#                  relate=learner_maxent()),
+#    LearnerConfig(attach=Keyed('sk-pasagg',
+#                               SkPassiveAggressiveClassifier(n_iter=20)),
+#                  relate=learner_maxent()),
+#    LearnerConfig(attach=Keyed('dp-perc',
+#                               Perceptron(d, LOCAL_PERC_ARGS)),
+#                  relate=learner_maxent()),
+#    LearnerConfig(attach=Keyed('dp-pa',
+#                               PassiveAggressive(d, LOCAL_PA_ARGS)),
+#                  relate=learner_maxent()),
 ]
 """Straightforward attelo learner algorithms to try
 
 It's up to you to choose values for the key field that can distinguish
 between different configurations of your learners.
+
 """
 
 _STRUCTURED_LEARNERS = [
-    # lambda d: LearnerConfig(attach=Keyed('pd-perceptron-' + d.key,
-    #                                      Perceptron(d)),
-    #                        relate=_MAXENT),
+#    lambda d: LearnerConfig(attach=Keyed('dp-struct-perc',
+#                                         StructuredPerceptron(d, STRUCT_PERC_ARGS)),
+#                            relate=learner_maxent()),
+#    lambda d: LearnerConfig(attach=Keyed('dp-struct-pa',
+#                                         StructuredPassiveAggressive(d, STRUCT_PA_ARGS)),
+#                            relate=learner_maxent()),
 ]
 
 """Attelo learners that take decoders as arguments.
@@ -171,7 +243,10 @@ We assume that they cannot be used relation modelling
 
 _CORE_DECODERS = [
     Keyed('local', decoder_local),
-    Keyed('mst-left', decoder_mst),
+    #Keyed('mst-left', decoder_mst_l),
+    Keyed('mst-root', decoder_mst),
+    Keyed('tc-local', mk_tc_decoder(decoder_local)),
+    Keyed('tc-mst-root', mk_tc_decoder(decoder_mst)),
     #Keyed('astar', decoder_astar),
 ]
 
@@ -182,14 +257,18 @@ Don't forget that you can parameterise the decoders ::
     Keyed('astar-3-best' decoder_astar(nbest=3))
 """
 
-
-SETTINGS_BASIC = Settings(key='AD.L_joint',
+SETTINGS_JOINT = Settings(key='AD.L_jnt',
                           mode=DecodingMode.joint,
                           intra=None)
+SETTINGS_POST = Settings(key='AD.L_pst',
+                         mode=DecodingMode.post_label,
+                         intra=None)
+SETTINGS_BASIC = SETTINGS_POST
 
 
 _SETTINGS = [
-    SETTINGS_BASIC,
+    SETTINGS_JOINT,
+    SETTINGS_POST,
     ]
 """Variants on global settings that would generally apply
 over all decoder combos.
@@ -214,6 +293,9 @@ possibilities
 # -------------------------------------------------------------------------------
 
 
+HARNESS_NAME = 'irit-stac'
+
+
 def _is_junk(klearner, kdecoder):
     """
     Any configuration for which this function returns True
@@ -221,7 +303,7 @@ def _is_junk(klearner, kdecoder):
     """
     # intrasential head to head mode only works with mst for now
     intra_flag = kdecoder.settings.intra
-    if 'mst' not in kdecoder.key:
+    if kdecoder.key != 'mst':
         if (intra_flag is not None and
                 intra_flag.strategy == IntraStrategy.heads):
             return True
@@ -233,26 +315,61 @@ def _is_junk(klearner, kdecoder):
             return True
 
     # skip any config which tries to use a non-prob learner with
-    if not can_predict_proba(klearner.attach.payload):
+    if not klearner.attach.payload.can_predict_proba:
         if kdecoder.settings.mode != DecodingMode.post_label:
             return True
 
     return False
 
 
-def _mk_keyed_decoder(kdecoder, settings):
+def _mk_intra(mk_parser, settings):
+    """
+    Return an intra/inter parser that would be wrapped
+    around a core parser
+    """
+    strategy = settings.strategy
+    def _inner(lcfg):
+        "the actual parser factory"
+        oracle_cfg = LearnerConfig(attach=attach_learner_oracle(),
+                                   relate=label_learner_oracle())
+        intra_cfg = oracle_cfg if settings.intra_oracle else lcfg
+        inter_cfg = oracle_cfg if settings.inter_oracle else lcfg
+        parsers = IntraInterPair(intra=mk_parser(intra_cfg),
+                                 inter=mk_parser(inter_cfg))
+        if strategy == IntraStrategy.only:
+            return SentOnlyParser(parsers)
+        elif strategy == IntraStrategy.heads:
+            return HeadToHeadParser(parsers)
+        elif strategy == IntraStrategy.soft:
+            return SoftParser(parsers)
+        else:
+            raise ValueError("Unknown strategy: " + str(strategy))
+    return _inner
+
+
+def _mk_parser_config(kdecoder, settings):
     """construct a decoder from the settings
 
     :type k_decoder: Keyed(Settings -> Decoder)
 
-    :rtype: KeyedDecoder
+    :rtype: ParserConfig
     """
     decoder_key = combined_key([settings, kdecoder])
     decoder = kdecoder.payload(settings)
-    if settings.intra:
-        decoder = IntraInterDecoder(decoder, settings.intra.strategy)
-    return KeyedDecoder(key=decoder_key,
-                        payload=decoder,
+    if settings.mode == DecodingMode.joint:
+        mk_parser = lambda t: JointPipeline(learner_attach=t.attach.payload,
+                                            learner_label=t.relate.payload,
+                                            decoder=decoder)
+    elif settings.mode == DecodingMode.post_label:
+        mk_parser = lambda t: PostlabelPipeline(learner_attach=t.attach.payload,
+                                                learner_label=t.relate.payload,
+                                                decoder=decoder)
+    if settings.intra is not None:
+        mk_parser = _mk_intra(mk_parser, settings.intra)
+
+    return ParserConfig(key=decoder_key,
+                        decoder=decoder,
+                        payload=mk_parser,
                         settings=settings)
 
 
@@ -292,23 +409,31 @@ def _mk_evaluations():
     :rtype [(Keyed(learner), KeyedDecoder)]
     """
 
-    kdecoders = [_mk_keyed_decoder(d, s)
-                 for d, s in itr.product(_CORE_DECODERS, _SETTINGS)]
-    kdecoders = [k for k in kdecoders if k is not None]
+    kparsers = [_mk_parser_config(d, s)
+                for d, s in itr.product(_CORE_DECODERS, _SETTINGS)]
+    kparsers = [k for k in kparsers if k is not None]
 
     # all learner/decoder pairs
     pairs = []
-    pairs.extend(itr.product(_LOCAL_LEARNERS, kdecoders))
+    pairs.extend(itr.product(_LOCAL_LEARNERS, kparsers))
     for klearner in _STRUCTURED_LEARNERS:
-        pairs.extend((klearner(d.core), d) for d in kdecoders)
+        pairs.extend((klearner(x.decoder), x) for x in kparsers)
 
     # boxing this up a little bit more conveniently
-    return [EvaluationConfig(key=combined_key([klearner, kdecoder]),
-                             settings=kdecoder.settings,
-                             learner=klearner,
-                             decoder=kdecoder)
-            for klearner, kdecoder in pairs
-            if not _is_junk(klearner, kdecoder)]
+    configs = []
+    for klearner, kparser_ in pairs:
+        if _is_junk(klearner, kparser_):
+            continue
+        kparser = ParserConfig(key=kparser_.key,
+                               decoder=kparser_.decoder,
+                               payload=kparser_.payload(klearner),
+                               settings=kparser_.settings)
+        cfg = EvaluationConfig(key=combined_key([klearner, kparser]),
+                               settings=kparser.settings,
+                               learner=klearner,
+                               parser=kparser)
+        configs.append(cfg)
+    return configs
 
 
 EVALUATIONS = _mk_evaluations()
@@ -330,8 +455,8 @@ Set to None to graph everything
 
 DETAILED_EVALUATIONS = [e for e in EVALUATIONS if
                         'maxent' in e.learner.key and
-                        ('mst' in e.decoder.key or 'astar' in e.decoder.key)
-                        and 'joint' in e.settings.key
+                        ('mst' in e.parser.key or 'astar' in e.parser.key)
+                        and 'jnt' in e.settings.key
                         and 'orc' not in e.settings.key]
 """
 Any evalutions that we'd like full reports and graphs for.
@@ -346,21 +471,11 @@ HINT: set to empty list for no graphs whatsoever
 # -------------------------------------------------------------------------------
 
 
-_BEST_LEARNER = LearnerConfig(attach=learner_maxent(),
-                              relate=learner_maxent())
-_BEST_DECODER = _mk_keyed_decoder(Keyed('mst-left', decoder_mst),
-                                  SETTINGS_BASIC)
-
-BEST_EVALUATION =\
-    EvaluationConfig(key=combined_key([_BEST_LEARNER, _BEST_DECODER]),
-                     settings=_BEST_DECODER.settings,
-                     learner=_BEST_LEARNER,
-                     decoder=_BEST_DECODER)
 """
 The configuration we would like to use for the standalone parser.
 """
 
-DIALOGUE_ACT_LEARNER = learner_maxent()
+DIALOGUE_ACT_LEARNER = Keyed('maxent', LogisticRegression())
 """
 Classifier to use for dialogue acts
 """
@@ -393,7 +508,6 @@ def print_evaluations():
         print(econf)
         print()
     print("\n".join(econf.key for econf in EVALUATIONS))
-
 
 if __name__ == '__main__':
     print_evaluations()

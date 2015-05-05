@@ -15,9 +15,9 @@ import sys
 from attelo.harness.util import timestamp
 from joblib import (Parallel)
 
-from .local import (LOCAL_TMP,
+from .local import (HARNESS_NAME,
+                    LOCAL_TMP,
                     EVALUATIONS,
-                    SNAPSHOTS,
                     TEST_CORPUS,
                     TEST_EVALUATION_KEY)
 
@@ -34,13 +34,6 @@ def latest_tmp():
     Directory for last run (usually a symlink)
     """
     return os.path.join(LOCAL_TMP, "latest")
-
-
-def latest_snap():
-    """
-    Directory for last run (usually a symlink)
-    """
-    return os.path.join(SNAPSHOTS, "latest")
 
 
 def concat_i(itr):
@@ -62,20 +55,6 @@ def md5sum_file(path, blocksize=65536):
             buf = afile.read(blocksize)
     return hasher.hexdigest()
 
-
-def link_files(src_dir, tgt_dir):
-    """
-    Hard-link all files from the source directory into the
-    target directory (nb: files only; directories ignored)
-    This does not cost space and it makes future
-    archiving a bit more straightforward
-    """
-    for fname in os.listdir(src_dir):
-        data_file = os.path.join(src_dir, fname)
-        eval_file = os.path.join(tgt_dir, fname)
-        if os.path.isfile(data_file):
-            os.link(data_file, eval_file)
-
 # ---------------------------------------------------------------------
 # config
 # ---------------------------------------------------------------------
@@ -86,7 +65,7 @@ def exit_ungathered():
     You don't seem to have run the gather command
     """
     sys.exit("""No data to run experiments on.
-Please run `irit-stac gather`""")
+Please run `{} gather`""".format(HARNESS_NAME))
 
 
 def test_evaluation():

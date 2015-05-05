@@ -20,7 +20,7 @@ from ..local import (CORENLP_SERVER_DIR, CORENLP_ADDRESS,
                      EVALUATIONS)
 from ..path import (eval_data_path,
                     eval_model_path,
-                    vocab_path)
+                    mpack_paths)
 from ..pipeline import\
     (PipelineConfig,
      Stage, run_pipeline,
@@ -167,9 +167,10 @@ def _feature_extraction(lconf, log):
     Extract features from our input glozz file
     """
     corpus_dir = minicorpus_path(lconf)
+    vocab_path = mpack_paths(lconf, test_data=False)[3]
     cmd = ["stac-learning", "extract",
            "--parsing",
-           "--vocab", vocab_path(lconf),
+           "--vocab", vocab_path,
            corpus_dir,
            lconf.abspath(LEX_DIR),
            lconf.tmp_dir]

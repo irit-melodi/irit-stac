@@ -21,11 +21,9 @@ import attelo.score
 import attelo.report
 
 from ..decode import (delayed_decode, post_decode)
-from ..learn import (LEARNERS,
-                     delayed_learn,
+from ..learn import (learn,
                      mk_combined_models)
 from ..local import (EVALUATIONS,
-                     NAUGHTY_TURN_CONSTRAINT,
                      TRAINING_CORPUS,
                      TEST_CORPUS)
 from ..path import (fold_dir_path,
@@ -42,7 +40,6 @@ from ..util import (concat_i,
 from ..loop import (LoopConfig,
                     DataConfig,
                     ClusterStage)
-from ..turn_constraint import (apply_turn_constraint)
 
 # pylint: disable=too-few-public-methods
 
@@ -211,14 +208,9 @@ def _do_fold(lconf, dconf, fold):
     if not os.path.exists(fold_dir):
         os.makedirs(fold_dir)
 
-    # learn all models in parallel
-    include_intra = any(e.settings.intra is not None
-                        for e in EVALUATIONS)
-    learner_jobs = concat_i(delayed_learn(lconf, dconf, rconf, fold,
-                                          include_intra)
-                            for rconf in LEARNERS)
-    parallel(lconf)(learner_jobs)
-    # run all model/decoder joblets in parallel
+    # learn all models
+    for econf in EVALUATIONS:
+        learn(lconf, econf, dconf, fold)
     decoder_jobs = concat_i(delayed_decode(lconf, dconf, econf, fold)
                             for econf in EVALUATIONS)
     parallel(lconf)(decoder_jobs)
@@ -272,16 +264,6 @@ def _load_harness_multipack(lconf, test_data=False):
                           verbose=True)
 
 
-def _apply_naughty_filters(lconf, mpack):
-    """Make any modifications to the multipack that we load as we see
-    fit
-    """
-    for key in mpack:
-        if 'turn-constraint' in lconf.naughty_filters:
-            mpack[key] = apply_turn_constraint(mpack[key])
-    return mpack
-
-
 def _init_corpus(lconf):
     """Start evaluation; generate folds if needed
 
@@ -300,9 +282,7 @@ def _init_corpus(lconf):
             fold_dict = load_fold_dict(lconf.fold_file)
         else:
             fold_dict = _generate_fold_file(lconf, mpack)
-        mpack = _apply_naughty_filters(lconf, mpack)
-        return DataConfig(pack=mpack,
-                          folds=fold_dict)
+        return DataConfig(pack=mpack, folds=fold_dict)
     elif lconf.stage == ClusterStage.start:
         if can_skip_folds:
             # if we are just running --start and the fold file already
@@ -316,11 +296,8 @@ def _init_corpus(lconf):
     else:
         # any other stage: fold files have already been
         # created so we just read them in
-        mpack = _load_harness_multipack(lconf)
-        mpack = _apply_naughty_filters(lconf, mpack)
-        fold_dict = load_fold_dict(lconf.fold_file)
-        return DataConfig(pack=mpack,
-                          folds=fold_dict)
+        return DataConfig(pack=_load_harness_multipack(lconf),
+                          folds=load_fold_dict(lconf.fold_file))
 
 
 def _do_corpus(lconf):
@@ -339,7 +316,7 @@ def _do_corpus(lconf):
             _do_fold(lconf, dconf, fold)
 
     if _is_standalone_or(lconf, ClusterStage.combined_models):
-        mk_combined_models(lconf, dconf)
+        mk_combined_models(lconf, EVALUATIONS, dconf)
         if test_evaluation() is not None:
             test_pack = _load_harness_multipack(lconf, test_data=True)
             test_dconf = DataConfig(pack=test_pack, folds=None)
@@ -425,14 +402,8 @@ def main(args):
     testset = None if TEST_CORPUS is None else fp.basename(TEST_CORPUS)
     fold_file = fp.join(eval_dir, "folds-%s.json" % dataset)
 
-    naughty_filters = []
-    if NAUGHTY_TURN_CONSTRAINT:
-        naughty_filters.append('turn-constraint')
-
-
     lconf = LoopConfig(eval_dir=eval_dir,
                        scratch_dir=scratch_dir,
-                       naughty_filters=naughty_filters,
                        folds=args.folds,
                        stage=stage,
                        fold_file=fold_file,

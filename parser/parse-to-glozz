@@ -69,7 +69,7 @@ def main():
     predictions = load_predictions(args.parse)
     # slurp only the docs that appear in our predictions
     reader = educe.stac.Reader(args.input)
-    doc_subdocs = frozenset(pout.split_id(pid)[0] for pid, _, _ in predictions)
+    doc_subdocs = frozenset(pout.split_id(pid)[0] for _, pid, _ in predictions)
 
     def is_interesting(key):
         "if a given corpus key is one we want for parse-to-glozz"
