@@ -115,6 +115,17 @@ ANNOTATORS = educe.stac.corpus.METAL_STR
 Which annotators to read from during feature extraction
 """
 
+FIXED_FOLD_FILE = None
+# FIXED_FOLD_FILE = 'folds-TRAINING.json'
+"""
+Set this to a file path if you *always* want to use it for your corpus
+folds. This is for long standing evaluation experiments; we want to
+ensure that we have the same folds across different evaluate experiments,
+and even across different runs of gather.
+
+NB. It's up to you to ensure that the folds file makes sense
+"""
+
 def decoder_local(settings):
     "our instantiation of the local baseline decoder"
     use_prob = settings.mode != DecodingMode.post_label
