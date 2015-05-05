@@ -209,27 +209,27 @@ STRUCT_PA_ARGS = PerceptronArgs(iterations=50,
 
 _LOCAL_LEARNERS = [
     LearnerConfig(attach=attach_learner_oracle(),
-                  relate=label_learner_oracle()),
+                  label=label_learner_oracle()),
     LearnerConfig(attach=attach_learner_maxent(),
-                  relate=label_learner_maxent()),
+                  label=label_learner_maxent()),
     LearnerConfig(attach=tc_learner(attach_learner_maxent()),
-                  relate=tc_learner(label_learner_maxent())),
+                  label=tc_learner(label_learner_maxent())),
 #    LearnerConfig(attach=attach_learner_maxent(),
-#                  relate=label_learner_oracle()),
+#                  label=label_learner_oracle()),
 #    LearnerConfig(attach=attach_learner_rndforest(),
-#                  relate=label_learner_rndforest()),
+#                  label=label_learner_rndforest()),
 #    LearnerConfig(attach=Keyed('sk-perceptron',
 #                               SkPerceptron(n_iter=20)),
-#                  relate=learner_maxent()),
+#                  label=learner_maxent()),
 #    LearnerConfig(attach=Keyed('sk-pasagg',
 #                               SkPassiveAggressiveClassifier(n_iter=20)),
-#                  relate=learner_maxent()),
+#                  label=learner_maxent()),
 #    LearnerConfig(attach=Keyed('dp-perc',
 #                               Perceptron(d, LOCAL_PERC_ARGS)),
-#                  relate=learner_maxent()),
+#                  label=learner_maxent()),
 #    LearnerConfig(attach=Keyed('dp-pa',
 #                               PassiveAggressive(d, LOCAL_PA_ARGS)),
-#                  relate=learner_maxent()),
+#                  label=learner_maxent()),
 ]
 """Straightforward attelo learner algorithms to try
 
@@ -241,10 +241,10 @@ between different configurations of your learners.
 _STRUCTURED_LEARNERS = [
 #    lambda d: LearnerConfig(attach=Keyed('dp-struct-perc',
 #                                         StructuredPerceptron(d, STRUCT_PERC_ARGS)),
-#                            relate=learner_maxent()),
+#                            label=learner_maxent()),
 #    lambda d: LearnerConfig(attach=Keyed('dp-struct-pa',
 #                                         StructuredPassiveAggressive(d, STRUCT_PA_ARGS)),
-#                            relate=learner_maxent()),
+#                            label=learner_maxent()),
 ]
 
 """Attelo learners that take decoders as arguments.
@@ -342,7 +342,7 @@ def _mk_intra(mk_parser, settings):
     def _inner(lcfg):
         "the actual parser factory"
         oracle_cfg = LearnerConfig(attach=attach_learner_oracle(),
-                                   relate=label_learner_oracle())
+                                   label=label_learner_oracle())
         intra_cfg = oracle_cfg if settings.intra_oracle else lcfg
         inter_cfg = oracle_cfg if settings.inter_oracle else lcfg
         parsers = IntraInterPair(intra=mk_parser(intra_cfg),
@@ -369,11 +369,11 @@ def _mk_parser_config(kdecoder, settings):
     decoder = kdecoder.payload(settings)
     if settings.mode == DecodingMode.joint:
         mk_parser = lambda t: JointPipeline(learner_attach=t.attach.payload,
-                                            learner_label=t.relate.payload,
+                                            learner_label=t.label.payload,
                                             decoder=decoder)
     elif settings.mode == DecodingMode.post_label:
         mk_parser = lambda t: PostlabelPipeline(learner_attach=t.attach.payload,
-                                                learner_label=t.relate.payload,
+                                                learner_label=t.label.payload,
                                                 decoder=decoder)
     if settings.intra is not None:
         mk_parser = _mk_intra(mk_parser, settings.intra)
