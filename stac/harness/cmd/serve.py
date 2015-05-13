@@ -7,6 +7,7 @@ server version of parse (soclog in, ??? out)
 
 from __future__ import print_function
 from os import path as fp
+import sys
 import tempfile
 import zmq
 
@@ -100,8 +101,12 @@ def _reset_parser(args):
     tmp_dir = _mk_server_temp(args)
     soclog = fp.join(tmp_dir, "soclog")
     open(soclog, 'wb').close()
-    return StandaloneParser(soclog=soclog,
-                            tmp_dir=tmp_dir)
+    hconf = StandaloneParser(soclog=soclog,
+                             tmp_dir=tmp_dir)
+    if hconf.test_evaluation is None:
+        sys.exit("Can't run server: you didn't specify a test "
+                 "evaluation in the local configuration")
+    return hconf
 
 
 def main(args):

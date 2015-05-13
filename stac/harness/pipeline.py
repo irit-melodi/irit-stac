@@ -12,12 +12,15 @@ import re
 import sys
 
 from attelo.harness import (RuntimeConfig)
+from attelo.harness.interface import (HarnessException)
 from attelo.harness.util import call, makedirs
 from attelo.io import (Torpor, load_multipack)
 import attelo.harness.parse as ath_parse
 
 from .harness import (IritHarness)
-from .local import (SNAPSHOTS,
+from .local import (EVALUATIONS,
+                    SNAPSHOTS,
+                    TEST_EVALUATION_KEY,
                     TAGGER_JAR)
 from .util import (concat_i)
 
@@ -40,6 +43,19 @@ class StandaloneParser(IritHarness):
         super(StandaloneParser, self).load(RuntimeConfig.empty(),
                                            self.snap_dir,
                                            self.snap_dir)
+
+    @property
+    def test_evaluation(self):
+        # overriden to skip TEST_CORPUS check
+        if TEST_EVALUATION_KEY is None:
+            return None
+        test_confs = [x for x in self.evaluations
+                      if x.key == TEST_EVALUATION_KEY]
+        if test_confs:
+            return test_confs[0]
+        else:
+            return None
+
 
     def tmp(self, relpath):
         """
