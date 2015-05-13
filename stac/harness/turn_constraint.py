@@ -66,6 +66,11 @@ class TC_LearnerWrapper(object):
         # no turn constraint here; we just wanted them for learning with
         return self._learner.transform(dpack)
 
+    def predict_score(self, dpack):
+        "pass through to inner learner"
+        # no turn constraint here; we just wanted them for learning with
+        return self._learner.predict_score(dpack)
+
 
 class TC_Pruner(Parser):
     '''
