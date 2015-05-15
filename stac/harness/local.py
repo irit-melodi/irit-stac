@@ -49,9 +49,9 @@ from .config.common import (ORACLE,
                             # mk_joint,
                             mk_post)
 
+from .ilp import (ILPDecoder)
 from .turn_constraint import (tc_decoder,
                               tc_learner)
-
 # PATHS
 
 CONFIG_FILE = fp.splitext(__file__)[0] + '.py'
@@ -135,6 +135,10 @@ def decoder_mst():
     return Keyed('mst', MstDecoder(MstRootStrategy.fake_root, True))
 
 
+def decoder_ilp():
+    return Keyed('ilp', ILPDecoder())
+
+
 def attach_learner_maxent():
     "return a keyed instance of maxent learner"
     return Keyed('maxent', SklearnAttachClassifier(LogisticRegression()))
@@ -192,10 +196,8 @@ between different configurations of your learners.
 
 """
 
-
 def _structured(klearner):
     """learner configuration pair for a structured learner
-
     (parameterised on a decoder)"""
     return lambda d: LearnerConfig(attach=tc_learner(klearner(d)),
                                    label=label_learner_maxent())
@@ -226,9 +228,11 @@ def _core_parsers(klearner):
     post = [
         mk_post(klearner, decoder_last()),
         mk_post(klearner, DECODER_LOCAL),
+        mk_post(klearner, decoder_ilp()),
         # mk_post(klearner, decoder_mst()),
         # mk_post(klearner, tc_decoder(DECODER_LOCAL)),
         mk_post(klearner, tc_decoder(decoder_mst())),
+        mk_post(klearner, tc_decoder(decoder_ilp())),
     ]
     if klearner.attach.payload.can_predict_proba:
         return joint + post
@@ -359,7 +363,7 @@ def _want_details(econf):
     kids = econf.settings.children
     has_intra_oracle = has.intra and (kids.intra.oracle or kids.inter.oracle)
     return (has_maxent and
-            ('mst' in econf.parser.key or 'astar' in econf.parser.key) and
+            any(k in econf.parser.key for k in ('mst', 'astar', 'ilp')) and
             not has_intra_oracle)
 
 DETAILED_EVALUATIONS = [e for e in EVALUATIONS if _want_details(e)]

@@ -27,7 +27,7 @@ subto no_diagonal: forall <i> in EDUs:
 # Intra-turn acyclicity constraint
 subto cyc_bounds: forall <t> in Turns:
     forall <i> in TIND[t]:
-        1 <= c[t, i] <= TLEN[t]	 ;
+        1 <= c[t, i] <= TLEN[t] ;
 
 subto cyc_transition: forall <t> in Turns:
     forall <i, j> in TIND[t]*TIND[t] with i!=j:
