@@ -11,37 +11,51 @@ import os
 import re
 import sys
 
+from attelo.harness import (RuntimeConfig)
+from attelo.harness.interface import (HarnessException)
 from attelo.harness.util import call, makedirs
 from attelo.io import (Torpor, load_multipack)
 import attelo.harness.parse as ath_parse
-from joblib import (Parallel)
 
-from .local import (SNAPSHOTS,
-                    TAGGER_JAR,
-                    TRAINING_CORPUS)
-from .path import (attelo_model_paths,
-                   mpack_paths)
+from .harness import (IritHarness)
+from .local import (EVALUATIONS,
+                    SNAPSHOTS,
+                    TEST_EVALUATION_KEY,
+                    TAGGER_JAR)
 from .util import (concat_i)
 
 # pylint: disable=too-few-public-methods
 
 
-class PipelineConfig(object):
+class StandaloneParser(IritHarness):
     """
-    An object which behaves enough like LoopConfig for the
-    purposes of the parsing pipeline that we can dig up the
-    input files it needs to get by
+    A variant of the test harness which can be used for
+    standalone parsing
     """
 
     def __init__(self, soclog, tmp_dir):
         self.soclog = soclog
-        self.snap_dir = fp.abspath(latest_snap())
-        self.eval_dir = self.snap_dir  # compatibility with LoopConfig
-        self.scratch_dir = self.snap_dir  # compatibility with LoopConfig
         self.tmp_dir = fp.abspath(tmp_dir)
-        self.dataset = fp.basename(TRAINING_CORPUS)
         harness_dir = fp.dirname(fp.dirname(fp.abspath(__file__)))
         self.root_dir = fp.dirname(harness_dir)
+        self.snap_dir = fp.abspath(latest_snap())
+        super(StandaloneParser, self).__init__()
+        super(StandaloneParser, self).load(RuntimeConfig.empty(),
+                                           self.snap_dir,
+                                           self.snap_dir)
+
+    @property
+    def test_evaluation(self):
+        # overriden to skip TEST_CORPUS check
+        if TEST_EVALUATION_KEY is None:
+            return None
+        test_confs = [x for x in self.evaluations
+                      if x.key == TEST_EVALUATION_KEY]
+        if test_confs:
+            return test_confs[0]
+        else:
+            return None
+
 
     def tmp(self, relpath):
         """
@@ -111,10 +125,26 @@ def latest_snap():
     return fp.join(SNAPSHOTS, "latest")
 
 
+def dact_features_path(hconf):
+    """Path where dialogue act features are stored"""
+    return fp.join(hconf.eval_dir, "%s.dialogue-acts.sparse" % hconf.dataset)
+
+
+def dact_model_path(hconf, rconf):
+    """Path where dialogue act model is stored"""
+    parent_dir = hconf.combined_dir_path()
+    template = '{dataset}.{learner}.{task}.{ext}'
+    bname = template.format(dataset=hconf.dataset,
+                            learner=rconf.key,
+                            task='dialogue-acts',
+                            ext='model')
+    return fp.join(parent_dir, bname)
+
+
 def stub_name(lconf_or_soclog):
     "return a short filename component from a soclog path"
     soclog = lconf_or_soclog.soclog\
-        if isinstance(lconf_or_soclog, PipelineConfig) else lconf_or_soclog
+        if isinstance(lconf_or_soclog, StandaloneParser) else lconf_or_soclog
     stub = fp.splitext(fp.basename(soclog))[0]
     stub = re.sub(r'-', '_', stub)
     return stub
@@ -212,11 +242,10 @@ def _get_decoding_jobs(mpack, lconf, econf):
     """
     makedirs(lconf.tmp("parsed"))
     output_path = attelo_result_path(lconf, econf)
-    cache = attelo_model_paths(lconf,
-                               econf.learner,
-                               None)
+    cache = lconf.model_paths(econf.learner,
+                              None)
     parser = econf.parser.payload
-    parser.fit([], [], cache) # we assume everything is cached
+    parser.fit([], [], cache)  # we assume everything is cached
     return ath_parse.jobs(mpack, parser, output_path)
 
 
@@ -224,14 +253,14 @@ def decode(lconf, evaluations):
     "Decode the input using all the model/learner combos we know"
 
     fpath = minicorpus_path(lconf) + '.relations.sparse'
-    vocab_path = mpack_paths(lconf, test_data=False)[3]
+    vocab_path = lconf.mpack_paths(test_data=False)[3]
     mpack = load_multipack(fpath + '.edu_input',
                            fpath + '.pairings',
                            fpath,
                            vocab_path)
     decoder_jobs = concat_i(_get_decoding_jobs(mpack, lconf, econf)
                             for econf in evaluations)
-    Parallel(n_jobs=-1)(decoder_jobs)
+    lconf.parallel(decoder_jobs)
     for econf in evaluations:
         output_path = attelo_result_path(lconf, econf)
         ath_parse.concatenate_outputs(mpack, output_path)

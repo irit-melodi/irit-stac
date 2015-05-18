@@ -20,6 +20,7 @@ from attelo.io import (save_model,
                        load_vocab)
 
 from educe.stac.annotation import set_addressees
+from educe.stac.context import Context
 from educe.stac.learning.addressee import guess_addressees_for_edu
 import educe.stac.learning.features as stac_features
 import educe.stac
@@ -63,14 +64,20 @@ def _output_key(key):
 
 
 def get_edus_plus(inputs):
-    """
-    Return all the pairs of edus with their surrounding environment
+    """Generate edus and extra environmental information for each
+
+    Currently:
+
+    * environment
+    * contexts
+    * edu
     """
     for env in stac_features.mk_envs(inputs, 'unannotated'):
         doc = env.current.doc
+        contexts = Context.for_edus(doc)
         for unit in doc.units:
             if educe.stac.is_edu(unit):
-                yield env, unit
+                yield env, contexts, unit
 
 
 def extract_features(vocab, edus_plus):
@@ -81,7 +88,7 @@ def extract_features(vocab, edus_plus):
     # this unfortunately duplicates stac_features.extract_single_features
     # but it's the price we pay to ensure we get the edus and vectors in
     # the same order
-    for row, (env, edu) in enumerate(edus_plus):
+    for row, (env, _, edu) in enumerate(edus_plus):
         vec = stac_features.SingleEduKeys(env.inputs)
         vec.fill(env.current, edu)
         for feat, val in vec.one_hot_values_gen():
@@ -97,9 +104,9 @@ def annotate_edus(model, vocab, labels, inputs):
     edus_plus = list(get_edus_plus(inputs))
     feats = extract_features(vocab, edus_plus)
     predictions = model.predict(feats)
-    for (env, edu), da_num in zip(edus_plus, predictions):
+    for (env, contexts, edu), da_num in zip(edus_plus, predictions):
         da_label = labels[int(da_num) - 1]
-        addressees = guess_addressees_for_edu(env.current.contexts,
+        addressees = guess_addressees_for_edu(contexts,
                                               env.current.players,
                                               edu)
         set_addressees(edu, addressees)

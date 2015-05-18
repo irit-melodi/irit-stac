@@ -18,13 +18,12 @@ from ..local import (CORENLP_SERVER_DIR, CORENLP_ADDRESS,
                      TAGGER_JAR, LEX_DIR,
                      DIALOGUE_ACT_LEARNER,
                      EVALUATIONS)
-from ..path import (eval_data_path,
-                    eval_model_path,
-                    mpack_paths)
 from ..pipeline import\
-    (PipelineConfig,
+    (StandaloneParser,
      Stage, run_pipeline,
      check_3rd_party,
+     dact_features_path,
+     dact_model_path,
      decode,
      minicorpus_path,
      minicorpus_doc_path,
@@ -130,12 +129,8 @@ def _unit_annotations(lconf, log):
     guess dialogue acts for all the EDUs
     """
     corpus_dir = minicorpus_path(lconf)
-    ext = 'dialogue-acts'
-    d_model_path = eval_model_path(lconf,
-                                   DIALOGUE_ACT_LEARNER,
-                                   None,
-                                   ext)
-    d_features_path = eval_data_path(lconf, ext) + '.sparse'
+    d_model_path = dact_model_path(lconf, DIALOGUE_ACT_LEARNER)
+    d_features_path = dact_features_path(lconf)
     d_vocab_path = d_features_path + '.vocab'
 
     lconf.pyt("stac/unit_annotations.py",
@@ -167,7 +162,7 @@ def _feature_extraction(lconf, log):
     Extract features from our input glozz file
     """
     corpus_dir = minicorpus_path(lconf)
-    vocab_path = mpack_paths(lconf, test_data=False)[3]
+    vocab_path = lconf.mpack_paths(test_data=False)[3]
     cmd = ["stac-learning", "extract",
            "--parsing",
            "--vocab", vocab_path,
@@ -319,7 +314,7 @@ def main(args):
     `config_argparser`
     """
     check_3rd_party()
-    lconf = PipelineConfig(soclog=args.soclog,
-                           tmp_dir=_mk_parser_temp(args))
+    lconf = StandaloneParser(soclog=args.soclog,
+                             tmp_dir=_mk_parser_temp(args))
     _pipeline(lconf)
     _copy_results(lconf, args.output)
