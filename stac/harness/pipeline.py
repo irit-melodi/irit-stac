@@ -6,28 +6,56 @@ Support for parser pipeline
 """
 
 from collections import namedtuple
+from os import path as fp
+import os
 import re
 import sys
 
+from attelo.harness import (RuntimeConfig)
+from attelo.harness.interface import (HarnessException)
 from attelo.harness.util import call, makedirs
-from attelo.io import Torpor
+from attelo.io import (Torpor, load_multipack)
+import attelo.harness.parse as ath_parse
 
-from os import path as fp
+from .harness import (IritHarness)
+from .local import (EVALUATIONS,
+                    SNAPSHOTS,
+                    TEST_EVALUATION_KEY,
+                    TAGGER_JAR)
+from .util import (concat_i)
 
-from .local import TAGGER_JAR
+# pylint: disable=too-few-public-methods
 
 
-# pylint: disable=pointless-string-statement
-class LoopConfig(object):
-    "that which is common to outerish loops"
+class StandaloneParser(IritHarness):
+    """
+    A variant of the test harness which can be used for
+    standalone parsing
+    """
 
-    def __init__(self, soclog, snap_dir, tmp_dir):
+    def __init__(self, soclog, tmp_dir):
         self.soclog = soclog
-        self.snap_dir = fp.abspath(snap_dir)
         self.tmp_dir = fp.abspath(tmp_dir)
-        self.dataset = "all"
         harness_dir = fp.dirname(fp.dirname(fp.abspath(__file__)))
-        self.root_dir = fp.dirname(fp.dirname(harness_dir))
+        self.root_dir = fp.dirname(harness_dir)
+        self.snap_dir = fp.abspath(latest_snap())
+        super(StandaloneParser, self).__init__()
+        super(StandaloneParser, self).load(RuntimeConfig.empty(),
+                                           self.snap_dir,
+                                           self.snap_dir)
+
+    @property
+    def test_evaluation(self):
+        # overriden to skip TEST_CORPUS check
+        if TEST_EVALUATION_KEY is None:
+            return None
+        test_confs = [x for x in self.evaluations
+                      if x.key == TEST_EVALUATION_KEY]
+        if test_confs:
+            return test_confs[0]
+        else:
+            return None
+
 
     def tmp(self, relpath):
         """
@@ -44,10 +72,9 @@ class LoopConfig(object):
 
     def pyt(self, script, *args, **kwargs):
         "call python on one of our scripts"
-        abs_script = self.abspath(fp.join("code", script))
+        abs_script = self.abspath(script)
         cmd = ["python", abs_script] + list(args)
         call(cmd, **kwargs)
-# pylint: enable=pointless-string-statement
 
 
 class Stage(namedtuple('Stage',
@@ -91,10 +118,33 @@ def run_pipeline(lconf, stages):
 # ---------------------------------------------------------------------
 
 
+def latest_snap():
+    """
+    Directory for last run (usually a symlink)
+    """
+    return fp.join(SNAPSHOTS, "latest")
+
+
+def dact_features_path(hconf):
+    """Path where dialogue act features are stored"""
+    return fp.join(hconf.eval_dir, "%s.dialogue-acts.sparse" % hconf.dataset)
+
+
+def dact_model_path(hconf, rconf):
+    """Path where dialogue act model is stored"""
+    parent_dir = hconf.combined_dir_path()
+    template = '{dataset}.{learner}.{task}.{ext}'
+    bname = template.format(dataset=hconf.dataset,
+                            learner=rconf.key,
+                            task='dialogue-acts',
+                            ext='model')
+    return fp.join(parent_dir, bname)
+
+
 def stub_name(lconf_or_soclog):
     "return a short filename component from a soclog path"
     soclog = lconf_or_soclog.soclog\
-        if isinstance(lconf_or_soclog, LoopConfig) else lconf_or_soclog
+        if isinstance(lconf_or_soclog, StandaloneParser) else lconf_or_soclog
     stub = fp.splitext(fp.basename(soclog))[0]
     stub = re.sub(r'-', '_', stub)
     return stub
@@ -150,13 +200,6 @@ def unannotated_stub_path(lconf):
                    stub_name(lconf) + "_0")
 
 
-def features_path(lconf):
-    """
-    features extracted from the input soclog
-    """
-    return lconf.tmp("extracted-features.csv")
-
-
 def resource_np_path(lconf):
     """
     path to temporary minicorpus dir mimicking structure
@@ -170,11 +213,76 @@ def parsed_bname(lconf, econf):
     short name for virtual author consisting of dataset used to
     parse the file and the learner/decoder config
     """
-    return ".".join([lconf.dataset, econf.name])
+    return ".".join([lconf.dataset, econf.key])
+
+
+def result_path(lconf, econf):
+    """
+    Path to directory where we are saving results
+    """
+    parent = lconf.tmp("parsed")
+    return fp.join(parent, parsed_bname(lconf, econf))
+
+
+def attelo_result_path(lconf, econf):
+    """
+    Path to attelo graph file
+    """
+    return result_path(lconf, econf)
+
+
+# ---------------------------------------------------------------------
+# decoding
+# ---------------------------------------------------------------------
+
+
+def _get_decoding_jobs(mpack, lconf, econf):
+    """
+    Run the decoder on a single config and convert the output
+    """
+    makedirs(lconf.tmp("parsed"))
+    output_path = attelo_result_path(lconf, econf)
+    cache = lconf.model_paths(econf.learner,
+                              None)
+    parser = econf.parser.payload
+    parser.fit([], [], cache)  # we assume everything is cached
+    return ath_parse.jobs(mpack, parser, output_path)
+
+
+def decode(lconf, evaluations):
+    "Decode the input using all the model/learner combos we know"
+
+    fpath = minicorpus_path(lconf) + '.relations.sparse'
+    vocab_path = lconf.mpack_paths(test_data=False)[3]
+    mpack = load_multipack(fpath + '.edu_input',
+                           fpath + '.pairings',
+                           fpath,
+                           vocab_path)
+    decoder_jobs = concat_i(_get_decoding_jobs(mpack, lconf, econf)
+                            for econf in evaluations)
+    lconf.parallel(decoder_jobs)
+    for econf in evaluations:
+        output_path = attelo_result_path(lconf, econf)
+        ath_parse.concatenate_outputs(mpack, output_path)
+
 
 # ---------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------
+
+
+def link_files(src_dir, tgt_dir):
+    """
+    Hard-link all files from the source directory into the
+    target directory (nb: files only; directories ignored)
+    This does not cost space and it makes future
+    archiving a bit more straightforward
+    """
+    for fname in os.listdir(src_dir):
+        data_file = fp.join(src_dir, fname)
+        eval_file = fp.join(tgt_dir, fname)
+        if os.path.isfile(data_file):
+            os.link(data_file, eval_file)
 
 
 def check_3rd_party():

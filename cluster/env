@@ -1,0 +1,4 @@
+MINICONDA_DIR=/projets/melodi/miniconda
+
+export PATH=$MINICONDA_DIR/bin:$PATH
+source activate irit-stac-$USER

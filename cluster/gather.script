@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --job-name=irit-stac-gather
+#SBATCH --output=irit-stac-gather-%j.out
+##SBATCH --mail-type=END
+##SBATCH --mail-user=YOUR_EMAIL_ADDRESS_HERE <=== EDIT THIS
+STAC=$HOME/irit-stac
+source "$STAC/cluster/env"
+cd "$STAC"
+time irit-stac gather
+for i in TMP/latest/*.sparse; do
+    # get all the labels
+    head -n 1 "$i" > "$i.stripped"
+    # must have at least one feature somewhere
+    tail -n +2 "$i" | head -n 1 | cut -f 1,2 -d ' ' >> "$i.stripped"
+    # just the targets please
+    tail -n +3 "$i" | cut -f 1 -d ' ' >> "$i.stripped"
+done

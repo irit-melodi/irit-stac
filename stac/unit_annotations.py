@@ -7,17 +7,20 @@
 Learn and predict dialogue acts from EDU feature vectors
 """
 
+from os import path as fp
 import argparse
 import copy
-import cPickle
+import os
 
-from Orange.classification import Classifier
-import Orange
-import Orange.data
-import Orange.data.io
-import Orange.feature
+from scipy.sparse import lil_matrix
+from sklearn.datasets import load_svmlight_file
+from attelo.io import (save_model,
+                       load_model,
+                       load_labels,
+                       load_vocab)
 
 from educe.stac.annotation import set_addressees
+from educe.stac.context import Context
 from educe.stac.learning.addressee import guess_addressees_for_edu
 import educe.stac.learning.features as stac_features
 import educe.stac
@@ -25,70 +28,28 @@ from educe.stac.util.output import save_document
 
 
 # ---------------------------------------------------------------------
-# arguments and main
+# learning
 # ---------------------------------------------------------------------
 
 
-def predict_dialogue_act(model, vector):
-    """
-    Predict the dialogue act associated with a given feature vector
-    """
-    return model(vector, Classifier.GetValue)
+def learn_and_save(learner, feature_path, output_path):
+    '''
+    learn dialogue acts from an svmlight features file and dump
+    the model to disk
+    '''
+    # pylint: disable=unbalanced-tuple-unpacking
+    data, target = load_svmlight_file(feature_path)
+    # pylint: enable=unbalanced-tuple-unpacking
+    output_dir = fp.dirname(output_path)
+    model = learner.fit(data, target)
+    if not fp.exists(output_dir):
+        os.makedirs(output_dir)
+    save_model(output_path, model)
 
 
-def mk_instance(domain, vec):
-    """
-    Build an Orange instance from an extracted feature vector
-    """
-
-    def get_val(feat):
-        "get the value associated with a feature"
-        val_ = vec[feat.name]
-        val = val_.encode('utf-8') if isinstance(val_, unicode) else val_
-        if isinstance(feat, Orange.feature.Continuous):
-            return val
-        elif isinstance(feat, Orange.feature.Discrete):
-            if str(val) in feat.values:
-                return str(val)
-            else:
-                return '?'
-        else:
-            return val
-
-    inst = Orange.data.Instance(domain, map(get_val, domain))
-    for meta in domain.get_metas().values():
-        inst[meta] = str(get_val(meta))
-
-    return inst
-
-
-def model_domain(model):
-    """
-    Return a slightly modified version of the domain for the
-    given model, partly to work around faulty type detection
-    for some of the fields.
-    """
-    # no class variable - we don't know it yet
-    domain = Orange.data.Domain(model.domain.features, False)
-    for i, meta in model.domain.get_metas().items():
-        # coerce meta type to string because for some odd reason
-        # Orange seems to learn the dialogues as discrete
-        str_meta = Orange.feature.String(meta.name)
-        domain.add_meta(i, str_meta)
-    return domain
-
-
-def _read_annotate_inputs(args):
-    """
-    Return a `FeaturesInput` and a model
-    """
-    args.experimental = True  # use parser, not sure if we want this
-    args.ignore_cdus = False
-    args.debug = False
-    inputs = stac_features.read_corpus_inputs(args, 'unannotated')
-    with open(args.model, "rb") as fstream:
-        model = cPickle.load(fstream)
-    return inputs, model
+# ---------------------------------------------------------------------
+# prediction
+# ---------------------------------------------------------------------
 
 
 def _output_key(key):
@@ -102,18 +63,54 @@ def _output_key(key):
     return key2
 
 
-def annotate_edu(model, domain, inputs, current, edu):
+def get_edus_plus(inputs):
+    """Generate edus and extra environmental information for each
+
+    Currently:
+
+    * environment
+    * contexts
+    * edu
     """
-    Modify an edu by guessing its dialogue act and addressee
+    for env in stac_features.mk_envs(inputs, 'unannotated'):
+        doc = env.current.doc
+        contexts = Context.for_edus(doc)
+        for unit in doc.units:
+            if educe.stac.is_edu(unit):
+                yield env, contexts, unit
+
+
+def extract_features(vocab, edus_plus):
     """
-    vec = stac_features.SingleEduKeysForSingleExtraction(inputs)
-    vec.fill(current, edu)
-    instance = mk_instance(domain, vec)
-    addressees = guess_addressees_for_edu(current.contexts,
-                                          current.players,
-                                          edu)
-    edu.type = str(predict_dialogue_act(model, instance))
-    set_addressees(edu, addressees)
+    Return a sparse matrix of features for all edus in the corpus
+    """
+    matrix = lil_matrix((len(edus_plus), len(vocab)))
+    # this unfortunately duplicates stac_features.extract_single_features
+    # but it's the price we pay to ensure we get the edus and vectors in
+    # the same order
+    for row, (env, _, edu) in enumerate(edus_plus):
+        vec = stac_features.SingleEduKeys(env.inputs)
+        vec.fill(env.current, edu)
+        for feat, val in vec.one_hot_values_gen():
+            if feat in vocab:
+                matrix[row, vocab[feat]] = val
+    return matrix.tocsr()
+
+
+def annotate_edus(model, vocab, labels, inputs):
+    """
+    Annotate each EDU with its dialogue act and addressee
+    """
+    edus_plus = list(get_edus_plus(inputs))
+    feats = extract_features(vocab, edus_plus)
+    predictions = model.predict(feats)
+    for (env, contexts, edu), da_num in zip(edus_plus, predictions):
+        da_label = labels[int(da_num) - 1]
+        addressees = guess_addressees_for_edu(contexts,
+                                              env.current.players,
+                                              edu)
+        set_addressees(edu, addressees)
+        edu.type = da_label
 
 
 def command_annotate(args):
@@ -122,26 +119,27 @@ def command_annotate(args):
     Glozz documents, perform dialogue act annotation on them, and simple
     addressee detection, and dump Glozz documents in the output directory
     """
-    inputs, model = _read_annotate_inputs(args)
-    domain = model_domain(model)
+    args.ignore_cdus = False
+    args.parsing = True
+    args.single = True
+    inputs = stac_features.read_corpus_inputs(args)
+    model = load_model(args.model)
+    vocab = {f: i for i, f in
+             enumerate(load_vocab(args.vocabulary))}
+    labels = load_labels(args.labels)
 
-    people = stac_features.get_players(inputs)
+    # add dialogue acts and addressees
+    annotate_edus(model, vocab, labels, inputs)
 
-    # make predictions and save the output
-    for k in inputs.corpus:
-        doc = inputs.corpus[k]
-        current = stac_features.mk_env(inputs, people, k, True).current
-        edus = [unit for unit in doc.units if educe.stac.is_edu(unit)]
-        for edu in edus:
-            annotate_edu(model, domain, inputs, current, edu)
-        save_document(args.output, _output_key(k), doc)
+    # corpus has been modified in-memory, now save to disk
+    for key in inputs.corpus:
+        key2 = _output_key(key)
+        doc = inputs.corpus[key]
+        save_document(args.output, key2, doc)
 
 
 def main():
     "channel to subcommands"
-
-    usage = "%(prog)s [options] data_file"
-    psr = argparse.ArgumentParser(usage=usage)
 
     psr = argparse.ArgumentParser(add_help=False)
     psr.add_argument("corpus", default=None, metavar="DIR",
@@ -151,6 +149,10 @@ def main():
     psr.add_argument("--model", default=None, required=True,
                      help="provide saved model for prediction of "
                      "dialogue acts")
+    psr.add_argument("--vocabulary", default=None, required=True,
+                     help="feature vocabulary")
+    psr.add_argument("--labels", default=None, required=True,
+                     help="dialogue act labels file (features file)")
     psr.add_argument("--output", "-o", metavar="DIR",
                      default=None,
                      required=True,

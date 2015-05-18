@@ -10,12 +10,9 @@ from os import path as fp
 import os
 import shutil
 
-from attelo.harness.util import call, force_symlink, subdirs
+from attelo.harness.util import subdirs
 
-from ..local import\
-    TRAINING_CORPORA, LOCAL_TMP
-from ..util import\
-    current_tmp, latest_tmp
+from ..local import LOCAL_TMP
 
 NAME = 'clean'
 
@@ -47,6 +44,6 @@ def main(_):
             elif bname.startswith("scratch-"):
                 shutil.rmtree(subdir)
             elif bname.startswith("eval-"):
-                if not any(f.startswith("scores-") for
+                if not any(f.startswith("reports-") for
                            f in os.listdir(subdir)):
                     shutil.rmtree(subdir)

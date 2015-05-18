@@ -4,80 +4,67 @@ This is the STAC codebase.
 
 1. Python 2.7. Python 3 might also work.
 2. pip 1.5 or higher (see educe README if you do not)
-3. virtualenv (optional [grumble], can be installed with pip)
+3. Anacoda or miniconda (`conda --version` should say 2.2.6 or higher)
 4. git (to keep up with educe/attelo changes)
 5. graphviz (for visualising graphs)
-6. [optional] Anacoda (`conda --version` should say 2.2.6 or higher)
+6. STAC corpus (released separately)
 
 ## Sandboxing
 
-If you are attempting to use the development version of this code
-(ie. from SVN), I highly recommend using a sandbox environment.
-We have two versions below, one for Anaconda users (on Mac),
-and one for standard Python users via virtualenv.
+A sandbox environment is required.  We assume you will be using Anaconda
+(miniconda on Linux).  Once you have installed it, you should be able to
+create the environment with
 
-### For Anaconda users
-
-Anaconda users get slightly different instructions because virtualenv
-doesn't yet seem to work well with it (at least with the versions we've
-tried). Instead of using virtualenv, you could try something like this
-
-    conda create -n stac --clone $HOME/anaconda
+    conda create -n stac scipy pip
 
 If that doesn't work, make sure your anaconda version is up to date,
-and try `/anaconda` instead of `$HOME/anaconda`.
+and the conda bin directory is in your path (it might be installed in
+`/anaconda` instead of `$HOME/anaconda`).
 
 Note that whenever you want to use STAC things, you would need to run
 this command
 
     source activate stac
 
-### For standard Python users
-
-The virtualenv equivalent works a bit more like the follow:
-
-    mkdir $HOME/.virtualenvs
-    virtualenv $HOME/.virtualenvs/stac --no-site-packages
-
-Whenever you want to use STAC things, you would need to run this
-command
-
-    source $HOME/.virtualenvs/stac/bin/activate
-
 ## Installation (basics, development mode)
 
 Both educe and attelo supply requirements.txt files which can be
 processed by pip
 
-0. Preflight: do you have the right versions of Python and pip?
+1. Switch into your STAC sandbox
 
-1. Switch into your STAC virtualenv
+       source activate stac
 
-       source $HOME/.virtualenvs/stac/bin/activate
-
-2. Install megam (for learning experiments only [Toulouse]).
-   This might be tricky if you're on a Mac.
-   Ask Eric.
-
-3. Linux users: (Debian/Ubuntu)
+2. Linux users: (Debian/Ubuntu)
 
        sudo apt-get install python-dev libyaml-dev
+       # NB: this step may be obsoleted by requiring conda
 
-4. Install the STAC code in development mode.
+
+3. Fetch the irit-stac code if you have not done so already
+
+       git clone https://github.com/kowey/irit-stac.git
+       cd irit-stac
+
+4. Install the irit-stac code in development mode.
    This should automatically fetch the educe/attelo dependencies
    automatically
 
-       cd Stac/code
        pip install -r requirements.txt
 
    At this point, if somebody tells you to update the STAC code, it
-   should be possible to just `svn update` and maybe
+   should be possible to just `git pull` and maybe
    `pip install -r requirements.txt` again if attelo/educe need to be
    updated. No further installation will be needed
 
 5. Install NLTK data files
 
-       python code/setup-nltk.py
+       python setup-nltk.py
+
+6. Link the STAC corpus in (STAC has not yet been released, so here
+   the directory "Stac" refers to the STAC SVN directory)
+
+       ln -s /path/to/Stac/data data
 
 
 ## Full installation (Toulouse/Edinburgh)
@@ -96,7 +83,7 @@ parsing pipeline and the dialogue manager.
 
 3. Download and install corenlp-server (needs Apache Maven!)
 
-        cd Stac
+        cd irit-stac
         mkdir lib
         cd lib
         git clone https://github.com/kowey/corenlp-server
