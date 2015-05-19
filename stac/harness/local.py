@@ -7,6 +7,7 @@ In the future we may move this to a proper configuration file.
 # License: CeCILL-B (French BSD3-like)
 
 from __future__ import print_function
+from os import path as fp
 import itertools as itr
 
 import educe.stac.corpus
@@ -57,6 +58,9 @@ from .turn_constraint import (mk_tc_decoder,
                               tc_learner)
 
 # PATHS
+
+CONFIG_FILE = fp.splitext(__file__)[0] + '.py'
+
 
 LOCAL_TMP = 'TMP'
 """Things we may want to hold on to (eg. for weeks), but could

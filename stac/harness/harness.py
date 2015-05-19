@@ -13,7 +13,8 @@ from attelo.io import (load_fold_dict,
                        save_fold_dict)
 from attelo.util import (mk_rng)
 
-from .local import (DETAILED_EVALUATIONS,
+from .local import (CONFIG_FILE,
+                    DETAILED_EVALUATIONS,
                     EVALUATIONS,
                     FIXED_FOLD_FILE,
                     GRAPH_DOCS,
@@ -52,6 +53,10 @@ class IritHarness(Harness):
     # ------------------------------------------------------
     # local settings
     # ------------------------------------------------------
+
+    @property
+    def config_files(self):
+        return [CONFIG_FILE]
 
     @property
     def evaluations(self):
