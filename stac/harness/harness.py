@@ -85,10 +85,10 @@ class IritHarness(Harness):
         if FIXED_FOLD_FILE is None:
             rng = mk_rng()
             fold_dict = make_n_fold(mpack, 10, rng)
-            save_fold_dict(fold_dict, self.fold_file)
-            return fold_dict
         else:
-            return load_fold_dict(FIXED_FOLD_FILE)
+            fold_dict = load_fold_dict(FIXED_FOLD_FILE)
+        save_fold_dict(fold_dict, self.fold_file)
+        return fold_dict
 
     # ------------------------------------------------------
     # paths
