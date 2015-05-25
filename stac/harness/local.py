@@ -311,28 +311,24 @@ possibilities
 HARNESS_NAME = 'irit-stac'
 
 
-def _is_junk(klearner, kdecoder):
+def _is_junk(econf):
     """
     Any configuration for which this function returns True
     will be silently discarded
     """
     # intrasential head to head mode only works with mst for now
-    intra_flag = kdecoder.settings.intra
-    if kdecoder.key != 'mst':
-        if (intra_flag is not None and
-                intra_flag.strategy == IntraStrategy.heads):
-            return True
+    intra_flag = econf.settings.intra
 
     # no need for intra/inter oracle mode if the learner already
     # is an oracle
-    if klearner.key == 'oracle' and intra_flag is not None:
+    if econf.learner.key == 'oracle' and intra_flag is not None:
         if intra_flag.intra_oracle or intra_flag.inter_oracle:
             return True
 
     # skip any config which tries to use a non-prob learner with
-    if not klearner.attach.payload.can_predict_proba:
-        if kdecoder.settings.mode != DecodingMode.post_label:
-            return True
+    if (econf.settings.mode == DecodingMode.joint and
+        not econf.learner.attach.payload.can_predict_proba):
+        return True
 
     return False
 
@@ -365,9 +361,13 @@ def _mk_intra(mk_parser, settings):
 def _mk_parser_config(kdecoder, settings):
     """construct a decoder from the settings
 
-    :type k_decoder: Keyed(Settings -> Decoder)
+    Parameters
+    ----------
+    k_decoder: Keyed(Settings -> Decoder)
 
-    :rtype: ParserConfig
+    Returns
+    -------
+    config: ParserConfig
     """
     decoder_key = combined_key([settings, kdecoder])
     decoder = kdecoder.payload(settings)
@@ -382,10 +382,10 @@ def _mk_parser_config(kdecoder, settings):
     if settings.intra is not None:
         mk_parser = _mk_intra(mk_parser, settings.intra)
 
-    return ParserConfig(key=decoder_key,
-                        decoder=decoder,
-                        payload=mk_parser,
-                        settings=settings)
+    return lambda t: ParserConfig(key=decoder_key,
+                                  decoder=decoder,
+                                  payload=mk_parser(t),
+                                  settings=settings)
 
 
 def _mk_evaluations():
@@ -421,33 +421,31 @@ def _mk_evaluations():
 
     This would be so much easier with static typing
 
-    :rtype [(Keyed(learner), KeyedDecoder)]
+    Returns
+    -------
+    configs: [EvaluationConfig]
     """
 
-    kparsers = [_mk_parser_config(d, s)
+    builders = [_mk_parser_config(d, s)
                 for d, s in itr.product(_CORE_DECODERS, _SETTINGS)]
-    kparsers = [k for k in kparsers if k is not None]
+    builders = [k for k in builders if k is not None]
 
     # all learner/decoder pairs
     pairs = []
-    pairs.extend(itr.product(_LOCAL_LEARNERS, kparsers))
+    pairs.extend(itr.product(_LOCAL_LEARNERS, builders))
     for klearner in _STRUCTURED_LEARNERS:
-        pairs.extend((klearner(x.decoder), x) for x in kparsers)
+        pairs.extend((klearner(x.decoder), x) for x in builders)
 
     # boxing this up a little bit more conveniently
     configs = []
-    for klearner, kparser_ in pairs:
-        if _is_junk(klearner, kparser_):
-            continue
-        kparser = ParserConfig(key=kparser_.key,
-                               decoder=kparser_.decoder,
-                               payload=kparser_.payload(klearner),
-                               settings=kparser_.settings)
+    for klearner, builder in pairs:
+        kparser = builder(klearner)
         cfg = EvaluationConfig(key=combined_key([klearner, kparser]),
                                settings=kparser.settings,
                                learner=klearner,
                                parser=kparser)
-        configs.append(cfg)
+        if not _is_junk(cfg):
+            configs.append(cfg)
     return configs
 
 
