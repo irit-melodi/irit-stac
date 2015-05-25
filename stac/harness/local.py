@@ -24,7 +24,8 @@ from attelo.decoding.astar import (AstarArgs,
                                    AstarDecoder,
                                    Heuristic,
                                    RfcConstraint)
-from attelo.decoding.baseline import (LocalBaseline)
+from attelo.decoding.baseline import (LastBaseline,
+                                      LocalBaseline)
 from attelo.decoding.mst import (MstDecoder, MstRootStrategy)
 from attelo.learning.perceptron import (Perceptron,
                                         PerceptronArgs,
@@ -139,6 +140,10 @@ def combined_key(*variants):
     `key` field each"""
     return '-'.join(v if isinstance(v, six.string_types) else v.key
                     for v in variants)
+
+def decoder_last():
+    "our instantiation of the mst decoder"
+    return Keyed('last', LastBaseline())
 
 def decoder_local():
     "our instantiation of the mst decoder"
@@ -290,12 +295,14 @@ def _core_parsers(klearner):
     """
     return [
         # joint
+        mk_joint(klearner, decoder_last()),
         mk_joint(klearner, decoder_local()),
         mk_joint(klearner, decoder_mst()),
         mk_joint(klearner, tc_decoder(decoder_local())),
         mk_joint(klearner, tc_decoder(decoder_mst())),
 
         # postlabeling
+        mk_post(klearner, decoder_last()),
         mk_post(klearner, decoder_local()),
         mk_post(klearner, decoder_mst()),
         mk_post(klearner, tc_decoder(decoder_local())),
@@ -382,6 +389,28 @@ def _mk_dorc_intras(klearner, kconf):
     return [combine(p) for p in parsers]
 
 
+def _mk_last_intras(klearner, kconf):
+    """Intra/inter parsers based on a single core parser
+    and the last baseline
+    """
+    econf_last = mk_joint(klearner, decoder_last())
+    def combine(econf):
+        "return the combination of the intra/inter parser"
+        parsers = IntraInterPair(intra=econf_last.parser.payload,
+                                 inter=econf.parser.payload)
+        ikey = combined_key('last', kconf)
+        settings = Settings(key=combined_key(ikey, econf.settings),
+                            intra=True)
+        kparser = Keyed(combined_key(ikey, econf.parser),
+                        kconf.payload(parsers))
+        return EvaluationConfig(key=combined_key(econf.learner.key,
+                                                 kparser),
+                                settings=settings,
+                                learner=econf.learner,
+                                parser=kparser)
+    return [combine(p) for p in _core_parsers(klearner)]
+
+
 _INTRA_PAIRS = list(itr.product(_LOCAL_LEARNERS, _INTRA_INTER_CONFIGS))
 
 
@@ -390,6 +419,7 @@ EVALUATIONS = concat_l([
     concat_l(_mk_basic_intras(l, x) for l, x in _INTRA_PAIRS),
     #concat_l(_mk_sorc_intras(l, x) for l, x in _INTRA_PAIRS),
     #concat_l(_mk_dorc_intras(l, x) for l, x in _INTRA_PAIRS),
+    concat_l(_mk_last_intras(l, x) for l, x in _INTRA_PAIRS),
     ])
 
 
