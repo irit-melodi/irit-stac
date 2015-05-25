@@ -333,7 +333,7 @@ def _is_junk(econf):
     return False
 
 
-def _mk_intra(mk_parser, settings):
+def _mk_intra(mk_parser_fns, settings):
     """
     Return an intra/inter parser that would be wrapped
     around a core parser
@@ -345,8 +345,8 @@ def _mk_intra(mk_parser, settings):
                                    label=label_learner_oracle())
         intra_cfg = oracle_cfg if settings.intra_oracle else lcfg
         inter_cfg = oracle_cfg if settings.inter_oracle else lcfg
-        parsers = IntraInterPair(intra=mk_parser(intra_cfg),
-                                 inter=mk_parser(inter_cfg))
+        parsers = IntraInterPair(intra=mk_parser_fns.intra(intra_cfg),
+                                 inter=mk_parser_fns.inter(inter_cfg))
         if strategy == IntraStrategy.only:
             return SentOnlyParser(parsers)
         elif strategy == IntraStrategy.heads:
@@ -380,7 +380,9 @@ def _mk_parser_config(kdecoder, settings):
                                                 learner_label=t.label.payload,
                                                 decoder=decoder)
     if settings.intra is not None:
-        mk_parser = _mk_intra(mk_parser, settings.intra)
+        mk_parser_fns = IntraInterPair(intra=mk_parser,
+                                       inter=mk_parser)
+        mk_parser = _mk_intra(mk_parser_fns, settings.intra)
 
     return lambda t: ParserConfig(key=decoder_key,
                                   decoder=decoder,
