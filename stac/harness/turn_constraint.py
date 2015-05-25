@@ -88,14 +88,12 @@ class TC_Pruner(Parser):
 # pylint: enable=invalid-name
 
 
-def mk_tc_decoder(mk_decoder):
+def tc_decoder(kdecoder):
     "turn constrained version of any decoder constructor"
-    def inner(settings):
-        "actual constructor"
-        steps = [('tc filter', TC_Pruner()),
-                 ('decode', mk_decoder(settings))]
-        return Pipeline(steps=steps)
-    return inner
+    steps = [('tc filter', TC_Pruner()),
+             ('decode', kdecoder.payload)]
+    return Keyed(key='tc-' + kdecoder.key,
+                 payload=Pipeline(steps=steps))
 
 
 def tc_learner(klearner):
