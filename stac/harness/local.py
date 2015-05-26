@@ -236,8 +236,8 @@ ORACLE = LearnerConfig(attach=attach_learner_oracle(),
 
 _LOCAL_LEARNERS = [
     ORACLE,
-    LearnerConfig(attach=attach_learner_maxent(),
-                  label=label_learner_maxent()),
+#    LearnerConfig(attach=attach_learner_maxent(),
+#                  label=label_learner_maxent()),
     LearnerConfig(attach=tc_learner(attach_learner_maxent()),
                   label=tc_learner(label_learner_maxent())),
 #    LearnerConfig(attach=attach_learner_maxent(),
@@ -317,17 +317,17 @@ def _core_parsers(klearner):
     """
     return [
         # joint
-        mk_joint(klearner, decoder_last()),
+        #mk_joint(klearner, decoder_last()),
         mk_joint(klearner, decoder_local()),
-        mk_joint(klearner, decoder_mst()),
-        mk_joint(klearner, tc_decoder(decoder_local())),
+        #mk_joint(klearner, decoder_mst()),
+        #mk_joint(klearner, tc_decoder(decoder_local())),
         mk_joint(klearner, tc_decoder(decoder_mst())),
 
         # postlabeling
-        mk_post(klearner, decoder_last()),
+        #mk_post(klearner, decoder_last()),
         mk_post(klearner, decoder_local()),
-        mk_post(klearner, decoder_mst()),
-        mk_post(klearner, tc_decoder(decoder_local())),
+        #mk_post(klearner, decoder_mst()),
+        #mk_post(klearner, tc_decoder(decoder_local())),
         mk_post(klearner, tc_decoder(decoder_mst())),
     ]
 
