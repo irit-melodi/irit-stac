@@ -55,6 +55,21 @@ class TC_LearnerWrapper(object):
         pairs = [fun(d, t) for d, t in zip(dpacks, targets)]
         return zip(*pairs)
 
+    def important_features(self, top_n):
+        """If possible, return a list of important features with
+        their weights.
+
+        Note: we assume here that the underlying learner supports
+        this function
+        """
+        return self._learner.important_features(top_n)
+
+    def important_features_multi(self, top_n):
+        """If possible, return a dictionary mapping class indices
+        to important features
+        """
+        return self._learner.important_features_multi(top_n)
+
     def fit(self, dpacks, targets):
         "apply the turn constraint before learning"
         dpacks, targets = self.dzip(apply_turn_constraint, dpacks, targets)
