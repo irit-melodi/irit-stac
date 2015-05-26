@@ -418,7 +418,7 @@ def _mk_last_intras(klearner, kconf):
     kconf = Keyed(key=combined_key('last', kconf),
                   payload=kconf.payload)
     econf_last = mk_joint(klearner, decoder_last())
-    return [_combine_intra(IntraInterPair(p, econf_last),
+    return [_combine_intra(IntraInterPair(intra=econf_last, inter=p),
                            kconf,
                            primary='inter')
             for p in _core_parsers(klearner)]
