@@ -318,10 +318,10 @@ def _core_parsers(klearner):
     return [
         # joint
         #mk_joint(klearner, decoder_last()),
-        mk_joint(klearner, decoder_local()),
+        #mk_joint(klearner, decoder_local()),
         #mk_joint(klearner, decoder_mst()),
         #mk_joint(klearner, tc_decoder(decoder_local())),
-        mk_joint(klearner, tc_decoder(decoder_mst())),
+        #mk_joint(klearner, tc_decoder(decoder_mst())),
 
         # postlabeling
         #mk_post(klearner, decoder_last()),
@@ -334,7 +334,7 @@ def _core_parsers(klearner):
 
 _INTRA_INTER_CONFIGS = [
     Keyed('iheads', HeadToHeadParser),
-    Keyed('ionly', SentOnlyParser),
+    #Keyed('ionly', SentOnlyParser),
     Keyed('isoft', SoftParser),
 ]
 
