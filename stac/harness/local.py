@@ -324,7 +324,7 @@ def _core_parsers(klearner):
         #mk_joint(klearner, tc_decoder(decoder_mst())),
 
         # postlabeling
-        #mk_post(klearner, decoder_last()),
+        mk_post(klearner, decoder_last()),
         mk_post(klearner, decoder_local()),
         #mk_post(klearner, decoder_mst()),
         #mk_post(klearner, tc_decoder(decoder_local())),
@@ -434,6 +434,11 @@ def _is_junk(econf):
     kids = econf.settings.children
     has_intra_oracle = has.intra and (kids.intra.oracle or kids.inter.oracle)
     has_any_oracle = has.oracle or has_intra_oracle
+
+    decoder_name = econf.parser.key[len(has.key) + 1:]
+    # last with last-based intra decoders is a bit redundant
+    if has.intra and 'last' in has.key and decoder_name == 'last':
+        return True
 
     # oracle would be redundant with sentence/doc oracles
     if has.oracle and has_intra_oracle:
