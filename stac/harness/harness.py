@@ -11,6 +11,7 @@ from attelo.harness.evaluate import (evaluate_corpus,
                                      prepare_dirs)
 from attelo.io import (load_fold_dict,
                        save_fold_dict)
+from attelo.parser.intra import (IntraInterPair)
 from attelo.util import (mk_rng)
 
 from .local import (CONFIG_FILE,
@@ -134,15 +135,18 @@ class IritHarness(Harness):
         else:
             parent_dir = self.fold_dir_path(fold)
 
-        def _eval_model_path(mtype):
+        def _eval_model_path(subconf, mtype):
             "Model for a given loop/eval config and fold"
-            bname = self._model_basename(rconf, mtype, 'model')
+            bname = self._model_basename(subconf, mtype, 'model')
             return fp.join(parent_dir, bname)
 
-        return {'attach': _eval_model_path("attach"),
-                'label': _eval_model_path("relate"),
-                'intra:attach': _eval_model_path("sent-attach"),
-                'intra:label': _eval_model_path("sent-relate")}
+        if not isinstance(rconf, IntraInterPair):
+            rconf = IntraInterPair(intra=rconf, inter=rconf)
+
+        return {'attach': _eval_model_path(rconf.inter, "attach"),
+                'label': _eval_model_path(rconf.inter, "relate"),
+                'intra:attach': _eval_model_path(rconf.intra, "sent-attach"),
+                'intra:label': _eval_model_path(rconf.intra, "sent-relate")}
 
     # ------------------------------------------------------
     # utility
