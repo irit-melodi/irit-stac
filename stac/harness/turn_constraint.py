@@ -26,8 +26,9 @@ def turn_constraint_safe(dpack):
     '''
     spkr_idx = dpack.vocab.index(SAME_SPEAKER)
     return [i for i, (edu1, edu2) in enumerate(dpack.pairings)
-            if edu2.span() > edu1.span()
-            or dpack.data[i, spkr_idx]]
+            if edu2.span() > edu1.span() or
+            dpack.data[i, spkr_idx]]
+
 
 def apply_turn_constraint(dpack, target):
     '''
