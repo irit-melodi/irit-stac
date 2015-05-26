@@ -440,7 +440,7 @@ def _is_junk(econf):
         return True
 
     # toggle or comment to enable filtering in/out oracles
-    if not has_any_oracle:
+    if has_any_oracle:
         return True
 
     return False
