@@ -39,7 +39,8 @@ def main(_):
             continue
         for subdir in subdirs(data_dir):
             bname = fp.basename(subdir)
-            if bname in ["eval-current", "scratch-current"]:
+            if bname in ["eval-current", "eval-previous",
+                         "scratch-current", "scratch-previous"]:
                 os.unlink(subdir)
             elif bname.startswith("scratch-"):
                 shutil.rmtree(subdir)
