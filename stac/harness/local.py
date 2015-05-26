@@ -367,19 +367,23 @@ def _combine_intra(econfs, kconf, primary='intra'):
     else:
         raise ValueError("'primary' should be one of intra/inter: " + primary)
 
-    parsers = IntraInterPair(intra=econfs.intra.parser.payload,
-                             inter=econfs.inter.parser.payload)
-    subsettings = IntraInterPair(intra=econfs.intra.settings,
-                                 inter=econfs.inter.settings)
+    parsers = econfs.fmap(lambda e: e.parser.payload)
+    subsettings = econfs.fmap(lambda e: e.settings)
+    learners = econfs.fmap(lambda e: e.learner)
     settings = Settings(key=combined_key(kconf, econf.settings),
                         intra=True,
                         oracle=econf.settings.oracle,
                         children=subsettings)
     kparser = Keyed(combined_key(kconf, econf.parser),
                     kconf.payload(parsers))
-    return EvaluationConfig(key=combined_key(econf.learner.key, kparser),
+    if learners.intra.key == learners.inter.key:
+        learner_key = learners.intra.key
+    else:
+        learner_key = '{}S_D{}'.format(learners.intra.key,
+                                       learners.inter.key)
+    return EvaluationConfig(key=combined_key(learner_key, kparser),
                             settings=settings,
-                            learner=econf.learner,
+                            learner=learners,
                             parser=kparser)
 
 
@@ -479,11 +483,22 @@ GRAPH_DOCS = ['s2-league4-game1_07_stac_1396964826',
 Set to None to graph everything
 """
 
-DETAILED_EVALUATIONS = [e for e in EVALUATIONS if
-                        'maxent' in e.learner.key and
-                        ('mst' in e.parser.key or 'astar' in e.parser.key)
-                        and 'jnt' in e.settings.key
-                        and 'orc' not in e.settings.key]
+def _want_details(econf):
+    "true if we should do detailed reporting on this configuration"
+
+    if isinstance(econf.learner, IntraInterPair):
+        learners = [econf.learner.intra, econf.learner.inter]
+    else:
+        learners = [econf.learner]
+    has_maxent = any('maxent' in l.key for l in learners)
+    has = econf.settings
+    kids = econf.settings.children
+    has_intra_oracle = has.intra and (kids.intra.oracle or kids.inter.oracle)
+    return (has_maxent and
+            ('mst' in econf.parser.key or 'astar' in econf.parser.key) and
+            not has_intra_oracle)
+
+DETAILED_EVALUATIONS = [e for e in EVALUATIONS if _want_details(e)]
 """
 Any evalutions that we'd like full reports and graphs for.
 You could just set this to EVALUATIONS, but this sort of
