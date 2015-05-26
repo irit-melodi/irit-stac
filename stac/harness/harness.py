@@ -162,7 +162,7 @@ class IritHarness(Harness):
             oops = ("Sorry, there's an error in your configuration.\n"
                     "I don't dare to start evaluation until you fix it.\n"
                     "ERROR! -----------------vvvv---------------------\n"
-                    "The following configurations more than once:{}\n"
+                    "The following configurations more than once:\n{}\n"
                     "ERROR! -----------------^^^^^--------------------"
                     "").format("\n".join(bad_confs))
             sys.exit(oops)
