@@ -17,7 +17,6 @@ import numpy as np
 
 from attelo.harness.config import (EvaluationConfig,
                                    LearnerConfig,
-                                   ParserConfig,
                                    Keyed)
 
 from attelo.decoding.astar import (AstarArgs,
