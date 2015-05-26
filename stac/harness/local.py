@@ -398,8 +398,6 @@ def _mk_sorc_intras(klearner, kconf):
     """Intra/inter parsers based on a single core parser
     and a sentence oracle
     """
-    kconf = Keyed(key=combined_key('sorc', kconf),
-                  payload=kconf.payload)
     parsers = [IntraInterPair(intra=x, inter=y) for x, y in
                zip(_core_parsers(ORACLE), _core_parsers(klearner))]
     return [_combine_intra(p, kconf, primary='inter') for p in parsers]
@@ -409,8 +407,6 @@ def _mk_dorc_intras(klearner, kconf):
     """Intra/inter parsers based on a single core parser
     and a document oracle
     """
-    kconf = Keyed(key=combined_key('dorc', kconf),
-                  payload=kconf.payload)
     parsers = [IntraInterPair(intra=x, inter=y) for x, y in
                zip(_core_parsers(klearner), _core_parsers(ORACLE))]
     return [_combine_intra(p, kconf, primary='intra') for p in parsers]
