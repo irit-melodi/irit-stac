@@ -130,9 +130,26 @@ NB. It's up to you to ensure that the folds file makes sense
 """
 
 
-Settings = namedtuple('Settings', ['key', 'intra'])
+Settings = namedtuple('Settings',
+                      ['key', 'intra', 'oracle', 'children'])
 """
 Note that this is subclass of Keyed
+
+The settings are used for config management only, for example,
+if we want to filter in/out configurations that involve an
+oracle.
+
+Parameters
+----------
+intra: bool
+    If this config uses intra/inter decoding
+
+oracle: bool
+    If parser should be considered oracle-based
+
+children: container(Settings)
+    Any nested settings (eg. if intra/inter, this would be the
+    the settings of the intra and inter decoders)
 """
 
 def combined_key(*variants):
@@ -219,7 +236,7 @@ ORACLE = LearnerConfig(attach=attach_learner_oracle(),
                        label=label_learner_oracle())
 
 _LOCAL_LEARNERS = [
-    #ORACLE,
+    ORACLE,
     LearnerConfig(attach=attach_learner_maxent(),
                   label=label_learner_maxent()),
     LearnerConfig(attach=tc_learner(attach_learner_maxent()),
@@ -261,10 +278,16 @@ _STRUCTURED_LEARNERS = [
 We assume that they cannot be used relation modelling
 """
 
+def _core_settings(key, klearner):
+    "settings for basic pipelines"
+    return Settings(key=key,
+                    intra=False,
+                    oracle='oracle' in klearner.key,
+                    children=None)
 
 def mk_joint(klearner, kdecoder):
     "return a joint decoding parser config"
-    settings = Settings(key='AD.L-jnt', intra=True)
+    settings = _core_settings('AD.L-jnt', klearner)
     parser_key = combined_key(settings, kdecoder)
     key = combined_key(klearner, parser_key)
     parser = JointPipeline(learner_attach=klearner.attach.payload,
@@ -278,7 +301,7 @@ def mk_joint(klearner, kdecoder):
 
 def mk_post(klearner, kdecoder):
     "return a post label parser"
-    settings = Settings('AD.L-pst', intra=False)
+    settings = _core_settings('AD.L-pst', klearner)
     parser_key = combined_key(settings, kdecoder)
     key = combined_key(klearner, parser_key)
     parser = PostlabelPipeline(learner_attach=klearner.attach.payload,
@@ -325,104 +348,119 @@ _INTRA_INTER_CONFIGS = [
 HARNESS_NAME = 'irit-stac'
 
 
+def _combine_intra(econfs, kconf, primary='intra'):
+    """Combine a pair of EvaluationConfig into a single IntraInterParser
+
+    Parameters
+    ----------
+    econfs: IntraInterPair(EvaluationConfig)
+
+    kconf: Keyed(parser constructor)
+
+    primary: ['intra', 'inter']
+        Treat the intra/inter config as the primary one for the key
+    """
+    if primary == 'intra':
+        econf = econfs.intra
+    elif primary == 'inter':
+        econf = econfs.inter
+    else:
+        raise ValueError("'primary' should be one of intra/inter: " + primary)
+
+    parsers = IntraInterPair(intra=econfs.intra.parser.payload,
+                             inter=econfs.inter.parser.payload)
+    subsettings = IntraInterPair(intra=econfs.intra.settings,
+                                 inter=econfs.inter.settings)
+    settings = Settings(key=combined_key(kconf, econf.settings),
+                        intra=True,
+                        oracle=econf.settings.oracle,
+                        children=subsettings)
+    kparser = Keyed(combined_key(kconf, econf.parser),
+                    kconf.payload(parsers))
+    return EvaluationConfig(key=combined_key(econf.learner.key, kparser),
+                            settings=settings,
+                            learner=econf.learner,
+                            parser=kparser)
+
+
 def _mk_basic_intras(klearner, kconf):
     """Intra/inter parser based on a single core parser
     """
-    def combine(econf):
-        "return an intra/inter config out of a vanilla one"
-        parsers = IntraInterPair(intra=econf.parser.payload,
-                                 inter=econf.parser.payload)
-        settings = Settings(key=combined_key(kconf, econf.settings),
-                            intra=True)
-        kparser = Keyed(combined_key(kconf, econf.parser),
-                        kconf.payload(parsers))
-        return EvaluationConfig(key=combined_key(econf.learner.key, kparser),
-                                settings=settings,
-                                learner=econf.learner,
-                                parser=kparser)
-    return [combine(x) for x in _core_parsers(klearner)]
+    return [_combine_intra(IntraInterPair(x, x), kconf)
+            for x in _core_parsers(klearner)]
 
 
 def _mk_sorc_intras(klearner, kconf):
     """Intra/inter parsers based on a single core parser
     and a sentence oracle
     """
-    def combine(econfs):
-        "return the combination of the intra/inter parser"
-        parsers = IntraInterPair(intra=econfs.intra.parser.payload,
-                                 inter=econfs.inter.parser.payload)
-        ikey = combined_key('sorc', kconf)
-        settings = Settings(key=combined_key(ikey, econfs.inter.settings),
-                            intra=True)
-        kparser = Keyed(combined_key(ikey, econfs.inter.parser),
-                        kconf.payload(parsers))
-        return EvaluationConfig(key=combined_key(econfs.inter.learner.key,
-                                                 kparser),
-                                settings=settings,
-                                learner=econfs.inter.learner,
-                                parser=kparser)
-    parsers = [IntraInterPair(intra=o, inter=p) for o, p in
+    kconf = Keyed(key=combined_key('sorc', kconf),
+                  payload=kconf.payload)
+    parsers = [IntraInterPair(intra=x, inter=y) for x, y in
                zip(_core_parsers(ORACLE), _core_parsers(klearner))]
-    return [combine(p) for p in parsers]
+    return [_combine_intra(p, kconf, primary='inter') for p in parsers]
 
 
 def _mk_dorc_intras(klearner, kconf):
     """Intra/inter parsers based on a single core parser
     and a document oracle
     """
-    def combine(econfs):
-        "return the combination of the intra/inter parser"
-        parsers = IntraInterPair(intra=econfs.intra.parser.payload,
-                                 inter=econfs.inter.parser.payload)
-        ikey = combined_key('dorc', kconf)
-        settings = Settings(key=combined_key(ikey, econfs.intra.settings),
-                            intra=True)
-        kparser = Keyed(combined_key(ikey, econfs.intra.parser),
-                        kconf.payload(parsers))
-        return EvaluationConfig(key=combined_key(econfs.intra.learner.key,
-                                                 kparser),
-                                settings=settings,
-                                learner=econfs.intra.learner,
-                                parser=kparser)
+    kconf = Keyed(key=combined_key('dorc', kconf),
+                  payload=kconf.payload)
     parsers = [IntraInterPair(intra=x, inter=y) for x, y in
                zip(_core_parsers(klearner), _core_parsers(ORACLE))]
-    return [combine(p) for p in parsers]
+    return [_combine_intra(p, kconf, primary='intra') for p in parsers]
 
 
 def _mk_last_intras(klearner, kconf):
     """Intra/inter parsers based on a single core parser
     and the last baseline
     """
+    kconf = Keyed(key=combined_key('last', kconf),
+                  payload=kconf.payload)
     econf_last = mk_joint(klearner, decoder_last())
-    def combine(econf):
-        "return the combination of the intra/inter parser"
-        parsers = IntraInterPair(intra=econf_last.parser.payload,
-                                 inter=econf.parser.payload)
-        ikey = combined_key('last', kconf)
-        settings = Settings(key=combined_key(ikey, econf.settings),
-                            intra=True)
-        kparser = Keyed(combined_key(ikey, econf.parser),
-                        kconf.payload(parsers))
-        return EvaluationConfig(key=combined_key(econf.learner.key,
-                                                 kparser),
-                                settings=settings,
-                                learner=econf.learner,
-                                parser=kparser)
-    return [combine(p) for p in _core_parsers(klearner)]
+    return [_combine_intra(IntraInterPair(p, econf_last),
+                           kconf,
+                           primary='inter')
+            for p in _core_parsers(klearner)]
 
 
-_INTRA_PAIRS = list(itr.product(_LOCAL_LEARNERS, _INTRA_INTER_CONFIGS))
+def _is_junk(econf):
+    """
+    Any configuration for which this function returns True
+    will be silently discarded
+    """
+    # intrasential head to head mode only works with mst for now
+    has = econf.settings
+    kids = econf.settings.children
+    has_intra_oracle = has.intra and (kids.intra.oracle or kids.inter.oracle)
+    has_any_oracle = has.oracle or has_intra_oracle
+
+    # oracle would be redundant with sentence/doc oracles
+    if has.oracle and has_intra_oracle:
+        return True
+
+    # toggle or comment to enable filtering in/out oracles
+    if not has_any_oracle:
+        return True
+
+    return False
 
 
-EVALUATIONS = concat_l([
-    concat_l(_core_parsers(l) for l in _LOCAL_LEARNERS),
-    concat_l(_mk_basic_intras(l, x) for l, x in _INTRA_PAIRS),
-    #concat_l(_mk_sorc_intras(l, x) for l, x in _INTRA_PAIRS),
-    #concat_l(_mk_dorc_intras(l, x) for l, x in _INTRA_PAIRS),
-    concat_l(_mk_last_intras(l, x) for l, x in _INTRA_PAIRS),
+def _evaluations():
+    "the evaluations we want to run"
+    ipairs = list(itr.product(_LOCAL_LEARNERS, _INTRA_INTER_CONFIGS))
+    res = concat_l([
+        concat_l(_core_parsers(l) for l in _LOCAL_LEARNERS),
+        concat_l(_mk_basic_intras(l, x) for l, x in ipairs),
+        concat_l(_mk_sorc_intras(l, x) for l, x in ipairs),
+        concat_l(_mk_dorc_intras(l, x) for l, x in ipairs),
+        concat_l(_mk_last_intras(l, x) for l, x in ipairs),
     ])
+    return [x for x in res if not _is_junk(x)]
 
 
+EVALUATIONS = _evaluations()
 
 
 """Learners and decoders that are associated with each other.
