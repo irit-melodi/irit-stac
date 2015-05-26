@@ -437,7 +437,7 @@ def _is_junk(econf):
 
     decoder_name = econf.parser.key[len(has.key) + 1:]
     # last with last-based intra decoders is a bit redundant
-    if has.intra and 'last' in has.key and decoder_name == 'last':
+    if has.intra and decoder_name == 'last':
         return True
 
     # oracle would be redundant with sentence/doc oracles
