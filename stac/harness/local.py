@@ -315,14 +315,16 @@ def mk_post(klearner, kdecoder):
 def _core_parsers(klearner):
     """Our basic parser configurations
     """
-    return [
-        # joint
+    # joint
+    joint = [
         #mk_joint(klearner, decoder_last()),
         #mk_joint(klearner, decoder_local()),
         #mk_joint(klearner, decoder_mst()),
         #mk_joint(klearner, tc_decoder(decoder_local())),
         #mk_joint(klearner, tc_decoder(decoder_mst())),
+    ]
 
+    post = [
         # postlabeling
         mk_post(klearner, decoder_last()),
         mk_post(klearner, decoder_local()),
@@ -330,6 +332,10 @@ def _core_parsers(klearner):
         #mk_post(klearner, tc_decoder(decoder_local())),
         mk_post(klearner, tc_decoder(decoder_mst())),
     ]
+    if klearner.attach.payload.can_predict_proba:
+        return joint + post
+    else:
+        return post
 
 
 _INTRA_INTER_CONFIGS = [
@@ -417,7 +423,7 @@ def _mk_last_intras(klearner, kconf):
     """
     kconf = Keyed(key=combined_key('last', kconf),
                   payload=kconf.payload)
-    econf_last = mk_joint(klearner, decoder_last())
+    econf_last = mk_post(klearner, decoder_last())
     return [_combine_intra(IntraInterPair(intra=econf_last, inter=p),
                            kconf,
                            primary='inter')
