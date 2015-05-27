@@ -167,7 +167,7 @@ def decoder_local():
 
 def decoder_mst():
     "our instantiation of the mst decoder"
-    return Keyed('mst', MstDecoder(MstRootStrategy.leftmost, True))
+    return Keyed('mst', MstDecoder(MstRootStrategy.fake_root, True))
 
 
 def attach_learner_oracle():
