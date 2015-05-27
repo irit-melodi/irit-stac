@@ -235,11 +235,11 @@ ORACLE = LearnerConfig(attach=attach_learner_oracle(),
                        label=label_learner_oracle())
 
 _LOCAL_LEARNERS = [
-    ORACLE,
+#    ORACLE,
 #    LearnerConfig(attach=attach_learner_maxent(),
 #                  label=label_learner_maxent()),
-    LearnerConfig(attach=tc_learner(attach_learner_maxent()),
-                  label=tc_learner(label_learner_maxent())),
+#    LearnerConfig(attach=tc_learner(attach_learner_maxent()),
+#                  label=tc_learner(label_learner_maxent())),
 #    LearnerConfig(attach=attach_learner_maxent(),
 #                  label=label_learner_oracle()),
 #    LearnerConfig(attach=attach_learner_rndforest(),
