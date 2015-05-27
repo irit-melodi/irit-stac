@@ -7,7 +7,6 @@ In the future we may move this to a proper configuration file.
 # License: CeCILL-B (French BSD3-like)
 
 from __future__ import print_function
-from collections import namedtuple
 from os import path as fp
 import itertools as itr
 
@@ -15,22 +14,20 @@ import educe.stac.corpus
 
 from attelo.harness.config import (LearnerConfig,
                                    Keyed)
-from attelo.decoding.astar import (AstarArgs,
-                                   AstarDecoder,
-                                   Heuristic,
-                                   RfcConstraint)
+# from attelo.decoding.astar import (AstarArgs,
+#                                    AstarDecoder,
+#                                    Heuristic,
+#                                    RfcConstraint)
 from attelo.decoding.mst import (MstDecoder, MstRootStrategy)
 from attelo.learning.local import (SklearnAttachClassifier,
                                    SklearnLabelClassifier)
-
-from attelo.parser.intra import (HeadToHeadParser,
-                                 IntraInterPair,
-                                 SentOnlyParser,
+from attelo.parser.intra import (IntraInterPair,
+                                 HeadToHeadParser,
+                                 # SentOnlyParser,
                                  SoftParser)
 from attelo.util import (concat_l)
 
-from sklearn.linear_model import (LogisticRegression,
-                                 )
+from sklearn.linear_model import (LogisticRegression)
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
@@ -68,7 +65,7 @@ SNAPSHOTS = 'data/SNAPSHOTS'
 
 
 TRAINING_CORPUS = 'data/FROZEN/training-2015-04-02'
-#TRAINING_CORPUS = 'data/tiny'
+# TRAINING_CORPUS = 'data/tiny'
 """Corpora for use in building/training models and running our
 incremental experiments. Later on we should consider using the
 held-out test data for something, but let's make a point of
@@ -103,8 +100,6 @@ eg. 'maxent-C0.9-AD.L_jnt-mst'
 
 (HINT: you can join them together from the report headers)
 """
-
-
 
 LEX_DIR = "lexicon"
 """
@@ -141,10 +136,10 @@ def attach_learner_maxent():
     "return a keyed instance of maxent learner"
     return Keyed('maxent', SklearnAttachClassifier(LogisticRegression()))
 
+
 def label_learner_maxent():
     "return a keyed instance of maxent learner"
     return Keyed('maxent', SklearnLabelClassifier(LogisticRegression()))
-
 
 
 def attach_learner_dectree():
@@ -154,27 +149,30 @@ def attach_learner_dectree():
 
 def label_learner_dectree():
     "return a keyed instance of decision tree learner"
-    return Keyed('dectree', SklearnLabelClassifier(DecisionTreeClassifier()))
+    return Keyed('dectree',
+                 SklearnLabelClassifier(DecisionTreeClassifier()))
 
 
 def attach_learner_rndforest():
     "return a keyed instance of random forest learner"
-    return Keyed('rndforest', SklearnAttachClassifier(RandomForestClassifier()))
+    return Keyed('rndforest',
+                 SklearnAttachClassifier(RandomForestClassifier()))
+
 
 def label_learner_rndforest():
     "return a keyed instance of decision tree learner"
     return Keyed('rndforest', SklearnLabelClassifier(RandomForestClassifier()))
 
 _LOCAL_LEARNERS = [
-#    ORACLE,
-#    LearnerConfig(attach=attach_learner_maxent(),
-#                  label=label_learner_maxent()),
+    #    ORACLE,
+    #    LearnerConfig(attach=attach_learner_maxent(),
+    #                  label=label_learner_maxent()),
     LearnerConfig(attach=tc_learner(attach_learner_maxent()),
                   label=tc_learner(label_learner_maxent())),
-#    LearnerConfig(attach=attach_learner_maxent(),
-#                  label=label_learner_oracle()),
-#    LearnerConfig(attach=attach_learner_rndforest(),
-#                  label=label_learner_rndforest()),
+    #    LearnerConfig(attach=attach_learner_maxent(),
+    #                  label=label_learner_oracle()),
+    #    LearnerConfig(attach=attach_learner_rndforest(),
+    #                  label=label_learner_rndforest()),
     #    LearnerConfig(attach=attach_learner_perc(),
     #                  label=label_learner_maxent()),
     #    LearnerConfig(attach=attach_learner_pa(),
@@ -192,13 +190,18 @@ between different configurations of your learners.
 """
 
 
-_STRUCTURED_LEARNERS = [
-    #    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_perc(d)),
-    #                            label=label_learner_maxent()),
-    #    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
-    #                            label=label_learner_maxent()),
-]
+def _structured(klearner):
+    """learner configuration pair for a structured learner
 
+    (parameterised on a decoder)"""
+    return lambda d: LearnerConfig(attach=tc_learner(klearner(d)),
+                                   label=label_learner_maxent())
+
+
+_STRUCTURED_LEARNERS = [
+    #    _structured(attach_learner_dp_struct_perc),
+    #    _structured(attach_learner_dp_struct_pa),
+]
 """Attelo learners that take decoders as arguments.
 We assume that they cannot be used relation modelling
 """
@@ -209,18 +212,18 @@ def _core_parsers(klearner):
     """
     # joint
     joint = [
-        #mk_joint(klearner, decoder_last()),
+        # mk_joint(klearner, decoder_last()),
         # mk_joint(klearner, DECODER_LOCAL),
-        #mk_joint(klearner, decoder_mst()),
+        # mk_joint(klearner, decoder_mst()),
         # mk_joint(klearner, tc_decoder(DECODER_LOCAL)),
-        #mk_joint(klearner, tc_decoder(decoder_mst())),
+        # mk_joint(klearner, tc_decoder(decoder_mst())),
     ]
 
     post = [
         # postlabeling
         mk_post(klearner, decoder_last()),
         mk_post(klearner, DECODER_LOCAL),
-        #mk_post(klearner, decoder_mst()),
+        # mk_post(klearner, decoder_mst()),
         # mk_post(klearner, tc_decoder(DECODER_LOCAL)),
         mk_post(klearner, tc_decoder(decoder_mst())),
     ]
@@ -229,10 +232,9 @@ def _core_parsers(klearner):
     else:
         return post
 
-
 _INTRA_INTER_CONFIGS = [
     Keyed('iheads', HeadToHeadParser),
-    #Keyed('ionly', SentOnlyParser),
+    # Keyed('ionly', SentOnlyParser),
     Keyed('isoft', SoftParser),
 ]
 
@@ -240,7 +242,6 @@ _INTRA_INTER_CONFIGS = [
 # -------------------------------------------------------------------------------
 # maybe less to edit below but still worth having a glance
 # -------------------------------------------------------------------------------
-
 
 HARNESS_NAME = 'irit-stac'
 
@@ -343,12 +344,14 @@ their decoder, and cannot be shared
 """
 
 
-GRAPH_DOCS = ['s2-league4-game1_07_stac_1396964826',
-              's2-league4-game1_02_stac_1396964918',
-              ]
+GRAPH_DOCS = [
+    's2-league4-game1_07_stac_1396964826',
+    's2-league4-game1_02_stac_1396964918',
+]
 """Just the documents that you want to graph.
 Set to None to graph everything
 """
+
 
 def _want_details(econf):
     "true if we should do detailed reporting on this configuration"
