@@ -10,32 +10,23 @@ from __future__ import print_function
 from collections import namedtuple
 from os import path as fp
 import itertools as itr
-import six
 
 import educe.stac.corpus
 
-from attelo.harness.config import (EvaluationConfig,
-                                   LearnerConfig,
+from attelo.harness.config import (LearnerConfig,
                                    Keyed)
-
 from attelo.decoding.astar import (AstarArgs,
                                    AstarDecoder,
                                    Heuristic,
                                    RfcConstraint)
-from attelo.decoding.baseline import (LastBaseline,
-                                      LocalBaseline)
 from attelo.decoding.mst import (MstDecoder, MstRootStrategy)
 from attelo.learning.local import (SklearnAttachClassifier,
                                    SklearnLabelClassifier)
-from attelo.learning.oracle import (AttachOracle, LabelOracle)
 
 from attelo.parser.intra import (HeadToHeadParser,
                                  IntraInterPair,
                                  SentOnlyParser,
                                  SoftParser)
-from attelo.parser.full import (JointPipeline,
-                                PostlabelPipeline)
-from attelo.parser.pipeline import (Pipeline)
 from attelo.util import (concat_l)
 
 from sklearn.linear_model import (LogisticRegression,
@@ -44,6 +35,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 
+from .config.intra import (combine_intra)
 # from .config.perceptron import (attach_learner_dp_pa,
 #                                 attach_learner_dp_perc,
 #                                 attach_learner_pa,
@@ -52,6 +44,12 @@ from sklearn.ensemble import RandomForestClassifier
 #                                 label_learner_dp_perc,
 #                                 attach_learner_pa,
 #                                 attach_learner_perc)
+from .config.common import (ORACLE,
+                            combined_key,
+                            decoder_last,
+                            decoder_local,
+                            # mk_joint,
+                            mk_post)
 
 from .turn_constraint import (tc_decoder,
                               tc_learner)
@@ -130,56 +128,13 @@ NB. It's up to you to ensure that the folds file makes sense
 """
 
 
-Settings = namedtuple('Settings',
-                      ['key', 'intra', 'oracle', 'children'])
-"""
-Note that this is subclass of Keyed
+DECODER_LOCAL = decoder_local(0.2)
+"local decoder should accept above this score"
 
-The settings are used for config management only, for example,
-if we want to filter in/out configurations that involve an
-oracle.
-
-Parameters
-----------
-intra: bool
-    If this config uses intra/inter decoding
-
-oracle: bool
-    If parser should be considered oracle-based
-
-children: container(Settings)
-    Any nested settings (eg. if intra/inter, this would be the
-    the settings of the intra and inter decoders)
-"""
-
-def combined_key(*variants):
-    """return a key from a list of objects that have a
-    `key` field each"""
-    return '-'.join(v if isinstance(v, six.string_types) else v.key
-                    for v in variants)
-
-def decoder_last():
-    "our instantiation of the mst decoder"
-    return Keyed('last', LastBaseline())
-
-def decoder_local():
-    "our instantiation of the mst decoder"
-    return Keyed('local', LocalBaseline(0.2, True))
 
 def decoder_mst():
     "our instantiation of the mst decoder"
     return Keyed('mst', MstDecoder(MstRootStrategy.fake_root, True))
-
-
-def attach_learner_oracle():
-    "return a keyed instance of the oracle (virtual) learner"
-    return Keyed('oracle', AttachOracle())
-
-
-def label_learner_oracle():
-    "return a keyed instance of the oracle (virtual) learner"
-    return Keyed('oracle', LabelOracle())
-
 
 
 def attach_learner_maxent():
@@ -209,9 +164,6 @@ def attach_learner_rndforest():
 def label_learner_rndforest():
     "return a keyed instance of decision tree learner"
     return Keyed('rndforest', SklearnLabelClassifier(RandomForestClassifier()))
-
-ORACLE = LearnerConfig(attach=attach_learner_oracle(),
-                       label=label_learner_oracle())
 
 _LOCAL_LEARNERS = [
 #    ORACLE,
@@ -251,40 +203,6 @@ _STRUCTURED_LEARNERS = [
 We assume that they cannot be used relation modelling
 """
 
-def _core_settings(key, klearner):
-    "settings for basic pipelines"
-    return Settings(key=key,
-                    intra=False,
-                    oracle='oracle' in klearner.key,
-                    children=None)
-
-def mk_joint(klearner, kdecoder):
-    "return a joint decoding parser config"
-    settings = _core_settings('AD.L-jnt', klearner)
-    parser_key = combined_key(settings, kdecoder)
-    key = combined_key(klearner, parser_key)
-    parser = JointPipeline(learner_attach=klearner.attach.payload,
-                           learner_label=klearner.label.payload,
-                           decoder=kdecoder.payload)
-    return EvaluationConfig(key=key,
-                            settings=settings,
-                            learner=klearner,
-                            parser=Keyed(parser_key, parser))
-
-
-def mk_post(klearner, kdecoder):
-    "return a post label parser"
-    settings = _core_settings('AD.L-pst', klearner)
-    parser_key = combined_key(settings, kdecoder)
-    key = combined_key(klearner, parser_key)
-    parser = PostlabelPipeline(learner_attach=klearner.attach.payload,
-                               learner_label=klearner.label.payload,
-                               decoder=kdecoder.payload)
-    return EvaluationConfig(key=key,
-                            settings=settings,
-                            learner=klearner,
-                            parser=Keyed(parser_key, parser))
-
 
 def _core_parsers(klearner):
     """Our basic parser configurations
@@ -292,18 +210,18 @@ def _core_parsers(klearner):
     # joint
     joint = [
         #mk_joint(klearner, decoder_last()),
-        #mk_joint(klearner, decoder_local()),
+        # mk_joint(klearner, DECODER_LOCAL),
         #mk_joint(klearner, decoder_mst()),
-        #mk_joint(klearner, tc_decoder(decoder_local())),
+        # mk_joint(klearner, tc_decoder(DECODER_LOCAL)),
         #mk_joint(klearner, tc_decoder(decoder_mst())),
     ]
 
     post = [
         # postlabeling
         mk_post(klearner, decoder_last()),
-        mk_post(klearner, decoder_local()),
+        mk_post(klearner, DECODER_LOCAL),
         #mk_post(klearner, decoder_mst()),
-        #mk_post(klearner, tc_decoder(decoder_local())),
+        # mk_post(klearner, tc_decoder(DECODER_LOCAL)),
         mk_post(klearner, tc_decoder(decoder_mst())),
     ]
     if klearner.attach.payload.can_predict_proba:
@@ -327,49 +245,10 @@ _INTRA_INTER_CONFIGS = [
 HARNESS_NAME = 'irit-stac'
 
 
-def _combine_intra(econfs, kconf, primary='intra'):
-    """Combine a pair of EvaluationConfig into a single IntraInterParser
-
-    Parameters
-    ----------
-    econfs: IntraInterPair(EvaluationConfig)
-
-    kconf: Keyed(parser constructor)
-
-    primary: ['intra', 'inter']
-        Treat the intra/inter config as the primary one for the key
-    """
-    if primary == 'intra':
-        econf = econfs.intra
-    elif primary == 'inter':
-        econf = econfs.inter
-    else:
-        raise ValueError("'primary' should be one of intra/inter: " + primary)
-
-    parsers = econfs.fmap(lambda e: e.parser.payload)
-    subsettings = econfs.fmap(lambda e: e.settings)
-    learners = econfs.fmap(lambda e: e.learner)
-    settings = Settings(key=combined_key(kconf, econf.settings),
-                        intra=True,
-                        oracle=econf.settings.oracle,
-                        children=subsettings)
-    kparser = Keyed(combined_key(kconf, econf.parser),
-                    kconf.payload(parsers))
-    if learners.intra.key == learners.inter.key:
-        learner_key = learners.intra.key
-    else:
-        learner_key = '{}S_D{}'.format(learners.intra.key,
-                                       learners.inter.key)
-    return EvaluationConfig(key=combined_key(learner_key, kparser),
-                            settings=settings,
-                            learner=learners,
-                            parser=kparser)
-
-
 def _mk_basic_intras(klearner, kconf):
     """Intra/inter parser based on a single core parser
     """
-    return [_combine_intra(IntraInterPair(x, x), kconf)
+    return [combine_intra(IntraInterPair(x, x), kconf)
             for x in _core_parsers(klearner)]
 
 
@@ -379,7 +258,7 @@ def _mk_sorc_intras(klearner, kconf):
     """
     parsers = [IntraInterPair(intra=x, inter=y) for x, y in
                zip(_core_parsers(ORACLE), _core_parsers(klearner))]
-    return [_combine_intra(p, kconf, primary='inter') for p in parsers]
+    return [combine_intra(p, kconf, primary='inter') for p in parsers]
 
 
 def _mk_dorc_intras(klearner, kconf):
@@ -388,7 +267,7 @@ def _mk_dorc_intras(klearner, kconf):
     """
     parsers = [IntraInterPair(intra=x, inter=y) for x, y in
                zip(_core_parsers(klearner), _core_parsers(ORACLE))]
-    return [_combine_intra(p, kconf, primary='intra') for p in parsers]
+    return [combine_intra(p, kconf, primary='intra') for p in parsers]
 
 
 def _mk_last_intras(klearner, kconf):
@@ -398,9 +277,9 @@ def _mk_last_intras(klearner, kconf):
     kconf = Keyed(key=combined_key('last', kconf),
                   payload=kconf.payload)
     econf_last = mk_post(klearner, decoder_last())
-    return [_combine_intra(IntraInterPair(intra=econf_last, inter=p),
-                           kconf,
-                           primary='inter')
+    return [combine_intra(IntraInterPair(intra=econf_last, inter=p),
+                          kconf,
+                          primary='inter')
             for p in _core_parsers(klearner)]
 
 
