@@ -238,8 +238,8 @@ _LOCAL_LEARNERS = [
 #    ORACLE,
 #    LearnerConfig(attach=attach_learner_maxent(),
 #                  label=label_learner_maxent()),
-#    LearnerConfig(attach=tc_learner(attach_learner_maxent()),
-#                  label=tc_learner(label_learner_maxent())),
+    LearnerConfig(attach=tc_learner(attach_learner_maxent()),
+                  label=tc_learner(label_learner_maxent())),
 #    LearnerConfig(attach=attach_learner_maxent(),
 #                  label=label_learner_oracle()),
 #    LearnerConfig(attach=attach_learner_rndforest(),
@@ -278,10 +278,10 @@ def attach_learner_dp_struct_pa(decoder):
 
 
 _STRUCTURED_LEARNERS = [
-    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_perc(d)),
-                            label=label_learner_maxent()),
-    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
-                            label=label_learner_maxent()),
+#    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_perc(d)),
+#                            label=label_learner_maxent()),
+#    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
+#                            label=label_learner_maxent()),
 ]
 
 """Attelo learners that take decoders as arguments.
