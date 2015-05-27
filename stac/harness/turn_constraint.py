@@ -63,13 +63,19 @@ class TC_LearnerWrapper(object):
         Note: we assume here that the underlying learner supports
         this function
         """
-        return self._learner.important_features(top_n)
+        if hasattr(self._learner, 'important_features'):
+            return self._learner.important_features(top_n)
+        else:
+            return None
 
     def important_features_multi(self, top_n):
         """If possible, return a dictionary mapping class indices
         to important features
         """
-        return self._learner.important_features_multi(top_n)
+        if hasattr(self._learner, 'important_features_multi'):
+            return self._learner.important_features_multi(top_n)
+        else:
+            return None
 
     def fit(self, dpacks, targets):
         "apply the turn constraint before learning"
