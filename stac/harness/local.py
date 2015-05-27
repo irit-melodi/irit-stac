@@ -13,7 +13,6 @@ import itertools as itr
 import six
 
 import educe.stac.corpus
-import numpy as np
 
 from attelo.harness.config import (EvaluationConfig,
                                    LearnerConfig,
@@ -26,11 +25,6 @@ from attelo.decoding.astar import (AstarArgs,
 from attelo.decoding.baseline import (LastBaseline,
                                       LocalBaseline)
 from attelo.decoding.mst import (MstDecoder, MstRootStrategy)
-from attelo.learning.perceptron import (Perceptron,
-                                        PerceptronArgs,
-                                        PassiveAggressive,
-                                        StructuredPerceptron,
-                                        StructuredPassiveAggressive)
 from attelo.learning.local import (SklearnAttachClassifier,
                                    SklearnLabelClassifier)
 from attelo.learning.oracle import (AttachOracle, LabelOracle)
@@ -45,12 +39,19 @@ from attelo.parser.pipeline import (Pipeline)
 from attelo.util import (concat_l)
 
 from sklearn.linear_model import (LogisticRegression,
-                                  Perceptron as SkPerceptron,
-                                  PassiveAggressiveClassifier as
-                                  SkPassiveAggressiveClassifier)
+                                 )
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
+
+# from .config.perceptron import (attach_learner_dp_pa,
+#                                 attach_learner_dp_perc,
+#                                 attach_learner_pa,
+#                                 attach_learner_perc,
+#                                 label_learner_dp_pa,
+#                                 label_learner_dp_perc,
+#                                 attach_learner_pa,
+#                                 attach_learner_perc)
 
 from .turn_constraint import (tc_decoder,
                               tc_learner)
@@ -209,28 +210,6 @@ def label_learner_rndforest():
     "return a keyed instance of decision tree learner"
     return Keyed('rndforest', SklearnLabelClassifier(RandomForestClassifier()))
 
-
-
-LOCAL_PERC_ARGS = PerceptronArgs(iterations=20,
-                                 averaging=True,
-                                 use_prob=False,
-                                 aggressiveness=np.inf)
-
-LOCAL_PA_ARGS = PerceptronArgs(iterations=20,
-                               averaging=True,
-                               use_prob=False,
-                               aggressiveness=np.inf)
-
-STRUCT_PERC_ARGS = PerceptronArgs(iterations=50,
-                                  averaging=True,
-                                  use_prob=False,
-                                  aggressiveness=np.inf)
-
-STRUCT_PA_ARGS = PerceptronArgs(iterations=50,
-                                averaging=True,
-                                use_prob=False,
-                                aggressiveness=np.inf)
-
 ORACLE = LearnerConfig(attach=attach_learner_oracle(),
                        label=label_learner_oracle())
 
@@ -244,18 +223,14 @@ _LOCAL_LEARNERS = [
 #                  label=label_learner_oracle()),
 #    LearnerConfig(attach=attach_learner_rndforest(),
 #                  label=label_learner_rndforest()),
-#    LearnerConfig(attach=Keyed('sk-perceptron',
-#                               SkPerceptron(n_iter=20)),
-#                  label=learner_maxent()),
-#    LearnerConfig(attach=Keyed('sk-pasagg',
-#                               SkPassiveAggressiveClassifier(n_iter=20)),
-#                  label=learner_maxent()),
-#    LearnerConfig(attach=Keyed('dp-perc',
-#                               Perceptron(d, LOCAL_PERC_ARGS)),
-#                  label=learner_maxent()),
-#    LearnerConfig(attach=Keyed('dp-pa',
-#                               PassiveAggressive(d, LOCAL_PA_ARGS)),
-#                  label=learner_maxent()),
+    #    LearnerConfig(attach=attach_learner_perc(),
+    #                  label=label_learner_maxent()),
+    #    LearnerConfig(attach=attach_learner_pa(),
+    #                  label=label_learner_maxent()),
+    #    LearnerConfig(attach=attach_learner_dp_perc(),
+    #                  label=label_learner_maxent()),
+    #    LearnerConfig(attach=attach_learner_dp_pa(),
+    #                  label=label_learner_maxent()),
 ]
 """Straightforward attelo learner algorithms to try
 
@@ -265,23 +240,11 @@ between different configurations of your learners.
 """
 
 
-def attach_learner_dp_struct_perc(decoder):
-    "structured perceptron learning"
-    learner = StructuredPassiveAggressive(decoder, STRUCT_PERC_ARGS)
-    return Keyed('dp-struct-perc', learner)
-
-
-def attach_learner_dp_struct_pa(decoder):
-    "structured passive-aggressive learning"
-    learner = StructuredPassiveAggressive(decoder, STRUCT_PA_ARGS)
-    return Keyed('dp-struct-pa', learner)
-
-
 _STRUCTURED_LEARNERS = [
-#    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_perc(d)),
-#                            label=label_learner_maxent()),
-#    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
-#                            label=label_learner_maxent()),
+    #    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_perc(d)),
+    #                            label=label_learner_maxent()),
+    #    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
+    #                            label=label_learner_maxent()),
 ]
 
 """Attelo learners that take decoders as arguments.
