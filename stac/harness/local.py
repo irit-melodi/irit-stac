@@ -265,16 +265,21 @@ between different configurations of your learners.
 """
 
 
+def attach_learner_dp_struct_perc(decoder):
+    "structured perceptron learning"
+    learner = StructuredPassiveAggressive(decoder, STRUCT_PERC_ARGS)
+    return Keyed('dp-struct-perc', learner)
+
+
 def attach_learner_dp_struct_pa(decoder):
-    "structured passive-aggressive decoding"
+    "structured passive-aggressive learning"
     learner = StructuredPassiveAggressive(decoder, STRUCT_PA_ARGS)
     return Keyed('dp-struct-pa', learner)
 
 
 _STRUCTURED_LEARNERS = [
-#    lambda d: LearnerConfig(attach=Keyed('dp-struct-perc',
-#                                         StructuredPerceptron(d, STRUCT_PERC_ARGS)),
-#                            label=learner_maxent()),
+    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_perc(d)),
+                            label=label_learner_maxent()),
     lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
                             label=label_learner_maxent()),
 ]
@@ -465,10 +470,14 @@ def _is_junk(econf):
 
 def _evaluations():
     "the evaluations we want to run"
-    mst = decoder_mst().payload
+    # non-prob mst decoder (dp learners don't do probs)
+    nonprob_mst = Keyed('', MstDecoder(MstRootStrategy.fake_root, False))
+    nonprob_mst = tc_decoder(nonprob_mst)
+    nonprob_mst = nonprob_mst.payload
+    #
     learners = []
     learners.extend(_LOCAL_LEARNERS)
-    learners.extend(l(mst) for l in _STRUCTURED_LEARNERS)
+    learners.extend(l(nonprob_mst) for l in _STRUCTURED_LEARNERS)
     ipairs = list(itr.product(learners, _INTRA_INTER_CONFIGS))
     res = concat_l([
         concat_l(_core_parsers(l) for l in learners),
