@@ -167,7 +167,7 @@ def decoder_local():
 
 def decoder_mst():
     "our instantiation of the mst decoder"
-    return Keyed('mst', MstDecoder(MstRootStrategy.leftmost, True))
+    return Keyed('mst', MstDecoder(MstRootStrategy.fake_root, True))
 
 
 def attach_learner_oracle():
@@ -264,13 +264,19 @@ between different configurations of your learners.
 
 """
 
+
+def attach_learner_dp_struct_pa(decoder):
+    "structured passive-aggressive decoding"
+    learner = StructuredPassiveAggressive(decoder, STRUCT_PA_ARGS)
+    return Keyed('dp-struct-pa', learner)
+
+
 _STRUCTURED_LEARNERS = [
 #    lambda d: LearnerConfig(attach=Keyed('dp-struct-perc',
 #                                         StructuredPerceptron(d, STRUCT_PERC_ARGS)),
 #                            label=learner_maxent()),
-#    lambda d: LearnerConfig(attach=Keyed('dp-struct-pa',
-#                                         StructuredPassiveAggressive(d, STRUCT_PA_ARGS)),
-#                            label=learner_maxent()),
+    lambda d: LearnerConfig(attach=tc_learner(attach_learner_dp_struct_pa(d)),
+                            label=label_learner_maxent()),
 ]
 
 """Attelo learners that take decoders as arguments.
@@ -315,14 +321,16 @@ def mk_post(klearner, kdecoder):
 def _core_parsers(klearner):
     """Our basic parser configurations
     """
-    return [
-        # joint
+    # joint
+    joint = [
         #mk_joint(klearner, decoder_last()),
         #mk_joint(klearner, decoder_local()),
         #mk_joint(klearner, decoder_mst()),
         #mk_joint(klearner, tc_decoder(decoder_local())),
         #mk_joint(klearner, tc_decoder(decoder_mst())),
+    ]
 
+    post = [
         # postlabeling
         mk_post(klearner, decoder_last()),
         mk_post(klearner, decoder_local()),
@@ -330,6 +338,10 @@ def _core_parsers(klearner):
         #mk_post(klearner, tc_decoder(decoder_local())),
         mk_post(klearner, tc_decoder(decoder_mst())),
     ]
+    if klearner.attach.payload.can_predict_proba:
+        return joint + post
+    else:
+        return post
 
 
 _INTRA_INTER_CONFIGS = [
@@ -417,7 +429,7 @@ def _mk_last_intras(klearner, kconf):
     """
     kconf = Keyed(key=combined_key('last', kconf),
                   payload=kconf.payload)
-    econf_last = mk_joint(klearner, decoder_last())
+    econf_last = mk_post(klearner, decoder_last())
     return [_combine_intra(IntraInterPair(intra=econf_last, inter=p),
                            kconf,
                            primary='inter')
@@ -453,9 +465,13 @@ def _is_junk(econf):
 
 def _evaluations():
     "the evaluations we want to run"
-    ipairs = list(itr.product(_LOCAL_LEARNERS, _INTRA_INTER_CONFIGS))
+    mst = decoder_mst().payload
+    learners = []
+    learners.extend(_LOCAL_LEARNERS)
+    learners.extend(l(mst) for l in _STRUCTURED_LEARNERS)
+    ipairs = list(itr.product(learners, _INTRA_INTER_CONFIGS))
     res = concat_l([
-        concat_l(_core_parsers(l) for l in _LOCAL_LEARNERS),
+        concat_l(_core_parsers(l) for l in learners),
         concat_l(_mk_basic_intras(l, x) for l, x in ipairs),
         concat_l(_mk_sorc_intras(l, x) for l, x in ipairs),
         concat_l(_mk_dorc_intras(l, x) for l, x in ipairs),
