@@ -140,13 +140,15 @@ class IritHarness(Harness):
             bname = self._model_basename(subconf, mtype, 'model')
             return fp.join(parent_dir, bname)
 
-        if not isinstance(rconf, IntraInterPair):
-            rconf = IntraInterPair(intra=rconf, inter=rconf)
+        if isinstance(rconf, IntraInterPair):
+            return {'inter:attach': _eval_model_path(rconf.inter, "attach"),
+                    'inter:label': _eval_model_path(rconf.inter, "relate"),
+                    'intra:attach': _eval_model_path(rconf.intra, "sent-attach"),
+                    'intra:label': _eval_model_path(rconf.intra, "sent-relate")}
+        else:
+            return {'attach': _eval_model_path(rconf, "attach"),
+                    'label': _eval_model_path(rconf, "relate")}
 
-        return {'attach': _eval_model_path(rconf.inter, "attach"),
-                'label': _eval_model_path(rconf.inter, "relate"),
-                'intra:attach': _eval_model_path(rconf.intra, "sent-attach"),
-                'intra:label': _eval_model_path(rconf.intra, "sent-relate")}
 
     # ------------------------------------------------------
     # utility
