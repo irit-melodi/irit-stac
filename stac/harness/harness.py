@@ -11,6 +11,7 @@ from attelo.harness.evaluate import (evaluate_corpus,
                                      prepare_dirs)
 from attelo.io import (load_fold_dict,
                        save_fold_dict)
+from attelo.parser.intra import (IntraInterPair)
 from attelo.util import (mk_rng)
 
 from .local import (CONFIG_FILE,
@@ -134,15 +135,20 @@ class IritHarness(Harness):
         else:
             parent_dir = self.fold_dir_path(fold)
 
-        def _eval_model_path(mtype):
+        def _eval_model_path(subconf, mtype):
             "Model for a given loop/eval config and fold"
-            bname = self._model_basename(rconf, mtype, 'model')
+            bname = self._model_basename(subconf, mtype, 'model')
             return fp.join(parent_dir, bname)
 
-        return {'attach': _eval_model_path("attach"),
-                'label': _eval_model_path("relate"),
-                'intra:attach': _eval_model_path("sent-attach"),
-                'intra:label': _eval_model_path("sent-relate")}
+        if isinstance(rconf, IntraInterPair):
+            return {'inter:attach': _eval_model_path(rconf.inter, "attach"),
+                    'inter:label': _eval_model_path(rconf.inter, "relate"),
+                    'intra:attach': _eval_model_path(rconf.intra, "sent-attach"),
+                    'intra:label': _eval_model_path(rconf.intra, "sent-relate")}
+        else:
+            return {'attach': _eval_model_path(rconf, "attach"),
+                    'label': _eval_model_path(rconf, "relate")}
+
 
     # ------------------------------------------------------
     # utility
@@ -158,7 +164,7 @@ class IritHarness(Harness):
             oops = ("Sorry, there's an error in your configuration.\n"
                     "I don't dare to start evaluation until you fix it.\n"
                     "ERROR! -----------------vvvv---------------------\n"
-                    "The following configurations more than once:{}\n"
+                    "The following configurations more than once:\n{}\n"
                     "ERROR! -----------------^^^^^--------------------"
                     "").format("\n".join(bad_confs))
             sys.exit(oops)

@@ -43,8 +43,7 @@ _DEBUG = 0
 
 
 STANDALONE_EVALUATIONS = [e for e in EVALUATIONS
-                          if e.learner.key != 'oracle' and
-                          e.settings.intra is None]
+                          if (not e.settings.oracle) and e.settings.intra is None]
 
 
 # ---------------------------------------------------------------------
