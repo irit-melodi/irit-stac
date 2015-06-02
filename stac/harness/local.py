@@ -79,8 +79,8 @@ is used in more than one corpus, but we can revisit this scheme as
 needed.
 """
 
-# TEST_CORPUS = 'data/FROZEN/test-2015-05-30'
-TEST_CORPUS = None
+TEST_CORPUS = 'data/FROZEN/test-2015-05-30'
+# TEST_CORPUS = None
 # TEST_CORPUS = 'tiny'
 """Corpora for use in FINAL testing.
 
