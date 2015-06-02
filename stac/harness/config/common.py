@@ -70,12 +70,12 @@ ORACLE = LearnerConfig(attach=attach_learner_oracle(),
 
 
 def decoder_last():
-    "our instantiation of the mst decoder"
+    "our instantiation of the attach-to-last decoder"
     return Keyed('last', LastBaseline())
 
 
 def decoder_local(threshold):
-    "our instantiation of the mst decoder"
+    "our instantiation of the local basline decoder"
     return Keyed('local', LocalBaseline(threshold, True))
 
 # ---------------------------------------------------------------------
