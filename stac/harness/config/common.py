@@ -26,7 +26,8 @@ def combined_key(*variants):
 Settings = namedtuple('Settings',
                       ['key', 'intra', 'oracle', 'children'])
 """
-Note that this is subclass of Keyed
+Note that the existence of a `key` field means you can feed
+this into `combined_key` if you want
 
 The settings are used for config management only, for example,
 if we want to filter in/out configurations that involve an
