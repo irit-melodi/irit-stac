@@ -27,12 +27,14 @@ on different aspects of the system in a shared space. One of the users
 2. Start bash (it's tcsh by default for us; I couldn't figure out
    how to change my login shell)
 
-3. Create and activate your personal conda environment
-   (HINT: is conda in your path? It should be after steps 1 and 2)
+3. Create your personal directory in the project dir along with
+   your conda environment (HINT: is conda in your path?
+   It should be after steps 1 and 2)
 
       ```
-      conda create -n irit-stac-$USER scipy pip
-      source activate irit-stac-$USER
+      mkdir $PROJECT_DIR/$USER
+      conda create -n irit-stac scipy pip
+      source activate irit-stac
       ```
 
 4. Copy the STAC SVN to the project space: on your local machine
@@ -55,7 +57,9 @@ on different aspects of the system in a shared space. One of the users
 7. Run the usual install
 
    ```
+   python setup-nltk.py
    pip install -r requirements.txt
+   ln -s $PROJECT_DIR/$USER/Stac/data .
    ```
 
 8. Set up your cluster scripts (replace vim with your favourite text
