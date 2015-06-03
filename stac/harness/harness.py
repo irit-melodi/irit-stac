@@ -168,6 +168,13 @@ class IritHarness(Harness):
                     "ERROR! -----------------^^^^^--------------------"
                     "").format("\n".join(bad_confs))
             sys.exit(oops)
+        if TEST_EVALUATION_KEY is not None and TEST_CORPUS is None:
+            oops = ("Sorry, there's an error in your configuration:\n"
+                    "You have requested a test evaluation, but have not "
+                    "specified a test corpus to run.\n"
+                    "Hint: it's ok to specify a test corpus without "
+                    "specifiying a test eval")
+            sys.exit(oops)
         if TEST_EVALUATION_KEY is not None and self.test_evaluation is None:
             oops = ("Sorry, there's an error in your configuration.\n"
                     "I don't dare to start evaluation until you fix it.\n"

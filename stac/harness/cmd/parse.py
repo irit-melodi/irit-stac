@@ -42,10 +42,6 @@ NAME = 'parse'
 _DEBUG = 0
 
 
-STANDALONE_EVALUATIONS = [e for e in EVALUATIONS
-                          if (not e.settings.oracle) and e.settings.intra is None]
-
-
 # ---------------------------------------------------------------------
 # pipeline stages
 # ---------------------------------------------------------------------
@@ -187,7 +183,7 @@ def _format_decoder_output(lconf, log):
                       minicorpus_stage_path(lconf, section,
                                             result=True))
 
-    for econf in STANDALONE_EVALUATIONS:
+    for econf in lconf.evaluations:
         # units/foo
         src_units_dir = minicorpus_stage_path(lconf, "units")
         tgt_units_dir = minicorpus_stage_path(lconf, "units",
@@ -239,7 +235,7 @@ def _pipeline(lconf):
 
     stages = CORE_STAGES +\
         [Stage("0700-decoding",
-               lambda x, _: decode(x, STANDALONE_EVALUATIONS),
+               lambda x, _: decode(x, lconf.evaluations),
                "Decoding"),
          Stage("0750-formatting", _format_decoder_output,
                "Formatting output"),
