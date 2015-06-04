@@ -53,3 +53,9 @@ subto unique_head:
 subto find_heads:
     forall <j> in EDUs:
         1 <= sum <i> in EDUs:x[i,j] + EDU_COUNT*h[j] <= EDU_COUNT ;
+
+# Transitive closure
+subto transitivity:
+    forall <a> in {1 to EDU_COUNT-1}:
+        forall <n> in {2 to EDU_COUNT-a}:
+            (sum <i> in {0 to n-1} : x[a+i,a+i+1]) + x[a,a+n] <= n ;
