@@ -123,9 +123,7 @@ def mk_zimpl_input(dpack, data_dir):
 
 
 def scip_load(dpack, fn):
-    """ Load SCIP attachment output into datapack
-
-    Required MSDAG-decoded datapack"""
+    """ Load SCIP attachment output into datapack"""
 
     def load_pairs():
         """ Convert SCIP output to attachment pairs """
@@ -166,16 +164,17 @@ class ILPDecoder(Decoder):
 
     Uses third-party tools (SCIP/ZIMPL)
 
-    Among other constraints described in the ZIMPL template,
-    The edge set of the final structure is between MST and MSDAG
-    (MST edges already being a subset of MSDAG edges) """
+    See ZPL_TEMPLATE_DIR for constraint set description
+    """
 
     def decode(self, dpack):
         tmpdir = mkdtemp()
+
+        # Prepare ZIMPL template and data
         zimpl_dump(dpack, tmpdir, 'raw')
+        input_path = mk_zimpl_input(dpack, tmpdir)
 
         # Run SCIP
-        input_path = mk_zimpl_input(dpack, tmpdir)
         param_path = fp.join(ZPL_TEMPLATE_DIR, 'scip.parameters')
         output_path = fp.join(tmpdir, 'output.scip')
         with open(output_path, 'w') as f_out:

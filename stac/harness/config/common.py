@@ -75,7 +75,7 @@ def decoder_last():
 
 
 def decoder_local(threshold):
-    "our instantiation of the local basline decoder"
+    "our instantiation of the local baseline decoder"
     return Keyed('local', LocalBaseline(threshold, True))
 
 # ---------------------------------------------------------------------
