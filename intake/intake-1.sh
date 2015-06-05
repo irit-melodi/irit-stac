@@ -24,11 +24,8 @@ BATCH=$3
 mkdir -p $OUTPUT_BNAME/{soclog,unsegmented,segmented}
 cp "$INPUT_FILE" $OUTPUT_BNAME/soclog
 
-TURNS_FILE=$OUTPUT_BNAME/turns
-python $CODE_DIR/txt2csv/extract_turns.py "$INPUT_FILE" > $TURNS_FILE
-python $CODE_DIR/txt2csv/extract_annot.py $TURNS_FILE
 CLEAN_SOCLOG=$OUTPUT_BNAME/unsegmented/${OUTPUT_BNAME}.soclog.csv
-mv ${TURNS_FILE}csv $CLEAN_SOCLOG
+python $CODE_DIR/intake/soclogtocsv.py "$INPUT_FILE" --output "$CLEAN_SOCLOG"
 
 # create aam file
 python $SCRIPT_DIR/create-glozz-aam.py $CLEAN_SOCLOG $OUTPUT_BNAME/$OUTPUT_BNAME.aam
@@ -37,7 +34,6 @@ python $SCRIPT_DIR/create-glozz-aam.py $CLEAN_SOCLOG $OUTPUT_BNAME/$OUTPUT_BNAME
 python $CODE_DIR/segmentation/simple-segments  --csv\
     $OUTPUT_BNAME/unsegmented/${OUTPUT_BNAME}.soclog.csv\
     $OUTPUT_BNAME/segmented/${OUTPUT_BNAME}.soclog.seg.csv
-rm ${TURNS_FILE}
 
 if [ -z "$BATCH" ]; then
     echo >&2 "Now edit segmented/$OUTPUT_BNAME.soclog.seg.csv (in eg. Excel)"
