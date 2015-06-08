@@ -201,7 +201,10 @@ def main(args):
         rconll = read_tsv(args.resources)
     else:
         rconll = []
-    background = Background(contexts=Context.for_corpus(corpus),
+    contexts = {}
+    for key in corpus:
+        contexts.update(Context.for_edus(corpus[key]))
+    background = Background(contexts=contexts,
                             resources=_extract_resources(rconll))
     doc = corpus.values()[0]
     decoder_output = read_tsv(args.input)
