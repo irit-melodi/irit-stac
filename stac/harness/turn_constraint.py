@@ -26,8 +26,9 @@ def turn_constraint_safe(dpack):
     '''
     spkr_idx = dpack.vocab.index(SAME_SPEAKER)
     return [i for i, (edu1, edu2) in enumerate(dpack.pairings)
-            if edu2.span() > edu1.span()
-            or dpack.data[i, spkr_idx]]
+            if edu2.span() > edu1.span() or
+            dpack.data[i, spkr_idx]]
+
 
 def apply_turn_constraint(dpack, target):
     '''
@@ -55,6 +56,27 @@ class TC_LearnerWrapper(object):
         pairs = [fun(d, t) for d, t in zip(dpacks, targets)]
         return zip(*pairs)
 
+    def important_features(self, top_n):
+        """If possible, return a list of important features with
+        their weights.
+
+        Note: we assume here that the underlying learner supports
+        this function
+        """
+        if hasattr(self._learner, 'important_features'):
+            return self._learner.important_features(top_n)
+        else:
+            return None
+
+    def important_features_multi(self, top_n):
+        """If possible, return a dictionary mapping class indices
+        to important features
+        """
+        if hasattr(self._learner, 'important_features_multi'):
+            return self._learner.important_features_multi(top_n)
+        else:
+            return None
+
     def fit(self, dpacks, targets):
         "apply the turn constraint before learning"
         dpacks, targets = self.dzip(apply_turn_constraint, dpacks, targets)
@@ -81,21 +103,16 @@ class TC_Pruner(Parser):
         return self
 
     def transform(self, dpack):
-        safe = turn_constraint_safe(dpack)
-        unsafe = np.ones_like(dpack.graph.attach, dtype=bool)
-        unsafe[safe] = False
-        return self.deselect(dpack, unsafe)
+        return self.select(dpack, turn_constraint_safe(dpack))
 # pylint: enable=invalid-name
 
 
-def mk_tc_decoder(mk_decoder):
+def tc_decoder(kdecoder):
     "turn constrained version of any decoder constructor"
-    def inner(settings):
-        "actual constructor"
-        steps = [('tc filter', TC_Pruner()),
-                 ('decode', mk_decoder(settings))]
-        return Pipeline(steps=steps)
-    return inner
+    steps = [('tc filter', TC_Pruner()),
+             ('decode', kdecoder.payload)]
+    return Keyed(key='tc-' + kdecoder.key,
+                 payload=Pipeline(steps=steps))
 
 
 def tc_learner(klearner):

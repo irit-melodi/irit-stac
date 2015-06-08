@@ -11,9 +11,11 @@ from attelo.harness.evaluate import (evaluate_corpus,
                                      prepare_dirs)
 from attelo.io import (load_fold_dict,
                        save_fold_dict)
+from attelo.parser.intra import (IntraInterPair)
 from attelo.util import (mk_rng)
 
-from .local import (DETAILED_EVALUATIONS,
+from .local import (CONFIG_FILE,
+                    DETAILED_EVALUATIONS,
                     EVALUATIONS,
                     FIXED_FOLD_FILE,
                     GRAPH_DOCS,
@@ -54,6 +56,10 @@ class IritHarness(Harness):
     # ------------------------------------------------------
 
     @property
+    def config_files(self):
+        return [CONFIG_FILE]
+
+    @property
     def evaluations(self):
         return EVALUATIONS
 
@@ -85,10 +91,10 @@ class IritHarness(Harness):
         if FIXED_FOLD_FILE is None:
             rng = mk_rng()
             fold_dict = make_n_fold(mpack, 10, rng)
-            save_fold_dict(fold_dict, self.fold_file)
-            return fold_dict
         else:
-            return load_fold_dict(FIXED_FOLD_FILE)
+            fold_dict = load_fold_dict(FIXED_FOLD_FILE)
+        save_fold_dict(fold_dict, self.fold_file)
+        return fold_dict
 
     # ------------------------------------------------------
     # paths
@@ -129,15 +135,20 @@ class IritHarness(Harness):
         else:
             parent_dir = self.fold_dir_path(fold)
 
-        def _eval_model_path(mtype):
+        def _eval_model_path(subconf, mtype):
             "Model for a given loop/eval config and fold"
-            bname = self._model_basename(rconf, mtype, 'model')
+            bname = self._model_basename(subconf, mtype, 'model')
             return fp.join(parent_dir, bname)
 
-        return {'attach': _eval_model_path("attach"),
-                'label': _eval_model_path("relate"),
-                'intra:attach': _eval_model_path("sent-attach"),
-                'intra:label': _eval_model_path("sent-relate")}
+        if isinstance(rconf, IntraInterPair):
+            return {'inter:attach': _eval_model_path(rconf.inter, "doc-attach"),
+                    'inter:label': _eval_model_path(rconf.inter, "doc-relate"),
+                    'intra:attach': _eval_model_path(rconf.intra, "sent-attach"),
+                    'intra:label': _eval_model_path(rconf.intra, "sent-relate")}
+        else:
+            return {'attach': _eval_model_path(rconf, "attach"),
+                    'label': _eval_model_path(rconf, "relate")}
+
 
     # ------------------------------------------------------
     # utility
@@ -153,9 +164,16 @@ class IritHarness(Harness):
             oops = ("Sorry, there's an error in your configuration.\n"
                     "I don't dare to start evaluation until you fix it.\n"
                     "ERROR! -----------------vvvv---------------------\n"
-                    "The following configurations more than once:{}\n"
+                    "The following configurations more than once:\n{}\n"
                     "ERROR! -----------------^^^^^--------------------"
                     "").format("\n".join(bad_confs))
+            sys.exit(oops)
+        if TEST_EVALUATION_KEY is not None and TEST_CORPUS is None:
+            oops = ("Sorry, there's an error in your configuration:\n"
+                    "You have requested a test evaluation, but have not "
+                    "specified a test corpus to run.\n"
+                    "Hint: it's ok to specify a test corpus without "
+                    "specifiying a test eval")
             sys.exit(oops)
         if TEST_EVALUATION_KEY is not None and self.test_evaluation is None:
             oops = ("Sorry, there's an error in your configuration.\n"

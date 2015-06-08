@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=irit-stac-gather
 #SBATCH --output=irit-stac-gather-%j.out
+## REMEMBER TO STRIP ONE HASH MARK OFF THESE
 ##SBATCH --mail-type=END
 ##SBATCH --mail-user=YOUR_EMAIL_ADDRESS_HERE <=== EDIT THIS
 STAC=$HOME/irit-stac
 source "$STAC/cluster/env"
 cd "$STAC"
-time irit-stac gather
+time irit-stac gather "$@"
 for i in TMP/latest/*.sparse; do
     # get all the labels
     head -n 1 "$i" > "$i.stripped"
