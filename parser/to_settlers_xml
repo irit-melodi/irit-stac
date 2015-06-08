@@ -15,8 +15,8 @@ import csv
 import sys
 
 from educe.stac.annotation import addressees, is_edu
+from educe.stac.context import Context
 from educe.stac.util.args import read_corpus
-from educe.stac.util.context import Context
 from educe.stac.util import prettifyxml
 
 from stac import settlers_xml as stx
