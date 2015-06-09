@@ -175,6 +175,7 @@ def mk_zimpl_input(dpack, data_dir):
     header = '\n'.join((
         "param EDU_COUNT := {0} ;".format(len(edus)),
         "param TURN_COUNT := {0} ;".format(len(turn_off)),
+        "param LABEL_COUNT := {0} ;".format(len(dpack.labels)),
     ))
 
     template_path = fp.join(ZPL_TEMPLATE_DIR, 'template.zpl')
@@ -208,8 +209,9 @@ def load_scip_output(dpack, output_path):
 
     def load_pairs():
         """ Convert SCIP output to attachment pairs """
-        r = re.compile('x#(\d+)#(\d+)')
+        r = re.compile('x#(\d+)#(\d+)#(\d+)')
         pairs = []
+        labels = []
         t_flag = False
         with open(output_path) as f:
             for line in f:
@@ -223,9 +225,10 @@ def load_scip_output(dpack, output_path):
                 else:
                     # Not reached triplets yet
                     continue
-                si, sj = m.groups()
+                si, sj, sr = m.groups()
                 pairs.append((int(si) - 1, int(sj) - 1))
-        return zip(*pairs)
+                labels.append(int(sr) - 1)
+        return zip(*pairs), labels
 
     # Build map (EDU1, EDU2) -> pair_index
     n_edus = len(dpack.edus)
@@ -234,10 +237,16 @@ def load_scip_output(dpack, output_path):
     pair_map[pair_pos] = np.arange(len(dpack.pairings))
 
     # Build indexes of attached pairs
-    output_attach = load_pairs()
+    output_attach, output_labels = load_pairs()
     index_attached = pair_map[output_attach]
+    assert(len(output_labels) == len(index_attached))
 
-    return index_attached
+    # Build labels
+    unrelated = dpack.label_number(UNRELATED)
+    prediction = np.full(len(dpack), unrelated)
+    prediction[index_attached] = output_labels
+
+    return prediction
 
 
 class ILPDecoder(Decoder):
@@ -263,6 +272,9 @@ class ILPDecoder(Decoder):
                  stdout=f_out, cwd=tmpdir)
 
         # Gather results
-        index_attached = load_scip_output(dpack, output_path)
+        prediction = load_scip_output(dpack, output_path)
+        graph = dpack.graph.tweak(prediction=prediction)
+        dpack = dpack.set_graph(graph)
+
         rmtree(tmpdir)
-        return self.select(dpack, index_attached)
+        return dpack
