@@ -17,18 +17,50 @@ ZPL_TEMPLATE_DIR = fp.join(fp.dirname(__file__), 'ilp')
 
 
 def pos_indexes(dpack):
-    """ Returns indices of EDUs for each pairing """
+    """ Returns indices of EDUs for each pairing
+
+    Parameters
+    ----------
+    dpack: DataPack
+        Datapack containing the pairings
+
+    Returns
+    -------
+    tuple (numpy.ndarray, numpy.ndarray)
+        Coordinates (x-axis and y-axis, respectively)
+        of pairings in attachment/label matrices
+    """
     edu_pos = dict((e, i) for i, e in enumerate(dpack.edus))
     pair_pos = np.vstack((edu_pos[u], edu_pos[v]) for u, v in dpack.pairings)
 
     return tuple(pair_pos.transpose())
 
 
-def zimpl_dump(dpack, tgt_dir=None, prefix='default', decoded=False):
+def dump_scores(dpack, tgt_dir=None, prefix='default', decoded=False):
     """ Dump classification scores for use in SCIP
 
     Default behavior is a dump of dpack.attach and dpack.label
     If decoded is True, dpack.prediction will be converted
+
+    Parameters
+    ----------
+    dpack: DataPack
+        Datapack which data should be dumped
+
+    tgt_dir: path
+        Where the dump files should be placed.
+        By default, a temporary directory will be created
+
+    prefix: str
+        Prefix for the dump files
+
+    decoded: bool
+        True if dpack.prediction should be dumped
+
+    Returns
+    -------
+    path
+        Directory receiving the dump files (see tgt_dir argument)
     """
     n_edus = len(dpack.edus)
     n_labels = len(dpack.labels)
@@ -79,13 +111,49 @@ def zimpl_dump(dpack, tgt_dir=None, prefix='default', decoded=False):
 
 
 def pretty_data(data):
-    """ Formats a list of lists, with space and linebreaks separation """
+    """ Formats a list of lists, with space and linebreaks separation
+
+    Parameters
+    ----------
+    data: [[int]]
+        Data to be formatted
+
+    Returns
+    -------
+    str
+        Formatted output.
+        One line for each element along the first axis
+        Inside a line, elements are separated by spaces
+    """
     return '\n'.join(
                 ' '.join(str(e) for e in lis)
             for lis in data)
 
 def mk_zimpl_input(dpack, data_dir):
-    """ Create ZIMPL input file tuned to the current data directory """
+    """ Create ZIMPL input files tuned to a datapack
+
+    This creates two files:
+    ``turn.dat`` contains turn lenghts, offsets and indexes for the document
+    ``input.zpl`` contains the ZIMPL problem description, with a header
+        specifiying EDU and turn counts.
+
+    The template for ``input.zpl``, named ``template.zpl``, is located by
+    ``ZPL_TEMPLATE_DIR``.
+
+    Parameters
+    ----------
+    dpack: DataPack
+
+    data_dir: path
+        Where the created files will be placed
+
+    Returns
+    -------
+    path
+        The path of ``input.zpl``.
+    """
+
+    # Create turn information
     edus = sorted(dpack.edus, key=lambda x: x.span())
     turn_len = []   # Turn lengths
     turn_off = []   # Turn offsets
@@ -122,15 +190,28 @@ def mk_zimpl_input(dpack, data_dir):
     return input_path
 
 
-def scip_load(dpack, fn):
-    """ Load SCIP attachment output into datapack"""
+def load_scip_output(dpack, output_path):
+    """ Load SCIP attachment output into datapack
+
+    Parameters
+    ----------
+    dpack: DataPack
+
+    output_path: path
+        Path of SCIP output file
+
+    Returns
+    -------
+    numpy.ndarray
+        Indexes of attached pairings
+    """
 
     def load_pairs():
         """ Convert SCIP output to attachment pairs """
         r = re.compile('x#(\d+)#(\d+)')
         pairs = []
         t_flag = False
-        with open(fn) as f:
+        with open(output_path) as f:
             for line in f:
                 m = r.match(line)
                 if m:
@@ -171,7 +252,7 @@ class ILPDecoder(Decoder):
         tmpdir = mkdtemp()
 
         # Prepare ZIMPL template and data
-        zimpl_dump(dpack, tmpdir, 'raw')
+        dump_scores(dpack, tmpdir, 'raw')
         input_path = mk_zimpl_input(dpack, tmpdir)
 
         # Run SCIP
@@ -182,6 +263,6 @@ class ILPDecoder(Decoder):
                  stdout=f_out, cwd=tmpdir)
 
         # Gather results
-        index_attached = scip_load(dpack, output_path)
+        index_attached = load_scip_output(dpack, output_path)
         rmtree(tmpdir)
         return self.select(dpack, index_attached)
