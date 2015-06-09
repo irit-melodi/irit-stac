@@ -46,8 +46,10 @@ from .config.common import (ORACLE,
                             combined_key,
                             decoder_last,
                             decoder_local,
+                            mk_bypass,
                             # mk_joint,
-                            mk_post)
+                            mk_post,
+                            )
 
 from .ilp import (ILPDecoder)
 from .turn_constraint import (tc_decoder,
@@ -228,16 +230,20 @@ def _core_parsers(klearner):
     post = [
         mk_post(klearner, decoder_last()),
         mk_post(klearner, DECODER_LOCAL),
-        mk_post(klearner, decoder_ilp()),
         # mk_post(klearner, decoder_mst()),
         # mk_post(klearner, tc_decoder(DECODER_LOCAL)),
         mk_post(klearner, tc_decoder(decoder_mst())),
-        mk_post(klearner, tc_decoder(decoder_ilp())),
     ]
+
+    bypass = [
+        mk_bypass(klearner, decoder_ilp()),
+        mk_bypass(klearner, tc_decoder(decoder_ilp())),
+    ]
+
     if klearner.attach.payload.can_predict_proba:
-        return joint + post
+        return joint + post + bypass
     else:
-        return post
+        return post + bypass
 
 _INTRA_INTER_CONFIGS = [
     Keyed('iheads', HeadToHeadParser),
