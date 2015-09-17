@@ -15,7 +15,7 @@ A sandbox environment is required.  We assume you will be using Anaconda
 (miniconda on Linux).  Once you have installed it, you should be able to
 create the environment with
 
-    conda create -n stac scipy pip
+    conda create -n irit-stac scipy pip scikit-learn
 
 If that doesn't work, make sure your anaconda version is up to date,
 and the conda bin directory is in your path (it might be installed in
@@ -24,7 +24,7 @@ and the conda bin directory is in your path (it might be installed in
 Note that whenever you want to use STAC things, you would need to run
 this command
 
-    source activate stac
+    source activate irit-stac
 
 ## Installation (basics, development mode)
 
@@ -33,7 +33,7 @@ processed by pip
 
 1. Switch into your STAC sandbox
 
-       source activate stac
+       source activate irit-stac
 
 2. Linux users: (Debian/Ubuntu)
 
@@ -43,7 +43,7 @@ processed by pip
 
 3. Fetch the irit-stac code if you have not done so already
 
-       git clone https://github.com/kowey/irit-stac.git
+       git clone https://github.com/irit-melodi/irit-stac.git
        cd irit-stac
 
 4. Install the irit-stac code in development mode.
@@ -117,7 +117,7 @@ up where it left off.
 ### Configuration
 
 There is a small configuration module that you can edit
-in code/stac/harness/local.py
+in `stac/harness/local.py`
 
 It lets you control things such as which corpora to run on,
 which decoders and learners to try, and how to do feature
@@ -134,24 +134,24 @@ using models built from features you have collected.
     irit-stac model
     irit-stac parse code/parser/sample.soclog /tmp/parser-output
 
-### Scores
+### Scores and reports
 
 You can get a sense of how things are going by inspecting the various
 intermediary results
 
-1. count files: At each learner/decoder combination we will count
-   the number of correct attachments and relation labels (and save
-   these into intermediary count) (for a given fold N, see
-   `TMP/latest/scratch-current/fold-N/count-*.csv`)
+1. output files: Outputs for any decoders in a fold that happen to
+   have finished running (for a given fold N, see
+   `TMP/latest/scratch-current/fold-N/output.*`)
 
-2. fold summaries: At the end of each fold, we will summarise all of
+2. fold reports : At the end of each fold, we will summarise all of
    the counts into a simple Precision/Recall/F1 report for attachment
    and labelling. (for a given fold N, see
-   `TMP/latest/scratch-current/fold-N/scores*.txt`)
+   `TMP/latest/scratch-current/fold-N/reports-*`)
 
-3. full summary: If we make it through the entire experiment, we will
+3. full reports: If we make it through the entire experiment, we will
    produce a cross-validation summary combining the counts from all
-   folds (`TMP/latest/eval-current/scores*.txt`)
+   folds and several other things
+   (`TMP/latest/eval-current/reports-*`)
 
 ### Cleanup
 

@@ -103,10 +103,7 @@ class TC_Pruner(Parser):
         return self
 
     def transform(self, dpack):
-        safe = turn_constraint_safe(dpack)
-        unsafe = np.ones_like(dpack.graph.attach, dtype=bool)
-        unsafe[safe] = False
-        return self.deselect(dpack, unsafe)
+        return self.select(dpack, turn_constraint_safe(dpack))
 # pylint: enable=invalid-name
 
 
