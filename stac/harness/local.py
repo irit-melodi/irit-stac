@@ -313,6 +313,10 @@ def _is_junk(econf):
     if has.intra and decoder_name == 'last':
         return True
 
+    # ilp already includes intra-inter distinction
+    if has.intra and decoder_name == 'tc-ilp':
+        return True
+
     # oracle would be redundant with sentence/doc oracles
     if has.oracle and has_intra_oracle:
         return True
@@ -369,7 +373,8 @@ def _want_details(econf):
     kids = econf.settings.children
     has_intra_oracle = has.intra and (kids.intra.oracle or kids.inter.oracle)
     return (has_maxent and
-            any(k in econf.parser.key for k in ('mst', 'astar', 'ilp')) and
+            any(k in econf.parser.key
+                for k in frozenset('mst', 'astar', 'ilp')) and
             not has_intra_oracle)
 
 DETAILED_EVALUATIONS = [e for e in EVALUATIONS if _want_details(e)]
