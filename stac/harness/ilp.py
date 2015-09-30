@@ -36,11 +36,15 @@ def pos_indexes(dpack):
     return tuple(pair_pos.transpose())
 
 
-def dump_scores(dpack, tgt_dir=None, prefix='default', decoded=False):
+def dump_scores_to_dat_files(dpack, tgt_dir=None, prefix='default', decoded=False):
     """ Dump classification scores for use in SCIP
 
     Default behavior is a dump of dpack.attach and dpack.label
     If decoded is True, dpack.prediction will be converted
+
+    This creates two files:
+    ``attach.dat`` contains the attachment prediction scores
+    ``label.dat`` contains the label prediction scores
 
     Parameters
     ----------
@@ -261,7 +265,7 @@ class ILPDecoder(Decoder):
         tmpdir = mkdtemp()
 
         # Prepare ZIMPL template and data
-        dump_scores(dpack, tmpdir, 'raw')
+        dump_scores_to_dat_files(dpack, tmpdir, 'raw')
         input_path = mk_zimpl_input(dpack, tmpdir)
 
         # Run SCIP
