@@ -137,7 +137,7 @@ def mk_zimpl_input(dpack, data_dir):
     """ Create ZIMPL input files tuned to a datapack
 
     This creates two files:
-    ``turn.dat`` contains turn lenghts, offsets and indexes for the document
+    ``turn.dat`` contains turn lengths, offsets and indexes for the document
     ``input.zpl`` contains the ZIMPL problem description, with a header
         specifiying EDU and turn counts.
 
@@ -176,9 +176,45 @@ def mk_zimpl_input(dpack, data_dir):
     with open(data_path, 'w') as f_data:
         print(pretty_data([turn_len, turn_off, edu_ind]), file=f_data)
 
+    # Create speaker information
+    speakers = []
+    for i, e in enumerate(dpack.vocab):
+        m = re.match('speaker_id_DU1=.*', e)
+        if m:
+            speakers.append(i)
+    speakers = list(set(speakers))
+
+    edu_speakers = dict()
+    for (edu, _), feats in zip(dpack.pairings, dpack.data):
+        if edu in edu_speakers:
+            continue
+        for si in speakers:
+            if feats[0, si] == 1:
+                edu_speakers[edu] = si
+                break
+        else:
+            edu_speakers[edu] = -1
+
+    sids = dict((s, i) for i, s in enumerate(speakers))
+    current_last = dict()
+    last_mat = np.zeros((len(edus), len(edus)), dtype=int)
+
+    for i, edu in enumerate(edus):
+        for plast in current_last.values():
+            last_mat[plast][i] = 1;
+        try:
+            current_last[edu_speakers[edu]] = i
+        except KeyError:
+            pass
+
+    data_path = fp.join(data_dir, 'mlast.dat')
+    with open(data_path, 'w') as f_data:
+        print(pretty_data(last_mat), file=f_data)
+
     header = '\n'.join((
         "param EDU_COUNT := {0} ;".format(len(edus)),
         "param TURN_COUNT := {0} ;".format(len(turn_off)),
+        "param PLAYER_COUNT := {0} ;".format(len(speakers)),
         "param LABEL_COUNT := {0} ;".format(len(dpack.labels)),
     ))
 

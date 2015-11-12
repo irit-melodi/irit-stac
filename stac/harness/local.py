@@ -374,7 +374,7 @@ def _want_details(econf):
     has_intra_oracle = has.intra and (kids.intra.oracle or kids.inter.oracle)
     return (has_maxent and
             any(k in econf.parser.key
-                for k in frozenset('mst', 'astar', 'ilp')) and
+                for k in frozenset(('mst', 'astar', 'ilp'))) and
             not has_intra_oracle)
 
 DETAILED_EVALUATIONS = [e for e in EVALUATIONS if _want_details(e)]
