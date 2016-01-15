@@ -95,9 +95,22 @@ SERVER = re.compile(r"(?P<name>Server)\|text="
 PLAYER = re.compile(r"player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
                     r"(?P<state>.+)\|text=(?P<text>.+)\]$")
 
-# spectator messages
+# spectator messages, first occurrence in soclog has no timestamp
+# but it triggers two lines in the soclog ; we read the first one
+# to infer a timestamp (cf. soclog_to_turns)
 SPECTATOR = re.compile(r"^player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
                        r"text=(?P<text>.+)$")
+
+# WIP
+# other game events, visible on the UI but not linguistically realized
+OTHER_EVENTS = {
+    'SOCJoinGame': '{nickname} joined the game',
+    'SOCSitDown': '{nickname} sat down',
+    'SOCStartGame': 'game started',  # opens *and closes* the start block
+    'SOCBoardLayout': 'board layout set',  # inside the start block
+    # leaving game is realized linguistically in a Server message
+    # 'SOCLeaveGame': '{nickname} left the game',
+}
 
 
 class TurnCounter(object):
