@@ -22,12 +22,14 @@ abspath () {
 
 CODE_DIR=$(abspath $SCRIPT_DIR/..)
 
-if [ $# -ne 1 ]; then
-    echo >&2 "Usage: $0 file.soclog.seg.csv"
+if [ $# -gt 2 ]; then
+    echo >&2 "Usage: $0 file.soclog.seg.csv [gen2-ling-only]"
     exit 1
 fi
 
 INPUT_FILE=$1
+GEN2_LING_ONLY=$2
+
 INPUT_DNAME=$(dirname  $INPUT_FILE)
 INPUT_BNAME=$(basename $INPUT_FILE .soclog.seg.csv)
 # if this is run as a successor to the intake-1 script
@@ -38,6 +40,12 @@ if [ "$(dirname $INPUT_DNAME)" == "${INPUT_BNAME}" ]; then
     STANDARD_MODE=1
 fi
 
+if [ "$GEN2_LING_ONLY" ] ; then
+    GEN2_LING_ONLY_F=" --gen2-ling-only"
+else
+    GEN2_LING_ONLY_F=""
+fi
+
 rm -rf sections unannotated units discourse
 mkdir -p sections unannotated units discourse
 
@@ -46,8 +54,8 @@ mkdir -p sanity-check
 UNSEGMENTED_DIR=$(abspath ${INPUT_DNAME}/../unsegmented)
 cp ${UNSEGMENTED_DIR}/${INPUT_BNAME}.soclog.csv sanity-check/unsegmented.csv
 grep -v '^[[:space:]]*$' $INPUT_FILE          > sanity-check/segmented.csv
-python "$CODE_DIR/intake/csvtoglozz.py" -f sanity-check/unsegmented.csv
-python "$CODE_DIR/intake/csvtoglozz.py" -f sanity-check/segmented.csv
+python "$CODE_DIR/intake/csvtoglozz.py""$GEN2_LING_ONLY_F" -f sanity-check/unsegmented.csv
+python "$CODE_DIR/intake/csvtoglozz.py""$GEN2_LING_ONLY_F" -f sanity-check/segmented.csv
 view_ac sanity-check/unsegmented.ac > sanity-check/unsegmented.txt
 view_ac sanity-check/segmented.ac   > sanity-check/segmented.txt
 diff sanity-check/unsegmented.txt sanity-check/segmented.txt > sanity-check/differences.txt || :
@@ -67,7 +75,7 @@ mv ${INPUT_DNAME}/${INPUT_BNAME}_*.soclog.seg.csv sections
 echo >&2 '== Writing Glozz am/ac files == [unannotated/*.{ac,aa}]'
 for i in sections/*.soclog.seg.csv; do
     echo $i
-    python "$CODE_DIR/intake/csvtoglozz.py" -f "$i"
+    python "$CODE_DIR/intake/csvtoglozz.py""$GEN2_LING_ONLY_F" -f "$i"
 done
 mv sections/*.{aa,ac} unannotated
 

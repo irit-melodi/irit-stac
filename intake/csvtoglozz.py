@@ -128,6 +128,7 @@ def parse_builds(builds):
     string that would go in the .aa file
     """
     res = []
+    builds = builds.strip()  # implies YUCK => return ""
     if builds:
         for item in builds.split("];"):
             if ']' not in item:
@@ -421,12 +422,19 @@ def process_turn(root, dialoguetext, turn, is_player):
     return dialoguetext
 
 
-def process_turns(turns):
+def process_turns(turns, gen2_ling_only=False):
     """
     Process a list of Turns and return a pair of:
 
     * text
     * standoff annotations (an XML element)
+
+    Parameters
+    ----------
+    turns :
+    gen2_ling_only : boolean
+        If True, restrict additional (aka 2nd generation) turns to
+        linguistic turns that escaped the 1st generation scripts.
     """
     dialoguetext = " "  # for the .ac file
     prev_dialogue = None
@@ -464,7 +472,8 @@ def process_turns(turns):
                 append_dialogue(root, event, span)
 
         # server turns
-        if "you" not in turn.rawtext:
+        if (not gen2_ling_only and
+            "you" not in turn.rawtext):
             dialoguetext = process_turn(root, dialoguetext, turn,
                                         is_player=False)
 
@@ -489,6 +498,9 @@ def parse_args():
     parser.add_argument('--start',
                         type=int,
                         help="starting timestamp (default: current time)")
+    parser.add_argument('--gen2-ling-only',
+                        action='store_true',
+                        help='only include linguistic turns from 2nd generation')
 
     return parser.parse_args()
 
@@ -502,7 +514,8 @@ def main():
         csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
         csvreader.next()  # skip header row
         turns = list(read_rows(list(csvreader)))
-        txt, xml = process_turns(turns)
+        txt, xml = process_turns(turns,
+                                 gen2_ling_only=args.gen2_ling_only)
 
     save_output(filename.split(".")[0], txt, xml)
 
