@@ -243,7 +243,7 @@ def _core_parsers(klearner):
     if klearner.attach.payload.can_predict_proba:
         return joint + post + bypass
     else:
-        return post + bypass
+        return post
 
 _INTRA_INTER_CONFIGS = [
     Keyed('iheads', HeadToHeadParser),
