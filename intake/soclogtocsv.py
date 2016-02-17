@@ -320,16 +320,17 @@ def parse_line(ctr, line, include_gen2=True):
         return None
 
 
-def soclog_to_turns(soclog, gen2_ling_only=False):
+def soclog_to_turns(soclog, sel_gen='gen2'):
     """Generator from soclog to Turn objects.
 
     Parameters
     ----------
     soclog : File
         The soclog file
-    gen2_ling_only : boolean
-        If True, restrict additional (aka 2nd generation) turns to
-        linguistic turns that escaped the 1st generation scripts.
+    sel_gen : one of {'gen1', 'gen2_ling_only', 'gen2'}
+        Select generation for the extraction script: 1st gen corresponds
+        to intake scripts until 2016-01, gen2_ling_only adds spectator
+        messages, gen2 is for situated communication.
     """
     ctr = TurnCounter()
     for line in soclog:
@@ -349,11 +350,14 @@ def soclog_to_turns(soclog, gen2_ling_only=False):
         if len(timestamp_ht) == 2:
             # timestamped line
             # don't include non-ling turns from 2nd generation
-            include_gen2 = not gen2_ling_only
+            include_gen2 = (sel_gen == 'gen2')
             turn = parse_line(ctr, line, include_gen2=include_gen2)
             if turn is not None:
                 yield turn
         elif len(timestamp_ht) == 1:
+            # these are excluded from gen1
+            if sel_gen == 'gen1':
+                continue
             # 2nd generation linguistic info: spectator messages
             match_spect = SPECTATOR.search(line)
             if match_spect:
@@ -391,16 +395,28 @@ def main():
     psr.add_argument('--output', metavar='FILE',
                      type=argparse.FileType('wb'),
                      default=sys.stdout)
-    psr.add_argument('--gen2-ling-only',
-                     action='store_true',
-                     help='only include linguistic turns from 2nd generation')
+    # choose generation
+    psr_gen = psr.add_mutually_exclusive_group()
+    psr_gen.add_argument('--gen1',
+                         action='store_true',
+                         help='only include same turns as in 1st gen')
+    psr_gen.add_argument('--gen2-ling-only',
+                         action='store_true',
+                         help='only include ling turns from 2nd gen')
     args = psr.parse_args()
 
+    # selection of turns to include
+    if args.gen1:
+        sel_gen = 'gen1'
+    elif args.gen2_ling_only:
+        sel_gen = 'gen2_ling_only'
+    else:
+        sel_gen = 'gen2'
+    #
     with codecs.open(args.soclog, 'r', 'utf-8') as soclog:
         outcsv = stac_csv.mk_csv_writer(args.output)
         outcsv.writeheader()
-        for turn in soclog_to_turns(soclog,
-                                    gen2_ling_only=args.gen2_ling_only):
+        for turn in soclog_to_turns(soclog, sel_gen=sel_gen):
             outcsv.writerow(turn.to_dict())
 
 

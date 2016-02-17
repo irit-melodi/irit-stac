@@ -11,9 +11,44 @@ import os
 import subprocess
 import sys
 
+from educe.stac.annotation import parse_turn_id
+
 
 # path to the folder containing the intake scripts (including this one)
 PATH_TO_INTAKE = os.path.dirname(__file__)
+
+
+def read_portioning(seg_file):
+    """Read portioning in the segmented csv file.
+
+    Parameters
+    ----------
+    seg_file : string
+        TODO
+
+    Returns
+    -------
+    first_idx : list of parse_turn_id
+        Identifier of the first turn of each portion.
+    """
+    first_idx = []
+    with open(seg_file, 'rb') as seg_f:
+        reader = csv.reader(seg_f, delimiter='\t')
+        # leave header line
+        line = reader.next()
+        grab_next = True
+        # regular lines
+        for line in reader:
+            # if empty line, be ready to start a new portion
+            if ((not line or
+                 not ''.join(line).strip())):
+                grab_next = True
+                continue
+            # new portion
+            if grab_next:
+                first_idx.append(parse_turn_id(line[0]))
+                grab_next = False
+    return first_idx
 
 
 def infer_portioning(disc_dir):
@@ -28,7 +63,7 @@ def infer_portioning(disc_dir):
 
     Returns
     -------
-    first_idx : list of float
+    first_idx : list of parse_turn_id
         Identifier of the first turn of each portion.
     """
     ac_files = glob(os.path.join(disc_dir, '*.ac'))
@@ -40,7 +75,7 @@ def infer_portioning(disc_dir):
     for ac_file in ac_files:
         with open(ac_file, 'rb') as ac_file:
             for line in ac_file:
-                fidx = float(line.split(':', 1)[0])
+                fidx = parse_turn_id(line.split(':', 1)[0].strip())
                 first_idx.append(fidx)
     return sorted(first_idx)
 
@@ -66,12 +101,13 @@ def backport_portioning(seg_file, first_idx):
             # regular lines
             for line in reader:
                 # keep existing empty lines
-                if not line:
+                if ((not line or
+                     not ''.join(line).strip())):
                     writer.writerow(line)
                     continue
                 # insert an empty line just before a starting turn
                 # (except for the turn starting the first portion)
-                if float(line[0]) in first_idx[1:]:
+                if parse_turn_id(line[0]) in first_idx[1:]:
                     writer.writerow([])
                 # write the normal line
                 writer.writerow(line)
@@ -115,10 +151,11 @@ def _backport_turn_text(f_orig, f_dest, f_res, verbose=0):
             continue
 
         # skip additional empty lines from f_orig
-        while not line_orig:
+        while (not line_orig or
+               not ''.join(line_orig).strip()):
             line_orig = reader_orig.next()
 
-        if float(line_orig[0]) != float(line_dest[0]):
+        if parse_turn_id(line_orig[0]) != parse_turn_id(line_dest[0]):
             err_msg = 'Weird state that should never be reached: {}\t{}'
             raise ValueError(err_msg.format(line_orig, line_dest))
 
@@ -192,8 +229,12 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
 
     # read and write content
     for line_dest in reader_dest:
-        # TODO? handle exhaustion of f_orig (try...except?)
-        line_orig = reader_orig.next()
+        # _orig exhausted means new turns in _dest
+        try:
+            line_orig = reader_orig.next()
+        except StopIteration:
+            writer_res.writerow(line_dest)
+            continue
 
         # easy case: keep lines that are identical on both sides
         if line_orig == line_dest:
@@ -202,20 +243,34 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
 
         # transfer empty lines, they mark subdoc split
         # TODO? get rid of spurious empty lines
-        while not line_orig:
+        while (not line_orig or
+               not ''.join(line_orig).strip()):
             writer_res.writerow(line_orig)  # transfer split
             line_orig = reader_orig.next()
 
-        if float(line_orig[0]) < float(line_dest[0]):
+        # DEBUG
+        # FIXME csv reader (doublequote=True) fails to split fields on
+        # if one field contains a doubled double quote (supposedly read
+        # as one double-quote)
+        try:
+            parse_turn_id(line_orig[0])
+        except ValueError:
+            print([i for i, c in enumerate(line_orig[0])
+                   if c == '\t'])
+            print('\n'.join(line_orig))
+            print(line_orig[0].split('\t'))
+            raise
+        # end DEBUG
+        if parse_turn_id(line_orig[0]) < parse_turn_id(line_dest[0]):
             err_msg = 'Weird state that should never be reached: {}\t{}'
             raise ValueError(err_msg.format(line_orig, line_dest))
 
         # new turns in _dest: write as they are
-        while float(line_orig[0]) > float(line_dest[0]):
+        while parse_turn_id(line_orig[0]) > parse_turn_id(line_dest[0]):
             writer_res.writerow(line_dest)
             line_dest = reader_dest.next()
 
-        if float(line_orig[0]) != float(line_dest[0]):
+        if parse_turn_id(line_orig[0]) != parse_turn_id(line_dest[0]):
             err_msg = 'Weird state that should never be reached: {}\t{}'
             raise ValueError(err_msg.format(line_orig, line_dest))
 
@@ -257,7 +312,7 @@ def transfer_turns(file_orig, file_dest):
     os.rename(file_res, file_dest)
 
 
-def augment_game(dir_orig, dir_dest, doc, resume_at_intake2=False):
+def augment_game(dir_orig, dir_dest, doc, steps='all'):
     """Do the augmentation
 
     Parameters
@@ -281,6 +336,7 @@ def augment_game(dir_orig, dir_dest, doc, resume_at_intake2=False):
     # * for injection/weaving: unsegmented, segmented, unannotated,
     #     discourse, units?
     # the original folder can follow one of two known layout conventions
+    dir_orig = os.path.abspath(dir_orig)
     game_dir_orig = os.path.join(dir_orig, doc)
     if not os.path.isdir(game_dir_orig):
         err_msg = 'Unable to find original files {}'.format(game_dir_orig)
@@ -331,32 +387,28 @@ def augment_game(dir_orig, dir_dest, doc, resume_at_intake2=False):
     # parsed
     # TODO
 
-    # unannotated
+    # subdirs: unannotated, discourse, units
     udis_dir_orig = os.path.join(game_dir_orig, 'unannotated')
+    # dis_dir_orig = os.path.join(game_dir_orig, 'discourse')
+    # uni_dir_orig = os.path.join(game_dir_orig, 'units')
     # TODO ?
 
-    # discourse
-    # TODO
-
-    # units
-    # TODO
-
     # locate destination folder
-    if dir_dest != '.':
-        err_msg = 'Please call this script from dir_dest (intake-1.sh legacy)'
-        raise ValueError(err_msg)
-
+    dir_dest = os.path.abspath(dir_dest)
     if not os.path.isdir(dir_dest):
         os.mkdir(dir_dest)
         print('Creating destination folder {}'.format(dir_dest))
-
+    # move to destination folder to call intake scripts (legacy)
+    caller_cwd = os.getcwd()
+    os.chdir(dir_dest)
+    # generate file names in destination folder
     doc_dir_dest = os.path.join(dir_dest, doc)
     # in new layout: ./unsegmented/<game>.soclog.csv
     useg_dest = os.path.join(doc_dir_dest, 'unsegmented',
                              doc + '.soclog.csv')
     seg_dest = os.path.join(doc_dir_dest, 'segmented',
                             doc + '.soclog.seg.csv')
-    if not resume_at_intake2:
+    if steps in ['all', 'intake1']:
         # intake-1
         # * creates dir_dest/{soclog,unsegmented,segmented}
         # * copies soclog
@@ -386,23 +438,47 @@ def augment_game(dir_orig, dir_dest, doc, resume_at_intake2=False):
             seg_dest, useg_dest))
         backport_turn_text(seg_dest, useg_dest)
 
-        # TODO infer portioning from the glozz files: a doc split takes place
-        # immediately before the first turn of the next section
-        portion_idx = infer_portioning(udis_dir_orig)
-        backport_portioning(seg_dest, portion_idx)
-        
+        # read doc portioning from segmented
+        portion_idx = read_portioning(seg_orig)
+        if len(portion_idx) == 1:
+            # no portioning in segmented: infer from the glozz files
+            # a doc split takes place immediately before the first turn of
+            # the next section
+            # FIXME maybe it should rather split after its last turn?
+            portion_idx = infer_portioning(udis_dir_orig)
+            backport_portioning(seg_dest, portion_idx)
 
-    # intake-2: segmented => unannotated aa/ac
-    intake2_cmd = [os.path.join(PATH_TO_INTAKE, 'intake-2.sh'),
-                   # this argument should be seg_dest
-                   # and subprocess.check_call() should not have any 'cwd'
-                   # parameter, but the current version of intake-2 writes
-                   # its files into the current working directory...
-                   os.path.join('segmented', doc + '.soclog.seg.csv'),
-                   "gen2-ling-only"]
-    subprocess.check_call(intake2_cmd, cwd=doc_dir_dest)
+    if steps in ['all', 'intake2']:
+        # intake-2: segmented => unannotated aa/ac
+        intake2_cmd = [os.path.join(PATH_TO_INTAKE, 'intake-2.sh'),
+                       # this argument should be seg_dest
+                       # and subprocess.check_call() should not have any 'cwd'
+                       # parameter, but the current version of intake-2 writes
+                       # its files into the current working directory...
+                       os.path.join('segmented', doc + '.soclog.seg.csv'),
+                       "gen2-ling-only"]
+        subprocess.check_call(intake2_cmd, cwd=doc_dir_dest)
 
-    # weaving
+    # move back to the original working dir to call the weaving script
+    os.chdir(caller_cwd)
+    if steps in ['all', 'weave']:
+        # weaving
+        weave_cmd = ['stac-oneoff', 'weave',
+                     dir_dest, dir_orig,
+                     '--doc', doc,
+                     '--annotator', '[GOLD|SILVER|BRONZE]',
+                     '-o', dir_dest]
+        subprocess.check_call(weave_cmd)
+
+    # create symlinks to unannotated/*.ac in each of the subdirs in
+    # discourse and units
+    for ac_path in glob(doc_dir_dest + '/unannotated/*.ac'):
+        for tgt_dir in ['discourse', 'units']:
+            for subdir in glob('{}/{}/*/'.format(doc_dir_dest, tgt_dir)):
+                os.symlink(
+                    os.path.relpath(ac_path, subdir),
+                    os.path.join(subdir, os.path.basename(ac_path))
+                )
 
 
 def main():
@@ -416,13 +492,15 @@ def main():
                         help='folder for the augmented corpus')
     parser.add_argument('doc', metavar='DOC',
                         help='document')
-    # typical use case: 
-    parser.add_argument('--resume_at_intake2', action='store_true',
-                        help='resume execution just before intake2')
+    # select steps
+    parser.add_argument('--steps', metavar='steps',
+                        choices=['all', 'intake1', 'intake2', 'weave'],
+                        default='all',
+                        help='intake steps to take')
     args = parser.parse_args()
     # do the job
     augment_game(args.dir_orig, args.dir_dest, args.doc,
-                 resume_at_intake2=args.resume_at_intake2)
+                 steps=args.steps)
 
 
 if __name__ == '__main__':
