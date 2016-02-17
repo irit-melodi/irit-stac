@@ -406,13 +406,13 @@ def process_turn(root, dialoguetext, turn, is_player):
     # .aa typographic annotations
 
     if dialoguetext.index(turn_text) != 0:
-        typstart = len(dialoguetext)\
-            - len(turn_text)\
-            - len(prefix)\
-            - 1
+        typstart = (len(dialoguetext) -
+                    len(turn_text) -
+                    len(prefix) -
+                    1)
     else:
         typstart = 0
-    typend = len(dialoguetext)-1
+    typend = len(dialoguetext) - 1
 
     # .aa actual pre-annotations (Turn ID, Timestamp, Emitter)
     append_turn(root, turn, Span(typstart, typend), is_player)
@@ -478,8 +478,8 @@ def process_turns(turns, gen2_ling_only=False):
                                         is_player=False)
 
     # last dialogue : only if it doesn't end in a Server's statement !!
-    if prev_dialogue is None or\
-       prev_dialogue.right != len(dialoguetext)-1:
+    if ((prev_dialogue is None or
+         prev_dialogue.right != len(dialoguetext) - 1)):
 
         span = Span(left=prev_dialogue.right if prev_dialogue else 0,
                     right=len(dialoguetext))
