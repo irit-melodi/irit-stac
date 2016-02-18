@@ -297,7 +297,8 @@ class ILPDecoder(Decoder):
     See ZPL_TEMPLATE_DIR for constraint set description
     """
 
-    def decode(self, dpack):
+    def decode(self, dpack, nonfixed_pairs=None):
+        # TODO integrate nonfixed_pairs, maybe?
         tmpdir = mkdtemp()
 
         # Prepare ZIMPL template and data
