@@ -121,6 +121,7 @@ def command_annotate(args):
     args.ignore_cdus = False
     args.parsing = True
     args.single = True
+    args.strip_mode = 'head'  # FIXME should not be specified here
     inputs = stac_features.read_corpus_inputs(args)
     model = joblib.load(args.model)
     vocab = {f: i for i, f in
