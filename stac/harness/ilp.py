@@ -290,7 +290,7 @@ def load_scip_output(dpack, output_path):
 
     # Build labels
     unrelated = dpack.label_number(UNRELATED)
-    prediction = np.full(len(dpack), unrelated)
+    prediction = np.full(len(dpack), unrelated, dtype=np.int)
     prediction[index_attached] = output_labels
 
     return prediction
