@@ -291,7 +291,7 @@ def parse_line(ctr, line, include_gen2=True):
                              emitter=speaker,
                              res=state.resources_string() or YUCK,
                              builds=state.buildups_string(),
-                             rawtext=text,
+                             rawtext=text.replace('&', '\&'),
                              annot=YUCK,
                              comment=YUCK)
 
@@ -375,7 +375,8 @@ def soclog_to_turns(soclog, sel_gen='gen2'):
                                      emitter=match_spect.group("name"),
                                      res=state.resources_string() or YUCK,
                                      builds=state.buildups_string() or YUCK,
-                                     rawtext=match_spect.group("text"),
+                                     rawtext=match_spect.group(
+                                         "text").replace('&', '\&'),
                                      annot=YUCK,
                                      comment=YUCK)
                 yield turn

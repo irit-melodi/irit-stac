@@ -49,6 +49,7 @@ import codecs
 import csv
 import datetime
 import itertools
+import re
 import sys
 import time
 
@@ -387,8 +388,14 @@ def process_turn(root, dialoguetext, turn, is_player):
     prefix = " : ".join([turn.number, turn.emitter, ""])
     dialoguetext += prefix
     if is_player:
-        turn_segments = [x for x in turn.rawtext.split('&')
+        # split on '&'
+        # NEW except if it is escaped (preceded by '\'); then delete the
+        # escaping character to restore the original text
+        # this pattern uses "negative lookbehind" (?<!...),
+        # see doc of the `re` module
+        turn_segments = [x for x in re.split('(?<![\\\])&', turn.rawtext)
                          if len(x) > 0]
+        turn_segments = [x.replace('\&', '&') for x in turn_segments]
     else:
         pre_segments = [x for x in turn.rawtext.split('. ')]
         if pre_segments:
