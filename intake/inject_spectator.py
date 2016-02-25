@@ -312,7 +312,7 @@ def transfer_turns(file_orig, file_dest):
     os.rename(file_res, file_dest)
 
 
-def augment_game(dir_orig, dir_dest, doc, steps='all'):
+def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
     """Do the augmentation
 
     Parameters
@@ -323,13 +323,16 @@ def augment_game(dir_orig, dir_dest, doc, steps='all'):
         Folder for the augmented corpus
     doc : string
         Name of the document
-    resume_at_intake2 : boolean, optional
-        If True, resume execution just before intake-2. This is useful
-        when you have to backport crappy editions from segmented to
-        unsegmented to make intake2 and subsequent processes happy ;
-        Of course, this slightly corrupts the corpus but we'll fix this
-        later (and then hopefully get rid of or modify the purpose of this
-        option).
+    steps : string, optional
+        Specify which steps should be executed ; defaults to 'all'.
+        This is useful when you have to backport crappy editions from
+        segmented to unsegmented to make intake2 and subsequent processes
+        happy ; Of course, this slightly corrupts the corpus but we'll fix
+        this later (and then hopefully get rid of or modify the purpose of
+        this option).
+    seg_path : string, optional
+        Path to the segmented file we should use ; This is necessary when
+        there are more than one file under segmented/.
     """
     # 1. locate original folder (existing version of the game) with files:
     # * for identical copy: soclog, pos-tagged, parsed
@@ -369,12 +372,18 @@ def augment_game(dir_orig, dir_dest, doc, steps='all'):
 
     # segmented: in ./segmented
     seg_dir_orig = os.path.join(game_dir_orig, 'segmented')
-    seg_orig = glob(os.path.join(seg_dir_orig,
-                                 doc + '*.soclog.seg.csv'))
-    if len(seg_orig) != 1:
-        err_msg = 'Unable to locate segmented file {}'.format(seg_orig)
-        raise ValueError(err_msg)
-    seg_orig = seg_orig[0]
+    if seg_path:
+        seg_orig = os.path.abspath(seg_path)
+        if not os.path.isfile(seg_orig):
+            raise ValueError('Unable to locate segmented file {}'.format(
+                seg_path))
+    else:
+        seg_orig = glob(os.path.join(seg_dir_orig,
+                                     doc + '*.soclog.seg.csv'))
+        if len(seg_orig) != 1:
+            err_msg = 'Unable to locate segmented file {}'.format(seg_orig)
+            raise ValueError(err_msg)
+        seg_orig = seg_orig[0]
     # paranoid check
     if not os.path.isfile(seg_orig):
         err_msg = 'Weird error on locating segmented file {}'.format(
@@ -497,10 +506,15 @@ def main():
                         choices=['all', 'intake1', 'intake2', 'weave'],
                         default='all',
                         help='intake steps to take')
+    # explicitly point to segmented (in case there is more than one in
+    # the segmented/ folder)
+    parser.add_argument('--segmented', metavar='FILE',
+                        help='segmented file to use (if >1 in segmented/)')
     args = parser.parse_args()
     # do the job
     augment_game(args.dir_orig, args.dir_dest, args.doc,
-                 steps=args.steps)
+                 steps=args.steps,
+                 seg_path=args.segmented)
 
 
 if __name__ == '__main__':
