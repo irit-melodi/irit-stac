@@ -364,8 +364,19 @@ def utf8_csv_reader(utf8_data, **kwargs):
 
 
 def save_output(basename, dialoguetext, root):
-    """
-    Save output to a pair of files with a given name prefix
+    """Save output to a pair of files with a given name prefix.
+
+    The pair of files has extensions .ac (for text) and .aa (for
+    annotations).
+
+    Parameters
+    ----------
+    basename : string
+        Basename for files.
+    dialoguetext : string
+        Text that supports the annotation.
+    root : xml.etree.Element
+        XML representation of the annotation on `dialoguetext`.
     """
     with codecs.open(basename+".ac", "w", "utf-8") as out:
         out.write(dialoguetext)
