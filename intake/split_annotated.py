@@ -13,9 +13,9 @@ import sys
 
 import educe.glozz
 from educe.annotation import (Relation, RelSpan, Schema)
-from educe.stac.annotation import (DIALOGUE_ACTS, is_cdu, is_edu,
+from educe.stac.annotation import (addressees, DIALOGUE_ACTS, is_cdu, is_edu,
                                    is_preference, is_resource,
-                                   is_relation_instance)
+                                   is_relation_instance, is_turn)
 from educe.stac.corpus import write_annotation_file
 
 
@@ -24,6 +24,229 @@ DIALOGUE_ACTS = DIALOGUE_ACTS + ['Strategic_comment']
 # pylint: disable=fixme
 _SPLIT_PREFIX = 'FIXME:'
 # pylint: enable=fixme
+
+
+def filter_likely_annotation_errors(anno_doc, verbose=1):
+    """Filter a document by removing likely annotation errors.
+
+    Filter out likely errors due to the terrible glozz UX.
+    Likely errors are currently defined as:
+    - units of span length 0,
+    - dialogue acts with no addressee and no surface act
+    - schemas with no member
+
+    Parameters
+    ----------
+    anno_doc : GlozzDocument
+        Document to filter
+    verbose : int
+        Verbosity level
+
+    Returns
+    -------
+    anno_doc : GlozzDocument
+        Same document but filtered.
+    """
+    # units
+    anno_units_err = [
+        x for x in anno_doc.units
+        if (x.span.char_start == x.span.char_end or
+            (is_edu(x) and
+             x.type in DIALOGUE_ACTS and
+             addressees(x) is None and
+             (x.features.get('Surface_act') == 'Please choose...')))
+    ]
+    # schemas
+    anno_schms_err = [
+        x for x in anno_doc.schemas
+        if not x.members
+    ]
+    # relations
+    # TODO
+    anno_relas_err = []
+
+    # warn about the ignored annotations
+    if verbose:
+        print('== Likely errors due to glozz UX ==')
+        if anno_units_err:
+            print('----- Units -----')
+            print('\n'.join('[ ] {}'.format(str(x))
+                            for x in anno_units_err))
+        if anno_schms_err:
+            print('----- Schemas -----')
+            print('\n'.join('[ ] {}'.format(str(x))
+                            for x in anno_schms_err))
+        if anno_relas_err:
+            print('----- Relations -----')
+            print('\n'.join('[ ] {}'.format(str(x))
+                            for x in anno_relas_err))
+
+    # remove detected errors
+    anno_units_err = set(anno_units_err)
+    anno_doc.units = [x for x in anno_doc.units
+                      if x not in anno_units_err]
+    anno_schms_err = set(anno_schms_err)
+    anno_doc.schemas = [x for x in anno_doc.schemas
+                        if x not in anno_schms_err]
+    anno_relas_err = set(anno_relas_err)
+    anno_doc.relations = [x for x in anno_doc.relations
+                          if x not in anno_relas_err]
+
+    return anno_doc
+
+
+def approximate_cover(elts, tgt):
+    """Returns True if elts covers tgt's span.
+
+    This is approximate because we only check that:
+    * the first and last elements respectively begin and end at the
+      extremities of tgt.span,
+    * consecutive elements don't overlap.
+
+    Because of the second item, we assume that elts has been sorted
+    by span.
+
+    Parameters
+    ----------
+    elts : sorted list of Annotation
+        Sequence of elements
+    tgt : Annotation
+        Target annotation
+
+    Returns
+    -------
+    res : boolean
+        True if elts approximately cover tgt.span
+    """
+    res = (elts[0].span.char_start == tgt.span.char_start and
+           elts[-1].span.char_end == tgt.span.char_end and
+           all(elt_cur.overlaps(elt_nxt) is None
+               for elt_cur, elt_nxt
+               in zip(elts[:-1], elts[1:])))
+    return res
+
+
+def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
+    """Infer resegmentation of EDUs.
+
+    Parameters
+    ----------
+    anno_doc : GlozzDocument
+        Document to filter
+    verbose : int
+        Verbosity level
+
+    Returns
+    -------
+    anno_doc : GlozzDocument
+        Filtered document, where the support of relations and schemas
+        has been rewritten.
+    """
+    anno_map = dict()
+
+    turns = [x for x in unanno_doc.units if is_turn(x)]
+    for turn in turns:
+        # `unannotated` was the starting point for the annotation process
+        u_edus = [x for x in unanno_doc.units
+                  if is_edu(x) and turn.span.encloses(x.span)]
+        u_ids = set(x.local_id() for x in u_edus)
+
+        # `annotated` is the result of the annotation process
+        # find conflicts, as pair-wise overlaps between annotations
+        # from `annotated`
+        a_edus = [x for x in anno_doc.units
+                  if is_edu(x) and turn.span.encloses(x.span)]
+        # 1. remove duplicate new annotations
+        # (EDUs that are introduced in `annotated` twice, as a segment
+        # and a dialogue act)
+        new_edus = [x for x in a_edus if x.local_id() not in u_ids]
+        a_dups = [(elt_a, elt_b) for elt_a, elt_b
+                  in itertools.combinations(
+                      sorted(new_edus, key=lambda x: x.local_id(),
+                             reverse=True), 2)
+                  if (elt_a.span == elt_b.span and
+                      ((elt_a.type in DIALOGUE_ACTS and
+                        elt_b.type not in DIALOGUE_ACTS) or
+                       (elt_a.type not in DIALOGUE_ACTS and
+                        elt_b.type in DIALOGUE_ACTS)))]
+        a_edus_useless = set(x[0] if x[0].type not in DIALOGUE_ACTS else x[1]
+                             for x in a_dups)
+        # TODO create map from duplicates to their original version,
+        # to update relations and schemas later
+        a_edus = [x for x in a_edus if x not in a_edus_useless]
+
+        # 2. list conflicts, then whitelist them progressively
+        # NB: we sort EDUs in reverse using their local_ids, so that
+        # conflict pairs are of the form (stac*, skar*) ; this is
+        # admittedly a cheap, ad-hoc, trick
+        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b
+                        in itertools.combinations(
+                            sorted(a_edus, key=lambda x: x.local_id(),
+                                   reverse=True), 2)
+                        if elt_a.overlaps(elt_b)]
+        # exact matches where the first member is an EDU from `unannotated`
+        # and the second member is a dialogue act on the same span
+        # FIXME replace span equality with span equality +- 1 (off-by-one)
+        # => write as a function, call it here
+        # RESUME HERE RESUME HERE RESUME HERE (do the FIXME)
+        exact_matches = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                         if (elt_a.local_id() in u_ids and
+                             elt_a.span == elt_b.span)]
+        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                        if (elt_a, elt_b) not in set(exact_matches)]
+        # exact matches purely on new annotations, i.e. a new segment +
+        # a new discourse act on the same span
+        anno_matches = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                        if (elt_a.span == elt_b.span and
+                            elt_a.local_id() not in u_ids and
+                            elt_b.local_id() not in u_ids and
+                            len([x for x in (elt_a, elt_b)
+                                 if x.type in DIALOGUE_ACTS]) == 1 and
+                            len([x for x in (elt_a, elt_b)
+                                 if x.type not in DIALOGUE_ACTS]) == 1)]
+        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                        if (elt_a, elt_b) not in set(anno_matches)]
+        # find EDU merges
+        edu_merges = dict()  # elt_b -> list of elt_a
+        for elt_b, pairs in itertools.groupby(pw_conflicts,
+                                              key=lambda x: x[1]):
+            sorted_a = sorted((y[0] for y in pairs), key=lambda z: z.span)
+            # we approximately check that the sequence of original EDUs
+            # fully covers the span of elt_b, from start to end, with
+            # no overlap
+            if ((all(elt_a.local_id() in u_ids for elt_a in sorted_a) and
+                 approximate_cover(sorted_a, elt_b))):
+                edu_merges[elt_b] = sorted_a
+        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                        if elt_b not in set(edu_merges.keys())]
+        # find EDU splits
+        edu_splits = dict()  # elt_a -> list of elt_b
+        for elt_a, pairs in itertools.groupby(pw_conflicts,
+                                              key=lambda x: x[0]):
+            sorted_b = sorted((y[1] for y in pairs), key=lambda z: z.span)
+            # we approximately check that the sequence of new EDUs
+            # fully covers the span of elt_a, from start to end, with
+            # no overlap
+            if ((elt_a.local_id() in u_ids and
+                 approximate_cover(sorted_b, elt_a))):
+                edu_splits[elt_a] = sorted_b
+        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                        if elt_a not in set(edu_splits.keys())]
+
+        if verbose:
+            if pw_conflicts:
+                print('Conflict:')
+                print('\n'.join('  {}\t<>\t{}'.format(str(elt_a), str(elt_b))
+                                for elt_a, elt_b in pw_conflicts))
+
+
+    # backport unit annotation to original segment if they have the same span
+
+    # filter out redundant or obsolete EDUs
+
+    # rewrite the support of schemas and relations using anno_map
+
+    return anno_doc
 
 
 def split_annotated(dir_orig, doc, verbose=0):
@@ -67,40 +290,114 @@ def split_annotated(dir_orig, doc, verbose=0):
         os.makedirs(units_dir)
         print('Creating folder {}'.format(units_dir))
 
-    # read the annotated files
+    # process each annotated file
     for anno_file in sorted(glob(os.path.join(annotated_dir, '*.aa'))):
         # matching text file
         text_file = os.path.splitext(anno_file)[0] + '.ac'
 
-        # GlozzDocument for annotated
+        # read and filter the `annotated` file
         anno_doc = educe.glozz.read_annotation_file(anno_file, text_file)
-        # GlozzDocument for unannotated
+        anno_doc = filter_likely_annotation_errors(anno_doc, verbose=1)
+
+        # read the `unannotated` file
         unanno_file = os.path.join(unannotated_dir,
                                    os.path.basename(anno_file))
         unanno_doc = educe.glozz.read_annotation_file(unanno_file, text_file)
 
-        # create units doc from unannotated
+        # infer resegmentation in `annotated`
+        anno_doc = infer_resegmentation(unanno_doc, anno_doc, verbose=1)
+        raise ValueError('Stop here')
+
+        # map annotations from annotated to unannotated
+        unanno_edus = {x.local_id(): x for x in unanno_doc.units if is_edu(x)}
+        anno_edus = {x.local_id(): x for x in anno_doc.units if is_edu(x)}
+        unanno_edus2anno_edus = {x_id:
+                                 [y_id for y_id, y in anno_edus.items()
+                                  if y.encloses(x) or x.encloses(y)]
+                                 for x_id, x in unanno_edus.items()}
+        ambig_items = {
+            x_id: y_ids
+            for x_id, y_ids in unanno_edus2anno_edus.items()
+            if (len([y_id for y_id in y_ids
+                     if anno_edus[y_id].type in DIALOGUE_ACTS]) > 1 or
+                len([y_id for y_id in y_ids
+                     if anno_edus[y_id].type not in DIALOGUE_ACTS]) > 1)
+        }
+        # resolve ambiguities
+        # * if the ambiguity is on a sequence of non-overlapping EDUs
+        # whose beginning and end match the unannotated EDU's, it means
+        # there was an EDU split
+        print('Ambiguous EDU matchings in {}:'.format(anno_file))
+        for unanno_id, anno_ids in ambig_items.items():
+            unanno_edu = unanno_edus[unanno_id]
+            # EDU split manifests as an annotated sequence of dialogue acts
+            m_acts = [(y_id, anno_edus[y_id]) for y_id in anno_ids
+                      if anno_edus[y_id].type in DIALOGUE_ACTS]
+            if len(m_acts) > 1:
+                # check whether they form a non-overlapping sequence
+                # that covers the span, as this would indicate an EDU split
+                m_acts = sorted(m_acts, key=lambda x: x[1].span)
+                if ((m_acts[0][1].span.char_start != unanno_edu.span.char_start or
+                     m_acts[-1][1].span.char_end != unanno_edu.span.char_end or
+                     any(elt_a[1].span.overlaps(elt_b[1].span)
+                         for elt_a, elt_b
+                         in itertools.product(m_acts, m_acts)
+                         if elt_a != elt_b))):
+                    # for the moment, just print them
+                    print('{}\n  {}'.format(
+                        unanno_edu,
+                        '\n  '.join(str(y) for y_id, y in m_acts)
+                    ))
+                else:
+                    print('{}\nis split into\n  {}'.format(
+                        unanno_edu,
+                        '\n  '.join(str(y) for y_id, y in m_acts)
+                    ))
+            # segments
+            m_segs = [(y_id, anno_edus[y_id]) for y_id in anno_ids
+                      if anno_edus[y_id].type not in DIALOGUE_ACTS]
+            if len(m_segs) > 1:
+                # check whether they form a non-overlapping sequence
+                # that covers the span, as this would indicate an EDU split
+                m_segs = sorted(m_segs, key=lambda x: x[1].span)
+                if ((m_segs[0].span.char_start != unanno_edu.span.char_start or
+                     m_segs[-1].span.char_end != unanno_edu.span.char_end or
+                     any(elt_a[1].span.overlaps(elt_b[1].span)
+                         for elt_a, elt_b
+                         in itertools.product(m_segs, m_segs)
+                         if elt_a != elt_b))):
+                    # for the moment, just print them
+                    print('{}\n  {}'.format(
+                        unanno_edu,
+                        '\n  '.join(str(y) for y_id, y in m_segs)
+                    ))
+                    print(m_segs[0][1].span.char_start != unanno_edu.span.char_start)
+                else:
+                    print('{}\nis split into\n  {}'.format(
+                        unanno_edu,
+                        '\n  '.join(str(y) for y_id, y in m_segs)
+                    ))
+        raise ValueError('Check me')
+        anno_edus2unanno_edus = {y.local_id():
+                                 [x.local_id() for x in unanno_edus
+                                  if y.encloses(x) or x.encloses(y)]
+                                 for y in anno_edus}
+        # RESUME HERE
+        # map schemas to EDUs
+        # anno_schs2anno_edus = {y.local_id():
+                               
+        anno2edu = {}  # anno : (edu, is_exact_match)
+
+        # create units doc from unannotated:
+        # port annotations: dialogue acts, resources, preferences
         units_doc = copy.deepcopy(unanno_doc)
-        # units: dialogue acts, resources, preferences
+        # * EDUs (dialogue acts and other EDUs)
+        # * dialogue acts: merge them into the regular EDUs
         acts = [x for x in anno_doc.units if x.type in DIALOGUE_ACTS]
-        # * backport dialogue act annotations to EDUs
         for edu in [x for x in units_doc.units if is_edu(x)]:
             # enclosing dialogue acts
             enclosing_acts = [y for y in acts if y.encloses(edu)]
-            if not enclosing_acts:
-                # no enclosing act is okay if there is no overlapping
-                # act either (this EDU is just missing any sort of
-                # unit annotation ; stac-check will detect and complain)
-                overlapping_acts = [z for z in acts if z.encloses(edu)]
-                if overlapping_acts:
-                    # if overlapping act, complain now because we'll lose
-                    # annotation
-                    err_msg = ('No enclosing but overlapping dialogue acts'
-                               'for {}'
-                               '\n'.join('  ' + str(z)
-                                         for z in overlapping_acts))
-                    raise ValueError(err_msg.format(edu))
-            elif len(enclosing_acts) == 1:
+            if len(enclosing_acts) == 1:
                 # unique: backport its type and features
                 act = enclosing_acts[0]
                 # mark span mismatch for additional reviewing
@@ -113,12 +410,14 @@ def split_annotated(dir_orig, doc, verbose=0):
                 else:
                     edu.type = act.type
                     edu.features.update(act.features)
-                if verbose:
-                    print('Updated EDU: {}'.format(edu))
-            else:  # > 1
+                # update the mapping from annotations to basic EDUs
+                anno2edu[act.local_id()] = (edu.local_id(), True)
+            elif len(enclosing_acts) > 1:
                 print('> 1 matching dialogue acts')
                 print('\n'.join('  ' + str(y) for y in enclosing_acts))
+
         # * port resources and preferences
+        # * port resources as they are
         units_doc.units.extend(x for x in anno_doc.units
                                if is_resource(x) or is_preference(x))
         # * port anaphors
@@ -146,16 +445,17 @@ def split_annotated(dir_orig, doc, verbose=0):
                 x.local_id(): x for x in cdu.members
                 if x.local_id() not in edus
             })
-        # map these non-EDUs to standard EDUs
-        # if there is no exact match, take the first enclosed EDU
-        # TODO ? extend to handle relations and schemas as well
+
+        # second step to map these non-EDUs to standard EDUs:
+        # if there is no exact match, take the first enclosed or
+        # enclosing EDU
+        # TODO ? extend to handle relations and schemas as well?
         # |- a priori, not necessary here because we start over from
         # |  unannotated, which is not supposed to contain any relation
         # |  or schema
-        anno2edu = {}  # anno : (edu, is_exact_match)
         for anno_id, anno in strangers.items():
             m_edus = [edu_id for edu_id, edu in edus.items()
-                      if anno.encloses(edu)]
+                      if anno.encloses(edu) or edu.encloses(anno)]
             if not m_edus:
                 err_msg = 'Unable to find EDU to replace {}'
                 raise ValueError(err_msg.format(anno))
@@ -164,7 +464,8 @@ def split_annotated(dir_orig, doc, verbose=0):
                 m_edu = m_edus[0]
                 anno2edu[anno_id] = (m_edu, True)
             else:
-                # mark the EDU as an inexact match
+                # several options: pick the first and mark the EDU as an
+                # inexact match
                 m_edu = m_edus[0]
                 anno2edu[anno_id] = (m_edu, False)
                 if verbose:
@@ -260,6 +561,30 @@ def split_annotated(dir_orig, doc, verbose=0):
             new_schema.fleshout(edus)
             disc_doc.schemas.append(new_schema)
 
+        # dump both files
+        bname = os.path.basename(os.path.splitext(anno_file)[0])
+        # discourse file
+        disc_anno_file = os.path.join(disc_dir, bname + '.aa')
+        write_annotation_file(disc_anno_file, disc_doc)
+        # units file
+        units_anno_file = os.path.join(units_dir, bname + '.aa')
+        write_annotation_file(units_anno_file, units_doc)
+        # create two symlinks to the same .ac file, for discourse and units
+        ac_path = os.path.join(game_dir_orig, 'unannotated',
+                               bname + '.ac')
+        for subdir in [disc_dir, units_dir]:
+            link_src = os.path.relpath(ac_path, subdir)
+            link_name = os.path.join(subdir, os.path.basename(ac_path))
+            if os.path.exists(link_name):
+                os.unlink(link_name)
+            try:
+                os.symlink(link_src, link_name)
+            except OSError:
+                print('Unable to create symlink {} to {}'.format(
+                    link_src, link_name
+                ))
+                raise
+
         # check that all annotations have been ported
         # gather all annotations from anno_doc
         anno_all_annos = set(x.local_id() for x in itertools.chain(
@@ -278,33 +603,18 @@ def split_annotated(dir_orig, doc, verbose=0):
         missing_annos = (anno_all_annos -
                          (units_all_annos | disc_all_annos | mapped_annos))
         if missing_annos:
-            print('Missing annotations from {}: {}'.format(
-                anno_file, missing_annos))
+            print('Missing annotations from {}:\n  {}'.format(
+                anno_file,
+                '\n  '.join(str(x) for x
+                            in set(anno_doc.units + anno_doc.relations +
+                                   anno_doc.schemas)
+                            if x.local_id() in missing_annos)
+            ))
+            print('unanno EDUs:\n  {}'.format(
+                '\n  '.join(str(x) for x
+                            in unanno_doc.units if is_edu(x))
+            ))
             raise ValueError('Ho?')
-
-        # dump both files
-        bname = os.path.basename(os.path.splitext(anno_file)[0])
-        # discourse file
-        disc_anno_file = os.path.join(disc_dir, bname + '.aa')
-        write_annotation_file(disc_anno_file, disc_doc)
-        # units file
-        units_anno_file = os.path.join(units_dir, bname + '.aa')
-        write_annotation_file(units_anno_file, units_doc)
-        # create symlinks to the .ac file
-        ac_path = os.path.join(game_dir_orig, 'unannotated',
-                               bname + '.ac')
-        for subdir in [disc_dir, units_dir]:
-            link_src = os.path.relpath(ac_path, subdir)
-            link_name = os.path.join(subdir, os.path.basename(ac_path))
-            if os.path.exists(link_name):
-                os.unlink(link_name)
-            try:
-                os.symlink(link_src, link_name)
-            except OSError:
-                print('Unable to create symlink {} to {}'.format(
-                    link_src, link_name
-                ))
-                raise
 
 
 def main():
