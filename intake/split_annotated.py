@@ -207,6 +207,7 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
     """
     anno_map = dict()
     cautious_map = dict()
+    new_cdus = []
 
     turns = [x for x in unanno_doc.units if is_turn(x)]
     for turn in turns:
@@ -220,29 +221,21 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
         # from `annotated`
         a_edus = [x for x in anno_doc.units
                   if is_edu(x) and turn.span.encloses(x.span)]
-        # 1. remove duplicate new annotations
-        # (EDUs that are introduced in `annotated` twice, as a segment
-        # and a dialogue act)
-        new_edus = [x for x in a_edus if x.local_id() not in u_ids]
-        a_dups = [(elt_a, elt_b) for elt_a, elt_b
-                  in itertools.combinations(
-                      sorted(new_edus, key=lambda x: x.local_id(),
-                             reverse=True), 2)
-                  if (elt_a.span == elt_b.span and
-                      ((elt_a.type in DIALOGUE_ACTS and
-                        elt_b.type not in DIALOGUE_ACTS) or
-                       (elt_a.type not in DIALOGUE_ACTS and
-                        elt_b.type in DIALOGUE_ACTS)))]
-        # map simple new segments to the segment with dialogue act
+        # 1. map duplicate segments to their equivalent with dialogue act
         # annotation
-        del_keep = [((elt_a, elt_b) if elt_b.type in DIALOGUE_ACTS
-                     else (elt_b, elt_a))
-                    for elt_a, elt_b in a_dups]
-        anno_map.update(del_keep)
-        # remove the useless new segments from the list of EDUs,
-        # so they don't generate conflicts
-        a_edus_useless = set(elt_a for elt_a, elt_b in del_keep)
-        a_edus = [x for x in a_edus if x not in a_edus_useless]
+        dup_items = [(elt_a, elt_b) for elt_a, elt_b
+                     in itertools.combinations(
+                         sorted(a_edus, key=lambda x: (
+                             x.type in DIALOGUE_ACTS, x.local_id())),
+                         2)
+                     if (span_eq(elt_a.text_span(), elt_b.text_span(),
+                                 eps=1) and
+                         elt_a.type not in DIALOGUE_ACTS and
+                         elt_b.type in DIALOGUE_ACTS)]
+        anno_map.update(dup_items)
+        # (locally) update the list of EDUs in anno_doc, so conflicts
+        # are not computed on trivially mapped segments
+        a_edus = [x for x in a_edus if x not in anno_map]
 
         # 2. list conflicts, then whitelist them progressively
         # NB: we sort EDUs in reverse using their local_ids, so that
@@ -252,45 +245,87 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
         # introduced in annotated
         pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b
                         in itertools.combinations(
-                            sorted(a_edus, key=lambda x: x.local_id(),
-                                   reverse=True), 2)
+                            sorted(a_edus, key=lambda x: (
+                                x.type in DIALOGUE_ACTS, x.local_id())),
+                            2)
                         if elt_a.overlaps(elt_b)]
 
-        # * exact matches, where the first member is an EDU from
-        # `unannotated` and the second member is a dialogue act on the
-        # same span ; allow off-by-one
-        exact_matches = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
-                         if (elt_a.local_id() in u_ids and
-                             span_eq(elt_a.text_span(), elt_b.text_span(),
-                                     eps=1))]
-        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
-                        if (elt_a, elt_b) not in set(exact_matches)]
-        # keep the new segments
-        anno_map.update(exact_matches)
-
-        # * EDU merges
-        edu_merges = dict()  # elt_b -> list of elt_a
+        # * Two cases are very close: EDU merges, and CDUs
+        rels_support = set(anno_map.get(x, x)
+                           for rel in anno_doc.relations
+                           for x in [rel.source, rel.target])
+        edu_merges = []  # list of (list of elt_a, elt_b)
+        cdu_guess = []  # list of (list of elt_a, elt_b)
         for elt_b, pairs in itertools.groupby(pw_conflicts,
                                               key=lambda x: x[1]):
-            sorted_a = sorted((y[0] for y in pairs), key=lambda z: z.span)
+            sorted_a = sorted((y[0] for y in pairs),
+                              key=lambda z: z.text_span())
             span_seq_a = Span(sorted_a[0].text_span().char_start,
                               sorted_a[-1].text_span().char_end)
-            # we approximately check that the sequence of original EDUs
+
+            # we approximately check that the sequence of EDUs elts_a
             # fully covers the span of elt_b, from start to end, with
             # no overlap or that the whole sequence is enclosed in
             # the annotation from `annotated` (this happens when some but
             # not all of the merged EDUs have been deleted)
-            if ((all(elt_a.local_id() in u_ids for elt_a in sorted_a) and
-                 (approximate_cover(sorted_a, elt_b) or
-                  elt_b.text_span().encloses(span_seq_a)))):
-                edu_merges[elt_b] = sorted_a
-        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
-                        if elt_b not in set(edu_merges.keys())]
+            if ((approximate_cover(sorted_a, elt_b) or
+                 elt_b.text_span().encloses(span_seq_a))):
+                # then, it is either an EDU merge or a CDU ;
+                # if any element of the sequence supports a relation,
+                # we take this as indicating a CDU
+                if any(y in rels_support for y in sorted_a):
+                    # broadcast type, features, metadata to the segments
+                    for elt_a in sorted_a:
+                        elt_a.type = _SPLIT_PREFIX + elt_b.type
+                        elt_a.features = elt_b.features
+                        elt_a.metadata = elt_b.metadata
+                    # transform elt_b into a CDU
+                    sch_relid = elt_b.local_id()
+                    sch_units = set(y.local_id() for y in sorted_a)
+                    sch_relas = set()
+                    sch_schms = set()
+                    sch_stype = 'Complex_discourse_unit'
+                    sch_feats = elt_b.features
+                    sch_metad = elt_b.metadata
+                    new_cdu = Schema(sch_relid, sch_units, sch_relas,
+                                     sch_schms, sch_stype, sch_feats,
+                                     metadata=sch_metad)
+                    new_cdus.append(new_cdu)
+                    # map former (bad) segment to its proper CDU version
+                    anno_map[elt_b] = new_cdu
+                    cdu_guess.append((sorted_a, elt_b))
+                    if verbose > 1:
+                        print('CDU {}\nwas {}, from\n  {}'.format(
+                            new_cdu, elt_b,
+                            '\n  '.join(str(z) for z in sorted_a)))
+                elif all(elt_a.local_id() in u_ids for elt_a in sorted_a):
+                    edu_merges.append((sorted_a, elt_b))
+                    if verbose > 1:
+                        print('EDU merge {} from\n  {}'.format(
+                            elt_b, '\n  '.join(str(z) for z in sorted_a)))
+                else:
+                    err_msg = 'Weird approximate cover:\n{}\n{}'
+                    raise ValueError(err_msg.format(
+                        ', '.join(str(y) for y in sorted_a),
+                        elt_b
+                    ))
+        # map each of the segments to its CDU, so these pairs can be
+        # removed from the list of conflicts later
+        cdu_map = dict()
+        for elts_a, elt_b in cdu_guess:
+            map_items = [(elt_a, elt_b) for elt_a in elts_a]
+            cdu_map.update(map_items)
+            cautious_map.update(map_items)
         # map each of the merged segments to the new, bigger EDU + mark
-        for elt_b, elts_a in edu_merges.items():
+        for elts_a, elt_b in edu_merges:
             map_items = [(elt_a, elt_b) for elt_a in elts_a]
             anno_map.update(map_items)
             cautious_map.update(map_items)
+        # update list of conflicts: remove pairs that contain a segment
+        # and its merged EDU, or a segment and its enclosing CDU
+        pw_conflicts = [(elt_a, elt_b) for elt_a, elt_b in pw_conflicts
+                        if (anno_map.get(elt_a, elt_a) != elt_b and
+                            cdu_map.get(elt_a, elt_a) != elt_b)]
 
         # * EDU splits
         edu_splits = dict()  # elt_a -> list of elt_b
@@ -322,9 +357,14 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
                    for x, y in anno_map.items()}
     cautious_map_id = {x.local_id(): y.local_id()
                        for x, y in cautious_map.items()}
-    # * forget mapped units
+    # * forget mapped units and segments rewritten as CDUs
     anno_doc.units = [x for x in anno_doc.units
-                      if not is_edu(x) or x.local_id() not in anno_map_id]
+                      if (not is_edu(x) or
+                          x.local_id() not in anno_map_id)]
+    # * add the new CDUs to the list of schemas
+    anno_doc.schemas.extend(new_cdus)
+
+    # rewrite the support of relations and schemas
     objects = {x.local_id(): x
                for x in itertools.chain(anno_doc.units, anno_doc.relations,
                                         anno_doc.schemas)}
@@ -347,9 +387,6 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
         sch.relations = set(anno_map_id.get(x, x) for x in sch.relations)
         sch.schemas = set(anno_map_id.get(x, x) for x in sch.schemas)
         sch.type = sch.type
-        # if necessary, mark schema type for review
-        if any(x for x in sch.span if x in cautious_map_id):
-            sch.type = _SPLIT_PREFIX + sch.type
         # sch.features = sch.features
         # sch.metadata = sch.metadata
         sch.span = sch.units | sch.relations | sch.schemas
