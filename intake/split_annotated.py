@@ -9,13 +9,11 @@ import copy
 from glob import glob
 import itertools
 import os
-import sys
 
 import educe.glozz
-from educe.annotation import (Relation, RelSpan, Schema, Span)
-from educe.stac.annotation import (addressees, DIALOGUE_ACTS, is_cdu, is_edu,
-                                   is_preference, is_resource,
-                                   is_relation_instance, is_turn)
+from educe.annotation import (RelSpan, Schema, Span)
+from educe.stac.annotation import (addressees, DIALOGUE_ACTS, is_edu,
+                                   is_turn)
 from educe.stac.corpus import write_annotation_file
 
 
@@ -24,6 +22,7 @@ DIALOGUE_ACTS = DIALOGUE_ACTS + ['Strategic_comment']
 # pylint: disable=fixme
 _SPLIT_PREFIX = 'FIXME:'
 # pylint: enable=fixme
+
 
 def is_empty_dialogue_act(anno):
     """Return True if anno is an empty dialogue act.
@@ -46,7 +45,7 @@ def is_empty_dialogue_act(anno):
             anno.type in DIALOGUE_ACTS and
             addressees(anno) is None and
             (anno.features.get('Surface_act') == 'Please choose...'))
-    
+
 
 def fix_likely_annotation_errors(anno_doc, verbose=1):
     """Fix a document for likely annotation errors due to glozz UX.
@@ -221,18 +220,26 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
         # from `annotated`
         a_edus = [x for x in anno_doc.units
                   if is_edu(x) and turn.span.encloses(x.span)]
-        # 1. map duplicate segments to their equivalent with dialogue act
-        # annotation
+        # 1. map new segments to their original equivalent, backporting
+        # dialogue act annotation
         dup_items = [(elt_a, elt_b) for elt_a, elt_b
                      in itertools.combinations(
                          sorted(a_edus, key=lambda x: (
-                             x.type in DIALOGUE_ACTS, x.local_id())),
+                             x.local_id() in u_ids,
+                             x.local_id())),
                          2)
                      if (span_eq(elt_a.text_span(), elt_b.text_span(),
                                  eps=1) and
-                         elt_a.type not in DIALOGUE_ACTS and
-                         elt_b.type in DIALOGUE_ACTS)]
+                         elt_b.local_id() in u_ids)]
         anno_map.update(dup_items)
+        # backport dialogue act annotation to original segment
+        for elt_a, elt_b in dup_items:
+            if elt_a.type in DIALOGUE_ACTS:
+                # backport annotation to original segment elt_b
+                elt_b.type = elt_a.type
+                elt_b.features = elt_a.features
+                for k in ['lastModifier', 'lastModificationDate']:
+                    elt_b.metadata[k] = elt_a.metadata[k]
         # (locally) update the list of EDUs in anno_doc, so conflicts
         # are not computed on trivially mapped segments
         a_edus = [x for x in a_edus if x not in anno_map]
@@ -278,14 +285,15 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
                     for elt_a in sorted_a:
                         elt_a.type = _SPLIT_PREFIX + elt_b.type
                         elt_a.features = elt_b.features
-                        elt_a.metadata = elt_b.metadata
+                        for k in ['lastModifier', 'lastModificationDate']:
+                            elt_a.metadata[k] = elt_b.metadata[k]
                     # transform elt_b into a CDU
                     sch_relid = elt_b.local_id()
                     sch_units = set(y.local_id() for y in sorted_a)
                     sch_relas = set()
                     sch_schms = set()
                     sch_stype = 'Complex_discourse_unit'
-                    sch_feats = elt_b.features
+                    sch_feats = {}
                     sch_metad = elt_b.metadata
                     new_cdu = Schema(sch_relid, sch_units, sch_relas,
                                      sch_schms, sch_stype, sch_feats,
@@ -345,7 +353,7 @@ def infer_resegmentation(unanno_doc, anno_doc, verbose=0):
             map_items = [(elt_a, elts_b[0])]
             anno_map.update(map_items)
             cautious_map.update(map_items)
-        
+
         if verbose:
             if pw_conflicts:
                 print('Conflict:')
@@ -445,7 +453,7 @@ def split_annotated(dir_orig, doc, verbose=0):
 
         # read and filter the `annotated` file
         anno_doc = educe.glozz.read_annotation_file(anno_file, text_file)
-        anno_doc = fix_likely_annotation_errors(anno_doc, verbose=1)
+        anno_doc = fix_likely_annotation_errors(anno_doc, verbose=verbose)
 
         # read the `unannotated` file
         unanno_file = os.path.join(unannotated_dir,
@@ -453,7 +461,7 @@ def split_annotated(dir_orig, doc, verbose=0):
         unanno_doc = educe.glozz.read_annotation_file(unanno_file, text_file)
 
         # infer resegmentation in `annotated`
-        anno_doc = infer_resegmentation(unanno_doc, anno_doc, verbose=1)
+        anno_doc = infer_resegmentation(unanno_doc, anno_doc, verbose=verbose)
 
         # create `units` doc from the cleaned `annotated`
         # port annotations: dialogue acts, resources, preferences
@@ -470,10 +478,10 @@ def split_annotated(dir_orig, doc, verbose=0):
         disc_doc = copy.deepcopy(anno_doc)
         # remove dialogue act annotation from segments, so that they revert
         # to being basic EDUs
-        for x in disc_doc.units:
-            if is_edu(x):
-                x.type = 'Segment'
-                x.features = {}
+        for disc_unit in disc_doc.units:
+            if is_edu(disc_unit):
+                disc_unit.type = 'Segment'
+                disc_unit.features = {}
         # filter anaphoric relations
         disc_doc.relations = [x for x in disc_doc.relations
                               if x.type != 'Anaphor']
