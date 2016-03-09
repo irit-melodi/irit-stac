@@ -36,6 +36,7 @@ from itertools import chain
 import argparse
 import codecs
 import re
+import string
 import sys
 
 from educe.stac.util import csv as stac_csv
@@ -66,31 +67,48 @@ class Gen(Enum):
     """
     first = 1
     second = 2
+    third = 3
 # pylint: enable=no-init, too-few-public-methods
 
-EVENTS = {Gen.first: ['traded',
-                      'gets',
-                      'rolled',
-                      'built',
-                      'made an offer to trade'],
-          Gen.second: ['robber',
-                       'stole',
-                       # private by rights but treating as public
-                       # because it's so useful
-                       "can't end your turn yet",
-                       'Type *ADDTIME* to',
-                       'game will expire in',
-                       'has won the game',
-                       'discarded',
-                       'needs to discard',
-                       'played a']}
+EVENTS = {
+    # non-ling events exported to CSV in the first round of annotation
+    Gen.first: [
+        'traded',
+        'gets',
+        'rolled',
+        'built',
+        'made an offer to trade'
+    ],
+    # additional non-ling events for the second round of annotation
+    Gen.third: [
+        'robber',
+        'stole',
+        # private by rights but treating as public
+        # because it's so useful
+        "can't end your turn yet",
+        'Type *ADDTIME* to',
+        'game will expire in',
+        'has won the game',
+        'discarded',
+        'needs to discard',
+        'played a',
+        # WIP: capture additional server messages
+        # * by request on the trello card
+        'monopolized',
+        # * on my own initiative (MM: ask JH and NA)
+        'picking a starting player',
+        "can't make that trade",
+        "can't roll right now",
+    ]
+}
 
-PRIVATE_MESSAGE = re.compile(r'^You stole|stole .* from you')
+PRIVATE_MESSAGE = re.compile(r'^You (stole|monopolized|have been connected)|stole .* from you')
 
-SERVER = re.compile(r"(?P<name>Server)\|text="
-                    r"(?P<event>.+(" +
-                    r'|'.join(chain.from_iterable(EVENTS.values())) +
-                    r").+$)")
+SERVER_RE = (r"(?P<name>Server)\|text="
+             r"(?P<event>.+(" +
+             r'|'.join(chain.from_iterable(EVENTS.values())) +
+             r").+$)")
+SERVER = re.compile(SERVER_RE)
 
 PLAYER = re.compile(r"player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
                     r"(?P<state>.+)\|text=(?P<text>.+)\]$")
@@ -103,13 +121,37 @@ SPECTATOR = re.compile(r"^player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
 
 # WIP
 # other game events, visible on the UI but not linguistically realized
+# * all were explicitly requested on the trello card
 OTHER_EVENTS = {
-    'SOCJoinGame': '{nickname} joined the game',
-    'SOCSitDown': '{nickname} sat down',
-    'SOCStartGame': 'game started',  # opens *and closes* the start block
-    'SOCBoardLayout': 'board layout set',  # inside the start block
-    # leaving game is realized linguistically in a Server message
-    # 'SOCLeaveGame': '{nickname} left the game',
+    'join game': (
+        r"SOCJoinGame:nickname=(?P<name>[^|]+)\|password=[^|]+\|host=(?P<host>[^|]+)\|",
+        '{name} joined the game.'
+    ),
+    'sit down': (
+        r"SOCSitDown:game=[^|]+\|nickname=(?P<name>[^|]+)\|playerNumber=(?P<plnb>[0-9]+)",
+        '{name} sat down at seat {plnb}.'
+    ),
+    'start game': (
+        # this event appears as a block of lines which is opened
+        # and closed by a 'SOCStartGame' line
+        r"SOCStartGame",
+        'Game started.'
+    ),
+    'board layout': (
+        # this is the first line inside the start game block
+        r"SOCBoardLayout",
+        'Board layout set.'
+    ),
+    # linguistically realized (server msg)
+    # 'leave game': (
+    #     r"SOCLeaveGame:nickname=(?P<name>[^|]+)\|",
+    #     '{name} left the game'
+    # ),
+    'reject offer': (
+        # this line appears twice, we should just ignore the 2nd occurrence
+        r"SOCRejectOffer:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)",
+        '{name} rejected trade offer.'
+    ),
 }
 
 
@@ -160,6 +202,23 @@ class TurnCounter(object):
             self.push()
             self.incr()
         elif gen == Gen.second and len(self) == 2:
+            self.incr()
+        # WIP third gen
+        elif gen == Gen.first and len(self) == 3:
+            self.pop()
+            self.pop()
+            self.incr()
+        elif gen == Gen.second and len(self) == 3:
+            self.pop()
+            self.incr()
+        elif gen == Gen.third and len(self) == 1:
+            self.push()
+            self.push()
+            self.incr()
+        elif gen == Gen.third and len(self) == 2:
+            self.push()
+            self.incr()
+        elif gen == Gen.third and len(self) == 3:
             self.incr()
         else:
             oops = ('impossible: incompatible generation ({})'
@@ -247,7 +306,7 @@ def guess_generation(event):
     return gen
 
 
-def parse_line(ctr, line, include_gen2=True):
+def parse_line(ctr, line, include_gen2=True, parsing_state=None):
     """Parse timestamped line.
 
     From a soclog line to either None or a Turn ::
@@ -264,6 +323,10 @@ def parse_line(ctr, line, include_gen2=True):
         String to parse
     include_gen2 : boolean
         If True, include (non-linguistic) 2nd generation information.
+    parsing_state : dictionary, optional
+        Provide a description of the current state of the parsing, e.g.
+        to avoid generating duplicate events when the soclog contains
+        two or more lines for an event.
 
     Returns
     -------
@@ -317,7 +380,53 @@ def parse_line(ctr, line, include_gen2=True):
                        match_player.group("text"),
                        state=state)
     else:
-        return None
+        # WIP non-ling
+        for k, v in OTHER_EVENTS.items():
+            evt_re, evt_msg = v  # unpack the event regex and message
+            evt_re_obj = re.compile(evt_re)
+            evt_search = evt_re_obj.search(line)
+            if not evt_search:
+                continue
+
+            # get named groups from regex
+            evt_fields = evt_search.groupdict()
+            if k == 'join game':
+                # keep only the latest "join game" event
+                if evt_fields['host'] != 'dummyhost':
+                    continue
+            elif k == 'sit down':
+                # sit down generates two messages, the first one with
+                # nickname "dummy" should be ignored
+                if evt_fields['name'] == 'dummy':
+                    continue
+                # store mapping from player number to nickname
+                pl_nb = evt_fields['plnb']
+                pl_name = evt_fields['name']
+                if 'plnb2name' not in parsing_state:
+                    parsing_state['plnb2name'] = dict()
+                parsing_state['plnb2name'][pl_nb] = pl_name
+
+            # this line matches a known pattern: generate a nonling turn
+            ctr.incr_at_gen(Gen.third)
+            # extract the field names from the "format string"
+            msg_fnames = [name for text, name, spec, conv
+                          in string.Formatter().parse(evt_msg)]
+            # if a player name is expected but the soclog line only
+            # provides a player number, map it
+            if 'name' in msg_fnames and 'name' not in evt_fields:
+                if 'plnb' in evt_fields:
+                    # use player name instead of number, in the generated
+                    # message
+                    pl_nb = evt_fields['plnb']
+                    evt_fields['name'] = parsing_state['plnb2name'][pl_nb]
+                else:
+                    raise ValueError("Fail to find required player name")
+            return mk_turn(str(ctr),
+                           'UI',  # custom emitter
+                           evt_msg.format(**evt_fields),  # defined text
+                           state=None)
+        # end WIP
+        #was: return None
 
 
 def soclog_to_turns(soclog, sel_gen='gen2'):
@@ -332,6 +441,10 @@ def soclog_to_turns(soclog, sel_gen='gen2'):
         to intake scripts until 2016-01, gen2_ling_only adds spectator
         messages, gen2 is for situated communication.
     """
+    # WIP keep parsing state ; currently stores mapping from player number
+    # to name
+    parsing_state = dict()
+
     ctr = TurnCounter()
     for line in soclog:
         line = line.strip()
@@ -351,7 +464,8 @@ def soclog_to_turns(soclog, sel_gen='gen2'):
             # timestamped line
             # don't include non-ling turns from 2nd generation
             include_gen2 = (sel_gen == 'gen2')
-            turn = parse_line(ctr, line, include_gen2=include_gen2)
+            turn = parse_line(ctr, line, include_gen2=include_gen2,
+                              parsing_state=parsing_state)
             if turn is not None:
                 yield turn
         elif len(timestamp_ht) == 1:
