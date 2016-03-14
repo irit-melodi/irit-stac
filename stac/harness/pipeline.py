@@ -11,6 +11,8 @@ import os
 import re
 import sys
 
+from joblib import Parallel
+
 from attelo.harness import (RuntimeConfig)
 from attelo.harness.interface import (HarnessException)
 from attelo.harness.util import call, makedirs
@@ -245,7 +247,7 @@ def _get_decoding_jobs(mpack, lconf, econf):
     cache = lconf.model_paths(econf.learner,
                               None)
     parser = econf.parser.payload
-    parser.fit([], [], cache)  # we assume everything is cached
+    parser.fit([], [], cache=cache)  # we assume everything is cached
     return ath_parse.jobs(mpack, parser, output_path)
 
 
@@ -260,7 +262,7 @@ def decode(lconf, evaluations):
                            vocab_path)
     decoder_jobs = concat_i(_get_decoding_jobs(mpack, lconf, econf)
                             for econf in evaluations)
-    lconf.parallel(decoder_jobs)
+    Parallel(n_jobs=lconf.runcfg.n_jobs, verbose=True)(decoder_jobs)
     for econf in evaluations:
         output_path = attelo_result_path(lconf, econf)
         ath_parse.concatenate_outputs(mpack, output_path)

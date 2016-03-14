@@ -12,11 +12,10 @@ import argparse
 import copy
 import os
 
+import joblib
 from scipy.sparse import lil_matrix
 from sklearn.datasets import load_svmlight_file
-from attelo.io import (save_model,
-                       load_model,
-                       load_labels,
+from attelo.io import (load_labels,
                        load_vocab)
 
 from educe.stac.annotation import set_addressees
@@ -44,7 +43,7 @@ def learn_and_save(learner, feature_path, output_path):
     model = learner.fit(data, target)
     if not fp.exists(output_dir):
         os.makedirs(output_dir)
-    save_model(output_path, model)
+    joblib.dump(model, output_path)
 
 
 # ---------------------------------------------------------------------
@@ -122,8 +121,9 @@ def command_annotate(args):
     args.ignore_cdus = False
     args.parsing = True
     args.single = True
+    args.strip_mode = 'head'  # FIXME should not be specified here
     inputs = stac_features.read_corpus_inputs(args)
-    model = load_model(args.model)
+    model = joblib.load(args.model)
     vocab = {f: i for i, f in
              enumerate(load_vocab(args.vocabulary))}
     labels = load_labels(args.labels)

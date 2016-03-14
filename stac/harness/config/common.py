@@ -12,8 +12,11 @@ from attelo.harness.config import (EvaluationConfig,
                                    LearnerConfig,
                                    Keyed)
 from attelo.learning.oracle import (AttachOracle, LabelOracle)
+from attelo.parser.attach import AttachClassifierWrapper
 from attelo.parser.full import (JointPipeline,
                                 PostlabelPipeline)
+from attelo.parser.label import (LabelClassifierWrapper, SimpleLabeller)
+from attelo.parser.pipeline import (Pipeline)
 
 
 def combined_key(*variants):
@@ -75,7 +78,7 @@ def decoder_last():
 
 
 def decoder_local(threshold):
-    "our instantiation of the local basline decoder"
+    "our instantiation of the local baseline decoder"
     return Keyed('local', LocalBaseline(threshold, True))
 
 # ---------------------------------------------------------------------
@@ -113,6 +116,23 @@ def mk_post(klearner, kdecoder):
     parser = PostlabelPipeline(learner_attach=klearner.attach.payload,
                                learner_label=klearner.label.payload,
                                decoder=kdecoder.payload)
+    return EvaluationConfig(key=key,
+                            settings=settings,
+                            learner=klearner,
+                            parser=Keyed(parser_key, parser))
+
+def mk_bypass(klearner, kdecoder):
+    """ Return a bypass decoder config
+
+    Used if the decoder itself also labels the pairs """
+    settings = _core_settings('AD.L-byp', klearner)
+    parser_key = combined_key(settings, kdecoder)
+    key = combined_key(klearner, parser_key)
+    steps = [('attach weights', AttachClassifierWrapper(klearner.attach.payload)),
+             ('label weights', LabelClassifierWrapper(klearner.label.payload)),
+             ('decode', kdecoder.payload),
+            ]
+    parser = Pipeline(steps=steps)
     return EvaluationConfig(key=key,
                             settings=settings,
                             learner=klearner,

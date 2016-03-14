@@ -5,6 +5,7 @@ Reading back the CONLL outputs from attelo
 from __future__ import print_function
 from collections import namedtuple
 import copy
+import re
 
 from educe.annotation import RelSpan, Relation
 import educe.corpus
@@ -55,12 +56,23 @@ def guess_doc(corpus, doc_subdoc):
         return matches[0]
 
 
+# ex: pilot03_2011_10_19_16_30_51_+0100
+DOC_TIMESTAMP_PATTERN = r"(?P<doc_id>.*_[0-9]{4}_[0-9]{2}_[0-9]{2}_[0-9]{2}_[0-9]{2}_[0-9]{2}_[-+][0-9]{4})_(?P<subdoc_id>[0-9]+)_(?P<loc_id>.*)"
+DOC_TIMESTAMP = re.compile(DOC_TIMESTAMP_PATTERN)
+
 def split_id(anno_id):
     """
     Split a global annotation into its global components and its
     local suffix
     """
-    doc, subdoc, suffix = anno_id.split('_', 2)
+    # WIP match a widespread format: doc_timestamp_anno
+    m = DOC_TIMESTAMP.match(anno_id)
+    if m is not None:
+        doc = m.group('doc_id')
+        subdoc = m.group('subdoc_id')
+        suffix = m.group('loc_id')
+    else:
+        doc, subdoc, suffix = anno_id.split('_', 2)
     return ((doc, subdoc), suffix)
 
 
