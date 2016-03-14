@@ -49,6 +49,7 @@ import codecs
 import csv
 import datetime
 import itertools
+import re
 import sys
 import time
 
@@ -128,6 +129,7 @@ def parse_builds(builds):
     string that would go in the .aa file
     """
     res = []
+    builds = builds.strip()  # implies YUCK => return ""
     if builds:
         for item in builds.split("];"):
             if ']' not in item:
@@ -362,8 +364,19 @@ def utf8_csv_reader(utf8_data, **kwargs):
 
 
 def save_output(basename, dialoguetext, root):
-    """
-    Save output to a pair of files with a given name prefix
+    """Save output to a pair of files with a given name prefix.
+
+    The pair of files has extensions .ac (for text) and .aa (for
+    annotations).
+
+    Parameters
+    ----------
+    basename : string
+        Basename for files.
+    dialoguetext : string
+        Text that supports the annotation.
+    root : xml.etree.Element
+        XML representation of the annotation on `dialoguetext`.
     """
     with codecs.open(basename+".ac", "w", "utf-8") as out:
         out.write(dialoguetext)
@@ -386,8 +399,14 @@ def process_turn(root, dialoguetext, turn, is_player):
     prefix = " : ".join([turn.number, turn.emitter, ""])
     dialoguetext += prefix
     if is_player:
-        turn_segments = [x for x in turn.rawtext.split('&')
+        # split on '&'
+        # NEW except if it is escaped (preceded by '\'); then delete the
+        # escaping character to restore the original text
+        # this pattern uses "negative lookbehind" (?<!...),
+        # see doc of the `re` module
+        turn_segments = [x for x in re.split('(?<![\\\])&', turn.rawtext)
                          if len(x) > 0]
+        turn_segments = [x.replace('\&', '&') for x in turn_segments]
     else:
         pre_segments = [x for x in turn.rawtext.split('. ')]
         if pre_segments:
@@ -405,13 +424,13 @@ def process_turn(root, dialoguetext, turn, is_player):
     # .aa typographic annotations
 
     if dialoguetext.index(turn_text) != 0:
-        typstart = len(dialoguetext)\
-            - len(turn_text)\
-            - len(prefix)\
-            - 1
+        typstart = (len(dialoguetext) -
+                    len(turn_text) -
+                    len(prefix) -
+                    1)
     else:
         typstart = 0
-    typend = len(dialoguetext)-1
+    typend = len(dialoguetext) - 1
 
     # .aa actual pre-annotations (Turn ID, Timestamp, Emitter)
     append_turn(root, turn, Span(typstart, typend), is_player)
@@ -421,12 +440,19 @@ def process_turn(root, dialoguetext, turn, is_player):
     return dialoguetext
 
 
-def process_turns(turns):
+def process_turns(turns, gen2_ling_only=False):
     """
     Process a list of Turns and return a pair of:
 
     * text
     * standoff annotations (an XML element)
+
+    Parameters
+    ----------
+    turns :
+    gen2_ling_only : boolean
+        If True, restrict additional (aka 2nd generation) turns to
+        linguistic turns that escaped the 1st generation scripts.
     """
     dialoguetext = " "  # for the .ac file
     prev_dialogue = None
@@ -464,13 +490,14 @@ def process_turns(turns):
                 append_dialogue(root, event, span)
 
         # server turns
-        if "you" not in turn.rawtext:
+        if (not gen2_ling_only and
+            "you" not in turn.rawtext):
             dialoguetext = process_turn(root, dialoguetext, turn,
                                         is_player=False)
 
     # last dialogue : only if it doesn't end in a Server's statement !!
-    if prev_dialogue is None or\
-       prev_dialogue.right != len(dialoguetext)-1:
+    if ((prev_dialogue is None or
+         prev_dialogue.right != len(dialoguetext) - 1)):
 
         span = Span(left=prev_dialogue.right if prev_dialogue else 0,
                     right=len(dialoguetext))
@@ -489,6 +516,9 @@ def parse_args():
     parser.add_argument('--start',
                         type=int,
                         help="starting timestamp (default: current time)")
+    parser.add_argument('--gen2-ling-only',
+                        action='store_true',
+                        help='only include linguistic turns from 2nd generation')
 
     return parser.parse_args()
 
@@ -502,7 +532,8 @@ def main():
         csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
         csvreader.next()  # skip header row
         turns = list(read_rows(list(csvreader)))
-        txt, xml = process_turns(turns)
+        txt, xml = process_turns(turns,
+                                 gen2_ling_only=args.gen2_ling_only)
 
     save_output(filename.split(".")[0], txt, xml)
 

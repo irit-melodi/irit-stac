@@ -15,8 +15,8 @@ import csv
 import sys
 
 from educe.stac.annotation import addressees, is_edu
+from educe.stac.context import Context
 from educe.stac.util.args import read_corpus
-from educe.stac.util.context import Context
 from educe.stac.util import prettifyxml
 
 from stac import settlers_xml as stx
@@ -201,7 +201,10 @@ def main(args):
         rconll = read_tsv(args.resources)
     else:
         rconll = []
-    background = Background(contexts=Context.for_corpus(corpus),
+    contexts = {}
+    for key in corpus:
+        contexts.update(Context.for_edus(corpus[key]))
+    background = Background(contexts=contexts,
                             resources=_extract_resources(rconll))
     doc = corpus.values()[0]
     decoder_output = read_tsv(args.input)

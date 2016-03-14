@@ -36,6 +36,7 @@ from itertools import chain
 import argparse
 import codecs
 import re
+import string
 import sys
 
 from educe.stac.util import csv as stac_csv
@@ -66,34 +67,92 @@ class Gen(Enum):
     """
     first = 1
     second = 2
+    third = 3
 # pylint: enable=no-init, too-few-public-methods
 
-EVENTS = {Gen.first: ['traded',
-                      'gets',
-                      'rolled',
-                      'built',
-                      'made an offer to trade'],
-          Gen.second: ['robber',
-                       'stole',
-                       # private by rights but treating as public
-                       # because it's so useful
-                       "can't end your turn yet",
-                       'Type *ADDTIME* to',
-                       'game will expire in',
-                       'has won the game',
-                       'discarded',
-                       'needs to discard',
-                       'played a']}
+EVENTS = {
+    # non-ling events exported to CSV in the first round of annotation
+    Gen.first: [
+        'traded',
+        'gets',
+        'rolled',
+        'built',
+        'made an offer to trade'
+    ],
+    # additional non-ling events for the second round of annotation
+    Gen.third: [
+        'robber',
+        'stole',
+        # private by rights but treating as public
+        # because it's so useful
+        "can't end your turn yet",
+        'Type *ADDTIME* to',
+        'game will expire in',
+        'has won the game',
+        'discarded',
+        'needs to discard',
+        'played a',
+        # WIP: capture additional server messages
+        # * by request on the trello card
+        'monopolized',
+        # * on my own initiative (MM: ask JH and NA)
+        'picking a starting player',
+        "can't make that trade",
+        "can't roll right now",
+    ]
+}
 
-PRIVATE_MESSAGE = re.compile(r'^You stole|stole .* from you')
+PRIVATE_MESSAGE = re.compile(r'^You (stole|monopolized|have been connected)|stole .* from you')
 
-SERVER = re.compile(r"(?P<name>Server)\|text="
-                    r"(?P<event>.+(" +
-                    r'|'.join(chain.from_iterable(EVENTS.values())) +
-                    r").+$)")
+SERVER_RE = (r"(?P<name>Server)\|text="
+             r"(?P<event>.+(" +
+             r'|'.join(chain.from_iterable(EVENTS.values())) +
+             r").+$)")
+SERVER = re.compile(SERVER_RE)
 
 PLAYER = re.compile(r"player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
                     r"(?P<state>.+)\|text=(?P<text>.+)\]$")
+
+# spectator messages, first occurrence in soclog has no timestamp
+# but it triggers two lines in the soclog ; we read the first one
+# to infer a timestamp (cf. soclog_to_turns)
+SPECTATOR = re.compile(r"^player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
+                       r"text=(?P<text>.+)$")
+
+# WIP
+# other game events, visible on the UI but not linguistically realized
+# * all were explicitly requested on the trello card
+OTHER_EVENTS = {
+    'join game': (
+        r"SOCJoinGame:nickname=(?P<name>[^|]+)\|password=[^|]+\|host=(?P<host>[^|]+)\|",
+        '{name} joined the game.'
+    ),
+    'sit down': (
+        r"SOCSitDown:game=[^|]+\|nickname=(?P<name>[^|]+)\|playerNumber=(?P<plnb>[0-9]+)",
+        '{name} sat down at seat {plnb}.'
+    ),
+    'start game': (
+        # this event appears as a block of lines which is opened
+        # and closed by a 'SOCStartGame' line
+        r"SOCStartGame",
+        'Game started.'
+    ),
+    'board layout': (
+        # this is the first line inside the start game block
+        r"SOCBoardLayout",
+        'Board layout set.'
+    ),
+    # linguistically realized (server msg)
+    # 'leave game': (
+    #     r"SOCLeaveGame:nickname=(?P<name>[^|]+)\|",
+    #     '{name} left the game'
+    # ),
+    'reject offer': (
+        # this line appears twice, we should just ignore the 2nd occurrence
+        r"SOCRejectOffer:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)",
+        '{name} rejected trade offer.'
+    ),
+}
 
 
 class TurnCounter(object):
@@ -143,6 +202,23 @@ class TurnCounter(object):
             self.push()
             self.incr()
         elif gen == Gen.second and len(self) == 2:
+            self.incr()
+        # WIP third gen
+        elif gen == Gen.first and len(self) == 3:
+            self.pop()
+            self.pop()
+            self.incr()
+        elif gen == Gen.second and len(self) == 3:
+            self.pop()
+            self.incr()
+        elif gen == Gen.third and len(self) == 1:
+            self.push()
+            self.push()
+            self.incr()
+        elif gen == Gen.third and len(self) == 2:
+            self.push()
+            self.incr()
+        elif gen == Gen.third and len(self) == 3:
             self.incr()
         else:
             oops = ('impossible: incompatible generation ({})'
@@ -214,6 +290,11 @@ def guess_generation(event):
     """
     Given an event string, determine what generation of this
     script it corresponds to
+
+    Returns
+    -------
+    gen : Gen
+        Generation this event belongs to.
     """
     for gen_key, gen_events in EVENTS.items():
         if any(x in event for x in gen_events):
@@ -225,20 +306,45 @@ def guess_generation(event):
     return gen
 
 
-def parse_line(ctr, line):
-    """
+def parse_line(ctr, line, include_gen2=True, parsing_state=None):
+    """Parse timestamped line.
+
     From a soclog line to either None or a Turn ::
 
         (TurnCounter, String) -> IO (Either None Turn)
 
     Note that this mutates the turn counter object
+
+    Parameters
+    ----------
+    ctr : TurnCounter
+        Turn counter, layered by generation
+    line : string
+        String to parse
+    include_gen2 : boolean
+        If True, include (non-linguistic) 2nd generation information.
+    parsing_state : dictionary, optional
+        Provide a description of the current state of the parsing, e.g.
+        to avoid generating duplicate events when the soclog contains
+        two or more lines for an event.
+
+    Returns
+    -------
+    turn : Turn or None
+        Turn for the given line.
     """
-    line = line.strip()
+    # line: <timestamp>:<SOCevent>:<description>
+    # the entire timestamp in the soclogs is in fact formatted as
+    # year:month:day:hour:minute:second:millisecond:utcoffset
+    # i.e. a format specification approximately like:
+    # YYYY:MM:DD:HH:MM:SS:mmm:+HHMM
+    # here, we keep only part of it, forgetting the year, month, day
+    # and signed UTC offset
     timestamp = line.split(":+", 1)[0]
     timestamp = ":".join(timestamp.split(":")[-4:])
 
-    match1 = SERVER.search(line)
-    match2 = PLAYER.search(line) if not match1 else None
+    match_server = SERVER.search(line)
+    match_player = PLAYER.search(line) if not match_server else None
 
     def mk_turn(turn_id, speaker, text, state=None):
         'convenience helper to construct Turn object'
@@ -248,40 +354,150 @@ def parse_line(ctr, line):
                              emitter=speaker,
                              res=state.resources_string() or YUCK,
                              builds=state.buildups_string(),
-                             rawtext=text,
+                             rawtext=text.replace('&', '\&'),
                              annot=YUCK,
                              comment=YUCK)
 
-    if match1:
-        event = match1.group("event")
+    if match_server:
+        event = match_server.group("event")
         gen = guess_generation(event)
+        if gen == Gen.second and not include_gen2:
+            # don't include (non-linguistic) 2nd generation events
+            return None
         if PRIVATE_MESSAGE.search(event):
             # skip private messages
             return None
         ctr.incr_at_gen(gen)
         return mk_turn(str(ctr),
-                       match1.group("name"),
-                       event)
-    elif match2:
+                       match_server.group("name"),
+                       event,
+                       state=None)
+    elif match_player:
         ctr.incr_at_gen(Gen.first)
-        state = parse_state(match2.group("state"))
+        state = parse_state(match_player.group("state"))
         return mk_turn(str(ctr),
-                       match2.group("name"),
-                       match2.group("text"),
-                       state)
+                       match_player.group("name"),
+                       match_player.group("text"),
+                       state=state)
     else:
-        return None
+        # WIP non-ling
+        for k, v in OTHER_EVENTS.items():
+            evt_re, evt_msg = v  # unpack the event regex and message
+            evt_re_obj = re.compile(evt_re)
+            evt_search = evt_re_obj.search(line)
+            if not evt_search:
+                continue
+
+            # get named groups from regex
+            evt_fields = evt_search.groupdict()
+            if k == 'join game':
+                # keep only the latest "join game" event
+                if evt_fields['host'] != 'dummyhost':
+                    continue
+            elif k == 'sit down':
+                # sit down generates two messages, the first one with
+                # nickname "dummy" should be ignored
+                if evt_fields['name'] == 'dummy':
+                    continue
+                # store mapping from player number to nickname
+                pl_nb = evt_fields['plnb']
+                pl_name = evt_fields['name']
+                if 'plnb2name' not in parsing_state:
+                    parsing_state['plnb2name'] = dict()
+                parsing_state['plnb2name'][pl_nb] = pl_name
+
+            # this line matches a known pattern: generate a nonling turn
+            ctr.incr_at_gen(Gen.third)
+            # extract the field names from the "format string"
+            msg_fnames = [name for text, name, spec, conv
+                          in string.Formatter().parse(evt_msg)]
+            # if a player name is expected but the soclog line only
+            # provides a player number, map it
+            if 'name' in msg_fnames and 'name' not in evt_fields:
+                if 'plnb' in evt_fields:
+                    # use player name instead of number, in the generated
+                    # message
+                    pl_nb = evt_fields['plnb']
+                    evt_fields['name'] = parsing_state['plnb2name'][pl_nb]
+                else:
+                    raise ValueError("Fail to find required player name")
+            return mk_turn(str(ctr),
+                           'UI',  # custom emitter
+                           evt_msg.format(**evt_fields),  # defined text
+                           state=None)
+        # end WIP
+        #was: return None
 
 
-def soclog_to_turns(lines):
+def soclog_to_turns(soclog, sel_gen='gen2'):
+    """Generator from soclog to Turn objects.
+
+    Parameters
+    ----------
+    soclog : File
+        The soclog file
+    sel_gen : one of {'gen1', 'gen2_ling_only', 'gen2'}
+        Select generation for the extraction script: 1st gen corresponds
+        to intake scripts until 2016-01, gen2_ling_only adds spectator
+        messages, gen2 is for situated communication.
     """
-    Generator from soclog lines to Turn objects
-    """
+    # WIP keep parsing state ; currently stores mapping from player number
+    # to name
+    parsing_state = dict()
+
     ctr = TurnCounter()
-    for line in lines:
-        turn = parse_line(ctr, line)
-        if turn is not None:
-            yield turn
+    for line in soclog:
+        line = line.strip()
+        if not line:
+            continue
+        # line: <timestamp>:<SOCevent>:<description>
+        # timestamp is in fact formatted as
+        # year:month:day:hour:min:sec:millisec:timezone
+        # i.e. a format specification approximately like:
+        # yyyy:mm:dd:hh:mm:ss:mmm:ttttt
+        # here, we keep only part of the full timestamp, forgetting the year,
+        # month, day and timezone.
+        # timestamp = line.split(":+", 1)[0]
+        timestamp_ht = line.split(":+", 1)
+
+        if len(timestamp_ht) == 2:
+            # timestamped line
+            # don't include non-ling turns from 2nd generation
+            include_gen2 = (sel_gen == 'gen2')
+            turn = parse_line(ctr, line, include_gen2=include_gen2,
+                              parsing_state=parsing_state)
+            if turn is not None:
+                yield turn
+        elif len(timestamp_ht) == 1:
+            # these are excluded from gen1
+            if sel_gen == 'gen1':
+                continue
+            # 2nd generation linguistic info: spectator messages
+            match_spect = SPECTATOR.search(line)
+            if match_spect:
+                # get timestamp from the next line (we won't use it anyway)
+                next_line = next(soclog)
+                timestamp = next_line.split(":+", 1)[0]
+                timestamp = ":".join(timestamp.split(":")[-4:])
+                # increase counter, 2nd generation
+                ctr.incr_at_gen(Gen.second)
+                # these messages have no game state
+                state = EMPTY_STATE
+                # create turn
+                turn = stac_csv.Turn(number=str(ctr),
+                                     timestamp=timestamp,
+                                     emitter=match_spect.group("name"),
+                                     res=state.resources_string() or YUCK,
+                                     builds=state.buildups_string() or YUCK,
+                                     rawtext=match_spect.group(
+                                         "text").replace('&', '\&'),
+                                     annot=YUCK,
+                                     comment=YUCK)
+                yield turn
+            else:
+                raise ValueError("Weird line with no timestamp: " + line)
+        else:
+            raise ValueError("You should not be here")
 
 
 def main():
@@ -294,13 +510,28 @@ def main():
     psr.add_argument('--output', metavar='FILE',
                      type=argparse.FileType('wb'),
                      default=sys.stdout)
+    # choose generation
+    psr_gen = psr.add_mutually_exclusive_group()
+    psr_gen.add_argument('--gen1',
+                         action='store_true',
+                         help='only include same turns as in 1st gen')
+    psr_gen.add_argument('--gen2-ling-only',
+                         action='store_true',
+                         help='only include ling turns from 2nd gen')
     args = psr.parse_args()
 
+    # selection of turns to include
+    if args.gen1:
+        sel_gen = 'gen1'
+    elif args.gen2_ling_only:
+        sel_gen = 'gen2_ling_only'
+    else:
+        sel_gen = 'gen2'
+    #
     with codecs.open(args.soclog, 'r', 'utf-8') as soclog:
-        lines = soclog.readlines()
         outcsv = stac_csv.mk_csv_writer(args.output)
         outcsv.writeheader()
-        for turn in soclog_to_turns(lines):
+        for turn in soclog_to_turns(soclog, sel_gen=sel_gen):
             outcsv.writerow(turn.to_dict())
 
 
