@@ -49,31 +49,18 @@ import codecs
 import csv
 import datetime
 import itertools
+import re
 import sys
 import time
 
 from educe.stac.util.prettifyxml import prettify
+from educe.stac.util.csv import Turn
 
 
 class Span(namedtuple('Span', 'left right')):
     """
     Simple l/r pair
     """
-
-
-class Turn(namedtuple('Turn',
-                      ['number',
-                       'timestamp',
-                       'emitter',
-                       'res',
-                       'builds',
-                       'rawtext',
-                       'annot',
-                       'comment'])):
-    """
-    High-level representation of a turn
-    """
-    pass
 
 
 class Events(namedtuple('Events',
@@ -142,6 +129,7 @@ def parse_builds(builds):
     string that would go in the .aa file
     """
     res = []
+    builds = builds.strip()  # implies YUCK => return ""
     if builds:
         for item in builds.split("];"):
             if ']' not in item:
@@ -196,6 +184,25 @@ def read_events(previous, current, turns):
     # FIXME: I don't understand why we only collect the last trade
     # what's the motivation behind this? there are certainly cases
     # where we have more than one prior trade
+    #
+    # I think this this is a bug. It might be motivated by an idea
+    # that you only have one trade in a negotiation or a dice-roll,
+    # but there's two reasons why this can't be:
+    #
+    # * a player may trade with more than person in their turn
+    # * we may have more than one dice roll in a dialogue
+    #
+    # But fixing this could be a bit tricky because
+    #
+    # - a dialogue is triggered by a dice roll
+    # - its trades come before the trigger
+    # - the dice rolls and resource distributions come
+    #   at or after the trigger
+    #
+    # The triggers establish a cap on how far back we search
+    # for trades; in addition to returning all trades up to the
+    # the previous trigger, we should make sure that the
+    # before/after view is consistent
     return Events(rolls=[x for x in after if 'rolled a' in x],
                   resources=[x for x in after if 'gets' in x],
                   trades=trades[-1] if trades else None)
@@ -248,18 +255,19 @@ def append_unit(root, utype, features, left, right):
     append_span(elm_unit, left, right)
 
 
-def append_edu(root, span):
+def append_edu(root, span, is_player):
     """
     Append annotations for the given edu to the root
     """
+    utype = 'Segment' if is_player else 'NonplayerSegment'
     append_unit(root,
-                utype='Segment',
+                utype=utype,
                 left=span.left,
                 right=span.right,
                 features=[])
 
 
-def append_turn(root, curr_turn, span):
+def append_turn(root, curr_turn, span, is_player):
     """
     Append annotations for the given turn to the root
     """
@@ -276,7 +284,8 @@ def append_turn(root, curr_turn, span):
              ('Developments', parse_builds(curr_turn.builds)),
              ('Comments', 'Please write in remarks...')]
 
-    append_unit(root, utype='Turn',
+    utype = 'Turn' if is_player else 'NonplayerTurn'
+    append_unit(root, utype=utype,
                 left=span.left,
                 right=span.right,
                 features=feats)
@@ -355,8 +364,19 @@ def utf8_csv_reader(utf8_data, **kwargs):
 
 
 def save_output(basename, dialoguetext, root):
-    """
-    Save output to a pair of files with a given name prefix
+    """Save output to a pair of files with a given name prefix.
+
+    The pair of files has extensions .ac (for text) and .aa (for
+    annotations).
+
+    Parameters
+    ----------
+    basename : string
+        Basename for files.
+    dialoguetext : string
+        Text that supports the annotation.
+    root : xml.etree.Element
+        XML representation of the annotation on `dialoguetext`.
     """
     with codecs.open(basename+".ac", "w", "utf-8") as out:
         out.write(dialoguetext)
@@ -369,7 +389,7 @@ def save_output(basename, dialoguetext, root):
 # ---------------------------------------------------------------------
 
 
-def process_player_turn(root, dialoguetext, turn):
+def process_turn(root, dialoguetext, turn, is_player):
     """
     Process a single turn and append any resulting annotations to the
     root element.
@@ -378,39 +398,61 @@ def process_player_turn(root, dialoguetext, turn):
     """
     prefix = " : ".join([turn.number, turn.emitter, ""])
     dialoguetext += prefix
-    turn_segments = [x for x in turn.rawtext.split('&')
-                     if len(x) > 0]
+    if is_player:
+        # split on '&'
+        # NEW except if it is escaped (preceded by '\'); then delete the
+        # escaping character to restore the original text
+        # this pattern uses "negative lookbehind" (?<!...),
+        # see doc of the `re` module
+        turn_segments = [x for x in re.split('(?<![\\\])&', turn.rawtext)
+                         if len(x) > 0]
+        turn_segments = [x.replace('\&', '&') for x in turn_segments]
+    else:
+        pre_segments = [x for x in turn.rawtext.split('. ')]
+        if pre_segments:
+            turn_segments = [x + '. ' for x in pre_segments[:-1]]
+            turn_segments.append(pre_segments[-1])
+        else:
+            turn_segments = pre_segments
+        turn_text = '. '.join(turn_segments)
+
+    turn_text = ''.join(turn_segments)
     seg_spans = edu_spans(dialoguetext, turn_segments)
 
     # .ac buffer
-    turn_text = "".join(turn_segments)
     dialoguetext += turn_text + " "
     # .aa typographic annotations
 
     if dialoguetext.index(turn_text) != 0:
-        typstart = len(dialoguetext)\
-            - len(turn_text)\
-            - len(prefix)\
-            - 1
+        typstart = (len(dialoguetext) -
+                    len(turn_text) -
+                    len(prefix) -
+                    1)
     else:
         typstart = 0
-    typend = len(dialoguetext)-1
+    typend = len(dialoguetext) - 1
 
     # .aa actual pre-annotations (Turn ID, Timestamp, Emitter)
-
-    append_turn(root, turn, Span(typstart, typend))
+    append_turn(root, turn, Span(typstart, typend), is_player)
     for span in seg_spans:
-        append_edu(root, span)
+        append_edu(root, span, is_player)
 
     return dialoguetext
 
 
-def process_turns(turns):
+def process_turns(turns, gen2_ling_only=False):
     """
     Process a list of Turns and return a pair of:
 
     * text
     * standoff annotations (an XML element)
+
+    Parameters
+    ----------
+    turns :
+    gen2_ling_only : boolean
+        If True, restrict additional (aka 2nd generation) turns to
+        linguistic turns that escaped the 1st generation scripts.
     """
     dialoguetext = " "  # for the .ac file
     prev_dialogue = None
@@ -423,27 +465,39 @@ def process_turns(turns):
     root.append(Comment('Generated by csvtoglozz.py'))
 
     for i, turn in enumerate(turns):
+        # player turns
         if turn.emitter != "Server":
-            dialoguetext = process_player_turn(root, dialoguetext, turn)
-        elif "rolled a" in turn.rawtext:  # dialogue right boundary
+            dialoguetext = process_turn(root, dialoguetext, turn,
+                                        is_player=True)
+            continue
+
+        if "rolled a" in turn.rawtext:
+            # dialogue right boundary
             # hence, a dialogue is between the beginning and such a text (minus
             # server's turns), or between such a text + 1 and another such text
             # (minus server's turns).
-            event = read_events(i_old, i, turns)
-            i_old = i
-
             span = Span(left=prev_dialogue.right if prev_dialogue else 0,
                         right=len(dialoguetext) - 1)
             prev_dialogue = span
 
-            # ignore consecutive dice rolls
-            if span.left != span.right:
+            if span.left == span.right:
+                i_old = i
+                # ignore consecutive dice rolls
+            else:
+                event = read_events(i_old, i, turns)
+                i_old = i
                 # Generate the actual annotation !
                 append_dialogue(root, event, span)
 
+        # server turns
+        if (not gen2_ling_only and
+            "you" not in turn.rawtext):
+            dialoguetext = process_turn(root, dialoguetext, turn,
+                                        is_player=False)
+
     # last dialogue : only if it doesn't end in a Server's statement !!
-    if prev_dialogue is None or\
-       prev_dialogue.right != len(dialoguetext)-1:
+    if ((prev_dialogue is None or
+         prev_dialogue.right != len(dialoguetext) - 1)):
 
         span = Span(left=prev_dialogue.right if prev_dialogue else 0,
                     right=len(dialoguetext))
@@ -462,6 +516,9 @@ def parse_args():
     parser.add_argument('--start',
                         type=int,
                         help="starting timestamp (default: current time)")
+    parser.add_argument('--gen2-ling-only',
+                        action='store_true',
+                        help='only include linguistic turns from 2nd generation')
 
     return parser.parse_args()
 
@@ -475,7 +532,8 @@ def main():
         csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
         csvreader.next()  # skip header row
         turns = list(read_rows(list(csvreader)))
-        txt, xml = process_turns(turns)
+        txt, xml = process_turns(turns,
+                                 gen2_ling_only=args.gen2_ling_only)
 
     save_output(filename.split(".")[0], txt, xml)
 

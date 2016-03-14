@@ -15,6 +15,13 @@ from attelo.decoding import Decoder
 
 ZPL_TEMPLATE_DIR = fp.join(fp.dirname(__file__), 'ilp')
 
+# WIP seems to belong to stac.harness.local but...
+SCIP_BIN_DIR = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', '..',
+    'lib/scipoptsuite-3.2.0/scip-3.2.0/bin'))
+"Folder containing the SCIP binary files (ILP parser)"
+# end WIP
+
 
 def pos_indexes(dpack):
     """ Returns indices of EDUs for each pairing
@@ -283,7 +290,7 @@ def load_scip_output(dpack, output_path):
 
     # Build labels
     unrelated = dpack.label_number(UNRELATED)
-    prediction = np.full(len(dpack), unrelated)
+    prediction = np.full(len(dpack), unrelated, dtype=np.int)
     prediction[index_attached] = output_labels
 
     return prediction
@@ -297,7 +304,8 @@ class ILPDecoder(Decoder):
     See ZPL_TEMPLATE_DIR for constraint set description
     """
 
-    def decode(self, dpack):
+    def decode(self, dpack, nonfixed_pairs=None):
+        # TODO integrate nonfixed_pairs, maybe?
         tmpdir = mkdtemp()
 
         # Prepare ZIMPL template and data
@@ -308,7 +316,9 @@ class ILPDecoder(Decoder):
         param_path = fp.join(ZPL_TEMPLATE_DIR, 'scip.parameters')
         output_path = fp.join(tmpdir, 'output.scip')
         with open(output_path, 'w') as f_out:
-            call(['scip', '-f', input_path, '-s', param_path],
+            call([os.path.join(SCIP_BIN_DIR, 'scip'),
+                  '-f', input_path,
+                  '-s', param_path],
                  stdout=f_out, cwd=tmpdir)
 
         # Gather results

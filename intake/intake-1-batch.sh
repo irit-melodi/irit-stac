@@ -9,13 +9,15 @@ SCRIPT_DIR=$PWD
 popd > /dev/null
 
 if [ $# -ne 1 ]; then
-    echo >&2 "Usage: $0 mapping"
+    echo >&2 "Usage: $0 mapping [gen2_ling_only]"
     exit 1
 fi
 
 MAPPING_FILE=$1
+GEN2_LING_ONLY=$2
+
 while IFS=, read clean original; do
-    bash $SCRIPT_DIR/intake-1.sh "$original" "$clean" batch
+    bash $SCRIPT_DIR/intake-1.sh "$original" "$clean" "$GEN2_LING_ONLY" batch
 done < $MAPPING_FILE
 
 echo >&2 "Now for each entry in $MAPPING_FILE, edit the segmented csv file"

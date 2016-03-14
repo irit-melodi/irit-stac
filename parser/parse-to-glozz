@@ -69,13 +69,15 @@ def main():
     predictions = load_predictions(args.parse)
     # slurp only the docs that appear in our predictions
     reader = educe.stac.Reader(args.input)
-    doc_subdocs = frozenset(pout.split_id(pid)[0] for _, pid, _ in predictions)
+    doc_subdocs = frozenset(pout.split_id(pid)[0]
+                            for _, pid, _ in predictions)
 
     def is_interesting(key):
         "if a given corpus key is one we want for parse-to-glozz"
         right_doc = (key.doc, key.subdoc) in doc_subdocs
         right_stage = key.stage == 'unannotated'
         return right_doc and right_stage
+
     anno_files = {k: v for k, v in reader.files().items()
                   if is_interesting(k)}
     corpus = reader.slurp(anno_files, verbose=True)

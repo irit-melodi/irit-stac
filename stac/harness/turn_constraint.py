@@ -77,21 +77,21 @@ class TC_LearnerWrapper(object):
         else:
             return None
 
-    def fit(self, dpacks, targets):
+    def fit(self, dpacks, targets, nonfixed_pairs=None):
         "apply the turn constraint before learning"
         dpacks, targets = self.dzip(apply_turn_constraint, dpacks, targets)
-        self._learner.fit(dpacks, targets)
+        self._learner.fit(dpacks, targets, nonfixed_pairs=nonfixed_pairs)
         return self
 
-    def transform(self, dpack):
+    def transform(self, dpack, nonfixed_pairs=None):
         "pass through to inner learner"
         # no turn constraint here; we just wanted them for learning with
-        return self._learner.transform(dpack)
+        return self._learner.transform(dpack, nonfixed_pairs=nonfixed_pairs)
 
-    def predict_score(self, dpack):
+    def predict_score(self, dpack, nonfixed_pairs=None):
         "pass through to inner learner"
         # no turn constraint here; we just wanted them for learning with
-        return self._learner.predict_score(dpack)
+        return self._learner.predict_score(dpack, nonfixed_pairs=nonfixed_pairs)
 
 
 class TC_Pruner(Parser):
@@ -99,10 +99,10 @@ class TC_Pruner(Parser):
     Trivial parser that should be run right before a decoder
     in a parsing pipeline
     '''
-    def fit(self, dpacks, targets, cache=None):
+    def fit(self, dpacks, targets, nonfixed_pairs=None, cache=None):
         return self
 
-    def transform(self, dpack):
+    def transform(self, dpack, nonfixed_pairs=None):
         return self.select(dpack, turn_constraint_safe(dpack))
 # pylint: enable=invalid-name
 
