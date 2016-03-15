@@ -148,7 +148,8 @@ OTHER_EVENTS = {
     #     '{name} left the game'
     # ),
     'reject offer': (
-        # this line appears twice, we should just ignore the 2nd occurrence
+        # this line appears twice, we should just ignore the
+        # 2nd occurrence
         r"SOCRejectOffer:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)",
         '{name} rejected trade offer.'
     ),
@@ -309,6 +310,11 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
     turn : Turn or None
         Turn for the given line.
     """
+    # locally store the previous line and update the parsing state
+    # for future iterations
+    line_prev = parsing_state.get('line_prev', '')
+    parsing_state['line_prev'] = line
+
     # line: <timestamp>:<SOCevent>:<description>
     # the entire timestamp in the soclogs is in fact formatted as
     # year:month:day:hour:minute:second:millisecond:utcoffset
@@ -387,6 +393,13 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                 if 'plnb2name' not in parsing_state:
                     parsing_state['plnb2name'] = dict()
                 parsing_state['plnb2name'][pl_nb] = pl_name
+            elif k == 'reject offer':
+                reject_re_obj = re.compile(OTHER_EVENTS['reject offer'][0])
+                # reject offer generates two identical messages, the
+                # second one should be ignored
+                reject_prev = reject_re_obj.search(line_prev)
+                if reject_prev:
+                    continue
 
             # this line matches a known pattern: generate a nonling turn
             gen = 3
