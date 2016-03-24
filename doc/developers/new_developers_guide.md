@@ -247,5 +247,5 @@ datasets, vectorizers and learners of various types: linear and non-linear
 models, ensembles...
 We try to follow their good practices:
 * follow the same guidelines for coding (pep8, pylint),
-* use the same docstring conventions (from scipy [TODO add link]),
-* adopt a similar API ([TODO: add reference to the scikit-learn paper]).
+* use the docstring specification from [the numpy project](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt), of which a concise example is available [here](http://sphinxcontrib-napoleon.readthedocs.org/en/latest/example_numpy.html),
+* adopt a similar [design and API](http://arxiv.org/abs/1309.0238) (from 2013 but still relevant, for the most part).
