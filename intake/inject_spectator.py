@@ -426,7 +426,7 @@ def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
         # * calls segmentation/simple-segments to presegment automatically
         # into segmented
         intake1_cmd = [os.path.join(PATH_TO_INTAKE, 'intake-1.sh'),
-                       soclog_orig, doc, "gen2-ling-only", "batch"]
+                       soclog_orig, doc, 2, "batch"]
         subprocess.check_call(intake1_cmd)
 
         # reinject edited lines from the previous version into the newly

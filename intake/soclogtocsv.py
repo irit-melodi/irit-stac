@@ -121,6 +121,10 @@ SPECTATOR = re.compile(r"^player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
 # realized ; as of 2016-03-15, all the following were explicitly
 # requested on the trello card
 OTHER_EVENTS = {
+    'game state 0': (
+        r"SOCGameState:game=[^|]+\|state=0",
+        'Game state 0.'
+    ),
     'join game': (
         (r"SOCJoinGame:nickname=(?P<name>[^|]+)\|password=[^|]+\|" +
          r"host=(?P<host>[^|]+)\|"),
@@ -378,7 +382,19 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
 
             # get named groups from regex
             evt_fields = evt_search.groupdict()
-            if k == 'join game':
+            if k == 'game state 0':
+                # keep only the first "game state 0"
+                if 'game state 0' in parsing_state:
+                    continue
+                else:
+                    parsing_state['game state 0'] = True
+            elif k == 'start game':
+                # keep only the first "start game"
+                if 'start game' in parsing_state:
+                    continue
+                else:
+                    parsing_state['start game'] = True
+            elif k == 'join game':
                 # keep only the latest "join game" event
                 if evt_fields['host'] != 'dummyhost':
                     continue
