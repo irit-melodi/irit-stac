@@ -171,7 +171,7 @@ def read_events(previous, current, turns):
 
     def is_server(turn):
         "if a csv row corresponds to a server turn"
-        return turn.emitter == 'Server'
+        return turn.emitter in ['Server', 'UI']
 
     # server messages before/after the current row
     after = [x.rawtext for x in
@@ -440,7 +440,7 @@ def process_turn(root, dialoguetext, turn, is_player):
     return dialoguetext
 
 
-def process_turns(turns, gen2_ling_only=False):
+def process_turns(turns, gen):
     """
     Process a list of Turns and return a pair of:
 
@@ -450,9 +450,8 @@ def process_turns(turns, gen2_ling_only=False):
     Parameters
     ----------
     turns :
-    gen2_ling_only : boolean
-        If True, restrict additional (aka 2nd generation) turns to
-        linguistic turns that escaped the 1st generation scripts.
+    gen : int
+        Generation for which to generate turns from the soclog.
     """
     dialoguetext = " "  # for the .ac file
     prev_dialogue = None
@@ -466,7 +465,7 @@ def process_turns(turns, gen2_ling_only=False):
 
     for i, turn in enumerate(turns):
         # player turns
-        if turn.emitter != "Server":
+        if turn.emitter not in ["Server", "UI"]:
             dialoguetext = process_turn(root, dialoguetext, turn,
                                         is_player=True)
             continue
@@ -490,8 +489,8 @@ def process_turns(turns, gen2_ling_only=False):
                 append_dialogue(root, event, span)
 
         # server turns
-        if (not gen2_ling_only and
-            "you" not in turn.rawtext):
+        if (gen >= 3 and
+            " you" not in turn.rawtext):
             dialoguetext = process_turn(root, dialoguetext, turn,
                                         is_player=False)
 
@@ -516,10 +515,8 @@ def parse_args():
     parser.add_argument('--start',
                         type=int,
                         help="starting timestamp (default: current time)")
-    parser.add_argument('--gen2-ling-only',
-                        action='store_true',
-                        help='only include linguistic turns from 2nd generation')
-
+    parser.add_argument('--gen', metavar='N', type=int, default=1,
+                        help='generation of turns to include (1, 2, 3)')
     return parser.parse_args()
 
 
@@ -532,8 +529,7 @@ def main():
         csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
         csvreader.next()  # skip header row
         turns = list(read_rows(list(csvreader)))
-        txt, xml = process_turns(turns,
-                                 gen2_ling_only=args.gen2_ling_only)
+        txt, xml = process_turns(turns, args.gen)
 
     save_output(filename.split(".")[0], txt, xml)
 
