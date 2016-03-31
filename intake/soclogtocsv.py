@@ -90,6 +90,8 @@ EVENTS = {
         'picking a starting player',
         "can't make that trade",
         "can't roll right now",
+        # * caught by NA on pilot14
+        "board reset",
     ]
 }
 
