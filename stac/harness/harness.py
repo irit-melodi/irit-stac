@@ -19,6 +19,7 @@ from .local import (CONFIG_FILE,
                     EVALUATIONS,
                     FIXED_FOLD_FILE,
                     GRAPH_DOCS,
+                    METRICS,
                     TEST_CORPUS,
                     TEST_EVALUATION_KEY,
                     TRAINING_CORPUS)
@@ -66,6 +67,12 @@ class IritHarness(Harness):
     @property
     def detailed_evaluations(self):
         return DETAILED_EVALUATIONS
+
+    # WIP
+    @property
+    def metrics(self):
+        return METRICS
+    # end WIP
 
     @property
     def test_evaluation(self):
