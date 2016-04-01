@@ -92,6 +92,8 @@ EVENTS = {
         "can't roll right now",
         # * caught by NA on pilot14
         "board reset",
+        # * caught by NA on pilot01
+        "left the gam",
     ]
 }
 
