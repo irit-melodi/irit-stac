@@ -94,6 +94,11 @@ EVENTS = {
         "board reset",
         # * caught by NA on pilot01
         "left the gam",
+        # * it's X's turn to (roll the dice | ...):
+        # delay between this message and the actual dice
+        # roll could explain some messages, cf. pilot14
+        # "go!" or "go go go!"
+        "turn to",
     ]
 }
 
@@ -125,9 +130,9 @@ SPECTATOR = re.compile(r"^player=(?P<name>[^|]+)\|speaking-queue=\[\]\|"
 # realized ; as of 2016-03-15, all the following were explicitly
 # requested on the trello card
 OTHER_EVENTS = {
-    'game state 0': (
-        r"SOCGameState:game=[^|]+\|state=0",
-        'Game state 0.'
+    'game state': (
+        r"SOCGameState:game=[^|]+\|state=(?P<game_state>[0-9]+)",
+        'Game state {game_state}.'
     ),
     'join game': (
         (r"SOCJoinGame:nickname=(?P<name>[^|]+)\|password=[^|]+\|" +
@@ -155,6 +160,37 @@ OTHER_EVENTS = {
     #     r"SOCLeaveGame:nickname=(?P<name>[^|]+)\|",
     #     '{name} left the game'
     # ),
+    # turn
+    'begin turn': (
+        r"SOCTurn:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)",
+        ''
+    ),
+    'end turn': (
+        r"SOCEndTurn",
+        '{name} ended their turn.'
+    ),
+    # trade
+    'clear offer': (
+        # this line should not generate a message ; it does however
+        # provide the player number in case of bank trades
+        r"SOCClearOffer:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)",
+        ''
+    ),
+    'make offer': (
+        # this event appears twice: before and after the server message ;
+        # as the latter does not display the addressee(s) of the offer,
+        # we'll display a complementary message
+        (r"SOCMakeOffer:game=[^|]+\|offer=game=[^|]+\|" +
+         r"from=(?P<plnb_src>[0-9]+)\|" +
+         r"to=(?P<pls_tgt>(true|false)(,(true|false))+)"),
+        '... from {names_tgt}'
+    ),
+    'bank trade': (
+        (r"SOCBankTrade:game=[^|]+\|" +
+         r"give=(?P<give>clay=[0-9]+\|ore=[0-9]+\|sheep=[0-9]+\|wheat=[0-9]+\|wood=[0-9]+\|unknown=[0-9]+)\|" +
+         r"get=(?P<get>clay=[0-9]+\|ore=[0-9]+\|sheep=[0-9]+\|wheat=[0-9]+\|wood=[0-9]+\|unknown=[0-9]+)"),
+        '{name} made an offer to trade {give_nz} for {get_nz} from the bank or a port.'
+    ),
     'reject offer': (
         # this line appears twice, we should just ignore the
         # 2nd occurrence
@@ -386,12 +422,15 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
 
             # get named groups from regex
             evt_fields = evt_search.groupdict()
-            if k == 'game state 0':
+            if k == 'game state':
+                game_state_cur = parsing_state.get('game_state')
+                game_state_nxt = evt_fields['game_state']
+                # update parsing state
+                parsing_state['game_state'] = game_state_nxt
                 # keep only the first "game state 0"
-                if 'game state 0' in parsing_state:
+                if (game_state_nxt != '0' or
+                    game_state_nxt == game_state_cur):
                     continue
-                else:
-                    parsing_state['game state 0'] = True
             elif k == 'start game':
                 # keep only the first "start game"
                 if 'start game' in parsing_state:
@@ -413,6 +452,64 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                 if 'plnb2name' not in parsing_state:
                     parsing_state['plnb2name'] = dict()
                 parsing_state['plnb2name'][pl_nb] = pl_name
+            elif k == 'begin turn':
+                pl_nb = evt_fields['plnb']
+                parsing_state['cur_plnb'] = pl_nb
+                pl_name = parsing_state['plnb2name'][pl_nb]
+                parsing_state['cur_name'] = pl_name
+                continue
+            elif k == 'end turn':
+                # retrieve name of current player from context
+                evt_fields['name'] = parsing_state['cur_name']
+            elif k == 'clear offer':
+                # store the last player involved in this type of event
+                # so we know which player is trying to trade (useful to
+                # display an informative message for failed trades)
+                pl_nb = evt_fields['plnb']
+                if pl_nb != '-1':
+                    pl_name = parsing_state['plnb2name'][pl_nb]
+                    parsing_state['offering_player'] = pl_name
+                continue
+            elif k == 'make offer':
+                make_offer_cur = parsing_state.get('make_offer', False)
+                if not make_offer_cur:
+                    # mark the first occurrence of the "make offer" event
+                    # as seen, don't generate any message
+                    parsing_state['make_offer'] = True
+                    continue
+                # second occurrence: prepare message
+                pls_tgt = evt_fields['pls_tgt']
+                tgt_idc = [i for i, x in enumerate(pls_tgt.split(','))
+                           if x == 'true']
+                evt_fields['names_tgt'] = 'or '.join(
+                    parsing_state['plnb2name'][str(i)]
+                    for i in tgt_idc)
+                # and discharge the "make offer" marker
+                parsing_state['make_offer'] = False
+            elif k == 'bank trade':
+                # prepare clean information for message
+                # * give
+                res_give = []
+                for x in evt_fields['give'].split('|'):
+                    resource, qty = x.split('=')
+                    if int(qty) > 0:
+                        res_give.append((resource, int(qty)))
+                evt_fields['give_nz'] = ', '.join(
+                    '{} {}'.format(qty, resource)
+                    for resource, qty in res_give
+                )
+                # * get
+                res_get = []
+                for x in evt_fields['get'].split('|'):
+                    resource, qty = x.split('=')
+                    if int(qty) > 0:
+                        res_get.append((resource, int(qty)))
+                evt_fields['get_nz'] = ', '.join(
+                    '{} {}'.format(qty, resource)
+                    for resource, qty in res_get
+                )
+                # * retrieve player name from context
+                evt_fields['name'] = parsing_state['offering_player']
             elif k == 'reject offer':
                 reject_re_obj = re.compile(OTHER_EVENTS['reject offer'][0])
                 # reject offer generates two identical messages, the
