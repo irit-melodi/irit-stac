@@ -20,10 +20,17 @@ SAME_SPEAKER = 'same_speaker=True'
 
 
 def turn_constraint_safe(dpack):
-    '''
-    Given a datapack, return the indices that correspond to edges
-    that respect the turn constraint
-    '''
+    """Get the indices of edges that respect the turn constraint.
+
+    Parameters
+    ----------
+    dpack: DataPack
+        DataPack that contains the edges.
+    Returns
+    -------
+    res: list of int
+        Indices of selected edges.
+    """
     spkr_idx = dpack.vocab.index(SAME_SPEAKER)
     return [i for i, (edu1, edu2) in enumerate(dpack.pairings)
             if edu2.span() > edu1.span() or
@@ -79,7 +86,17 @@ class TC_LearnerWrapper(object):
 
     def fit(self, dpacks, targets, nonfixed_pairs=None):
         "apply the turn constraint before learning"
-        dpacks, targets = self.dzip(apply_turn_constraint, dpacks, targets)
+        tc_safe_pairs = [turn_constraint_safe(dpack) for dpack in dpacks]
+        # restrict dpacks and targets to keep only tc safe edges
+        dpacks = [dpack.selected(idxes) for dpack, idxes
+                  in zip(dpacks, tc_safe_pairs)]
+        targets = [target[idxes] for target, idxes
+                   in zip(targets, tc_safe_pairs)]
+        # get indices of nonfixed_pairs in tc_safe_pairs
+        if nonfixed_pairs is not None:
+            nonfixed_ix = [np.in1d(idxes, nf_pairs) for idxes, nf_pairs
+                           in zip(tc_safe_pairs, nonfixed_pairs)]
+            nonfixed_pairs = [np.where(nf_ix)[0] for nf_ix in nonfixed_ix]
         self._learner.fit(dpacks, targets, nonfixed_pairs=nonfixed_pairs)
         return self
 

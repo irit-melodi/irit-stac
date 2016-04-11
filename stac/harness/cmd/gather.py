@@ -39,16 +39,27 @@ def config_argparser(psr):
 
 def extract_features(corpus, output_dir,
                      vocab_path=None, strip_mode=None):
-    """
+    """Extract features for a corpus, dump the instances.
+
     Run feature extraction for a particular corpus; and store the
     results in the output directory. Output file name will be
-    computed from the corpus file name
+    computed from the corpus file name.
 
-    :type: corpus: filepath
+    This triggers two distinct processes, for pairs of EDUs then for
+    single EDUs.
 
-    :param: vocab_path: vocabulary to load for feature extraction
-    (needed if extracting test data; must ensure we have the same
-    vocab in test as we'd have in training)
+    Parameters
+    ----------
+    corpus: filepath
+        Selected corpus
+    output_dir: filepath
+        Folder where instances will be dumped
+    vocab_path: filepath
+        Vocabulary to load for feature extraction (needed if extracting
+        test data; must ensure we have the same vocab in test as we'd
+        have in training)
+    strip_mode: one of {'head', 'broadcast', 'custom'}
+        Method to strip CDUs
     """
     # TODO: perhaps we could just directly invoke the appropriate
     # educe module here instead of going through the command line?
@@ -77,14 +88,18 @@ def main(args):
     else:
         tdir = current_tmp()
         extract_features(TRAINING_CORPUS, tdir, strip_mode=args.strip_mode)
+
     if TEST_CORPUS is not None:
-        train_path = fp.join(tdir, fp.basename(TRAINING_CORPUS))
-        vocab_path = train_path + '.relations.sparse.vocab'
+        vocab_path = fp.join(tdir,
+                             (fp.basename(TRAINING_CORPUS) +
+                              '.relations.sparse.vocab'))
         extract_features(TEST_CORPUS, tdir,
                          vocab_path=vocab_path,
                          strip_mode=args.strip_mode)
+
     with open(os.path.join(tdir, "versions-gather.txt"), "w") as stream:
         call(["pip", "freeze"], stdout=stream)
+
     if not args.skip_training:
         latest_dir = latest_tmp()
         force_symlink(fp.basename(tdir), latest_dir)

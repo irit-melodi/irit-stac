@@ -386,6 +386,13 @@ thing (mostly the graphs) takes time and space to build
 HINT: set to empty list for no graphs whatsoever
 """
 
+# WIP explicit selection of metrics
+METRICS = [
+    'edges',
+    'edges_by_label',
+    'edus',
+]
+
 # -------------------------------------------------------------------------------
 # settings for the standalone parser
 # -------------------------------------------------------------------------------
