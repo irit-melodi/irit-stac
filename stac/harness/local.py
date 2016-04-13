@@ -51,7 +51,7 @@ from .config.common import (ORACLE,
                             mk_post,
                             )
 
-from .ilp import (ILPDecoder)
+from .ilp import (ILPDecoder, SCIP_BIN_DIR)
 from .turn_constraint import (tc_decoder,
                               tc_learner)
 # PATHS
@@ -235,10 +235,16 @@ def _core_parsers(klearner):
         mk_post(klearner, tc_decoder(decoder_mst())),
     ]
 
-    bypass = [
-        mk_bypass(klearner, decoder_ilp()),
-        mk_bypass(klearner, tc_decoder(decoder_ilp())),
-    ]
+    # ILP decoders
+    if fp.isdir(SCIP_BIN_DIR):
+        bypass = [
+            mk_bypass(klearner, decoder_ilp()),
+            mk_bypass(klearner, tc_decoder(decoder_ilp())),
+        ]
+    else:
+        # you need to install SCIP and provide the path to its
+        # binaries in SCIP_BIN_DIR in ilp.py
+        bypass = []
 
     if klearner.attach.payload.can_predict_proba:
         return joint + post + bypass
