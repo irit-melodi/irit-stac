@@ -1,5 +1,8 @@
-"""Functions to augment an annotated game with spectator messages.
+"""Script to re-acquire a game, porting over existing annotations.
 
+This script enables to generate different versions of a game corresponding
+to different generations of corpus annotation, and to preserve the existing
+annotation.
 """
 
 from __future__ import print_function
@@ -493,10 +496,10 @@ def augment_game(dir_orig, dir_dest, doc, gen, steps='all', seg_path=''):
 
 
 def main():
-    """Augment an annotated game with spectator messages."""
+    """Re-acquire a game, porting over the existing annotation."""
     # parse command line
     parser = argparse.ArgumentParser(
-        description='Augment an annotated game with spectator messages')
+        description='Re-acquire a game, porting over the annotation')
     parser.add_argument('dir_orig', metavar='DIR',
                         help='folder of the annotated corpus')
     parser.add_argument('dir_dest', metavar='DIR',
@@ -505,7 +508,7 @@ def main():
                         help='document')
     # select generation
     parser.add_argument('--gen',  metavar='N', type=int, default=2,
-                        help='generation of turns to include (1, 2, 3)')
+                        help='max generation of turns to include (1, 2, 3)')
     # select steps
     parser.add_argument('--steps', metavar='steps',
                         choices=['all', 'intake1', 'intake2', 'weave'],
