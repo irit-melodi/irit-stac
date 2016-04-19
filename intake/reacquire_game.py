@@ -1,5 +1,8 @@
-"""Functions to augment an annotated game with spectator messages.
+"""Script to re-acquire a game, porting over existing annotations.
 
+This script enables to generate different versions of a game corresponding
+to different generations of corpus annotation, and to preserve the existing
+annotation.
 """
 
 from __future__ import print_function
@@ -312,7 +315,7 @@ def transfer_turns(file_orig, file_dest):
     os.rename(file_res, file_dest)
 
 
-def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
+def augment_game(dir_orig, dir_dest, doc, gen, steps='all', seg_path=''):
     """Do the augmentation
 
     Parameters
@@ -323,6 +326,8 @@ def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
         Folder for the augmented corpus
     doc : string
         Name of the document
+    gen : int
+        Generation to use for turn extraction from the soclog.
     steps : string, optional
         Specify which steps should be executed ; defaults to 'all'.
         This is useful when you have to backport crappy editions from
@@ -426,7 +431,7 @@ def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
         # * calls segmentation/simple-segments to presegment automatically
         # into segmented
         intake1_cmd = [os.path.join(PATH_TO_INTAKE, 'intake-1.sh'),
-                       soclog_orig, doc, "gen2-ling-only", "batch"]
+                       soclog_orig, doc, str(gen), "batch"]
         subprocess.check_call(intake1_cmd)
 
         # reinject edited lines from the previous version into the newly
@@ -465,7 +470,7 @@ def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
                        # parameter, but the current version of intake-2 writes
                        # its files into the current working directory...
                        os.path.join('segmented', doc + '.soclog.seg.csv'),
-                       "gen2-ling-only"]
+                       str(gen)]
         subprocess.check_call(intake2_cmd, cwd=doc_dir_dest)
 
     # move back to the original working dir to call the weaving script
@@ -491,16 +496,19 @@ def augment_game(dir_orig, dir_dest, doc, steps='all', seg_path=''):
 
 
 def main():
-    """Augment an annotated game with spectator messages."""
+    """Re-acquire a game, porting over the existing annotation."""
     # parse command line
     parser = argparse.ArgumentParser(
-        description='Augment an annotated game with spectator messages')
+        description='Re-acquire a game, porting over the annotation')
     parser.add_argument('dir_orig', metavar='DIR',
                         help='folder of the annotated corpus')
     parser.add_argument('dir_dest', metavar='DIR',
                         help='folder for the augmented corpus')
     parser.add_argument('doc', metavar='DOC',
                         help='document')
+    # select generation
+    parser.add_argument('--gen',  metavar='N', type=int, default=2,
+                        help='max generation of turns to include (1, 2, 3)')
     # select steps
     parser.add_argument('--steps', metavar='steps',
                         choices=['all', 'intake1', 'intake2', 'weave'],
@@ -512,7 +520,7 @@ def main():
                         help='segmented file to use (if >1 in segmented/)')
     args = parser.parse_args()
     # do the job
-    augment_game(args.dir_orig, args.dir_dest, args.doc,
+    augment_game(args.dir_orig, args.dir_dest, args.doc, args.gen,
                  steps=args.steps,
                  seg_path=args.segmented)
 
