@@ -27,7 +27,7 @@ and irit-stac (to make your training procedure available for experiments).
 2. pip >= 1.5
 3. Anaconda or miniconda >= 2.2.6
 4. git
-5. (optionally: graphviz, otherwise it can be installed via conda)
+5. graphviz (via your package manager or via conda)
 6. STAC corpus (released separately, ask your contact from the STAC project)
 7. A GitHub account
 
@@ -203,7 +203,7 @@ etc
 push the commits from your local "fancy-loss" branch to this new
 "fancy-loss" branch on origin.
 ```sh
-git push -u fancy-loss
+git push -u origin fancy-loss
 ```
 4. You can continue to work on your branch if necessary. New commits can
 then be pushed in the most simple way from local/fancy-loss to
