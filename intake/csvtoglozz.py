@@ -533,4 +533,6 @@ def main():
 
     save_output(filename.split(".")[0], txt, xml)
 
-main()
+
+if __name__ == '__main__':
+    main()
