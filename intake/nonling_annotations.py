@@ -21,8 +21,14 @@ import argparse
 import codecs
 import sys
 
-from csvtoglozz import append_unit
+from csvtoglozz import append_unit, mk_id
 from educe.stac.util.prettifyxml import prettify
+
+
+
+# ---------------------------------------------------------------------
+# "Units" annotations
+# ---------------------------------------------------------------------
 
 
 def add_units(tree, text):
@@ -39,7 +45,7 @@ def add_units(tree, text):
     Returns
     -------
     root :
-        modified XML tree with units non-linguistical event annotations
+        modified XML tree with units annotations for non-linguistical event
     """
     #root = tree.getroot()
     root = tree
@@ -174,6 +180,305 @@ def add_units(tree, text):
                 continue
 
     return root
+
+
+
+# ---------------------------------------------------------------------
+# "Discourse" annotations
+# ---------------------------------------------------------------------
+
+
+
+def append_relation(root, utype, id1, id2):
+    """
+    Append a new relation level annotation to the given root element.
+    Note that this generates a new identifier behind the scenes.
+
+    Parameters
+    ----------
+    root :
+        node of the XML tree to which we want to add a "relation" child
+    utype : string
+        type of the relation we want to create (sequence, continuation, QAP...)
+    id1 : string
+        id of the first element (EDU or CDU) of the relation
+    id2 : string
+        id of the second element (EDU or CDU) of the relation
+    """
+    unit_id, date = mk_id()
+
+    metadata = [('author', 'stac'),
+                ('creation-date', str(date)),
+                ('lastModifier', 'n/a'),
+                ('lastModificationDate', '0')]
+    elm_relation = SubElement(root, 'relation', {'id': unit_id})
+    elm_metadata = SubElement(elm_relation, 'metadata')
+    for key, val in metadata:
+        SubElement(elm_metadata, key).text = val
+    elm_charact = SubElement(elm_relation, 'characterisation')
+    SubElement(elm_charact, 'type').text = utype
+
+    elm_features = SubElement(elm_charact, 'featureSet')
+    comments = SubElement(elm_features, 'feature', {'name': 'Comments'})
+    comments.text = 'Please write in remarks...'
+    argument_scope = SubElement(elm_features, 'feature', {'name': 'Argument_scope'})
+    argument_scope.text = 'Please choose...'
+
+    positioning = SubElement(elm_relation, 'positioning')
+    edu1 = SubElement(positioning, 'term', {'name': 'id'})
+    edu1.text = id2
+    edu2 = SubElement(positioning, 'term', {'name': 'id'})
+    edu2.text = id2
+
+
+def append_schema(root, utype, edus):
+    """
+    Append a new schema level annotation to the given root element.
+    Note that this generates a new identifier behind the scenes.
+
+    Parameters
+    ----------
+    root :
+        node of the XML tree to which we want to add a "schema" child
+    utype : string
+        type of the schema we want to create. Usually, a "Complex_discourse_unit"
+    edus :
+        list of the ids of the EDUs that compose the CDU
+
+    Returns
+    -------
+    cdu_id : string
+        id of the CDU (used to create a relation between this CDU and another element)
+    """
+    cdu_id, date = mk_id()
+
+    metadata = [('author', 'stac'),
+                ('creation-date', str(date)),
+                ('lastModifier', 'n/a'),
+                ('lastModificationDate', '0')]
+    elm_relation = SubElement(root, 'schema', {'id': cdu_id})
+    elm_metadata = SubElement(elm_relation, 'metadata')
+    for key, val in metadata:
+        SubElement(elm_metadata, key).text = val
+    elm_charact = SubElement(elm_relation, 'characterisation')
+    SubElement(elm_charact, 'type').text = utype # utype = 'Complex_discourse_unit'
+    elm_features = SubElement(elm_charact, 'featureSet')
+
+    positioning = SubElement(elm_relation, 'positioning')
+    for edu in edus:
+        SubElement(positioning, 'embedded-unit', {'id': edu})
+
+    return cdu_id
+
+
+def add_discourse_annotations(tree, text):
+    """
+    Add discourse annotations for non-linguistical event
+    
+    Parameters
+    ----------
+    tree :
+        XML tree extracted from the .aa file to modify
+    text : string
+        raw text extracted from the .ac file
+
+    Returns
+    -------
+    root :
+        modified XML tree with discourse annotations for non-linguistical events
+    """
+    
+    root = tree
+
+    JoinRegEx = re.compile(r'(.+) joined the game.')
+    SitDownRegEx = re.compile(r'(.+) sat down at seat (\d).')
+    DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d).')
+    GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood).')
+    NoGetRegEx = re.compile(r'No player gets anything.')
+
+    SoldierRegEx = re.compile(r'(.+) played a soldier card.')
+    Discard1RegEx = re.compile(r'(.+) needs to discard.')
+    Discard2RegEx = re.compile(r'(.+) discarded (\d+) resources.')
+    Robber1RegEx = re.compile(r'(.+) will move the robber.')
+    Robber2RegEx = re.compile(r'(.+) moved the robber.')
+    Robber3RegEx = re.compile(r'(.+) moved the robber, must choose a victim.')
+    StoleRegEx = re.compile(r'(.+) stole a resource from (.+).')
+
+    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood).')
+    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+).')
+    RejectRegEx = re.compile(r'(.+) rejected trade offer.')
+    CardRegEX = re.compile(r'(.+) played a monopoly card.')
+    MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood).')
+
+    """
+    For events composed of several segments,
+    these lists will keep in memory the ids
+    of the segments of the event currently happening.
+
+    The lists are then emptied when the event is finished,
+    in order to start the next event.
+
+    For join / sit down events, since they happen at the same time,
+    we need a more complex structure than a list, like a dictionnary,
+    to identify which "sit down" event is linked to which "join" event.
+
+    For trade / monopoly events, we only need to keep the offer / card drawn in memory,
+    so a single string is enough.
+    """
+    JoinEvents = dict()
+    DiceEvent = []
+    RobberEvent = []
+    TradeEvent = ""
+    MonopolyEvent = ""
+
+    for unit in root:
+        if unit.findtext('characterisation/type') == 'NonplayerSegment':
+            start = int(unit.find('positioning/start/singlePosition').get('index'))
+            end = int(unit.find('positioning/end/singlePosition').get('index'))
+            event = text[start+1:end+1] #les fichiers .ac commencent par un espace, donc tous les index sont décalés de 1 pour la lecture
+
+            # Join / sit down events
+
+            if JoinRegEx.search(event) != None: #<X> joined the game.
+                mo = JoinRegEx.search(event)
+                X = mo.group(1)
+                JoinEvents[X] = unit.get('id')
+                continue
+
+            elif SitDownRegEx.search(event) != None: #<X> sat down at seat <N>.
+                mo = JoinRegEx.search(event)
+                X = mo.group(1)
+                append_relation(root, 'Sequence', JoinEvents[X], unit.get('id'))
+                del JoinEvents[X]
+                continue
+
+            # Resource distribution events
+
+            elif DiceRegEx.search(event) != None: #<X> rolled a <M1> and a <M2>.
+                mo = DiceRegEx.search(event)
+                M1 = int(mo.group(2))
+                M2 = int(mo.group(3))
+                if M1 + M2 != 7: # Resource distribution event
+                    if len(DiceEvent) > 0:
+                        if len(DiceEvent) == 2: # Resource distribution : 1 player
+                            append_relation(root, 'Result', DiceEvent[0], DiceEvent[1])
+                        else: # Resource Distribution : 2 or more players
+                            cdu = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
+                            append_relation(root, 'Result', DiceEvent[0], cdu)
+                            for i in range(1,len(DiceEvent)-2):
+                                append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
+                        DiceEvent[:] = []
+                    DiceEvent.append(unit.get('id'))
+                else: # Robber event
+                    if RobberEvent != []:
+                        raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
+                    RobberEvent.append(unit.get('id'))
+                continue
+
+            elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
+                DiceEvent.append(unit.get('id'))
+                continue
+
+            elif NoGetRegEx.search(event) != None: #No player gets anything.
+                append_relation(root, 'Result', DiceEvent[0], unit.get('id'))
+                DiceEvent[:] = []
+                continue
+
+            # Robber events
+
+            elif SoldierRegEx.search(event) != None: #<X> played a soldier card.
+                if RobberEvent != []:
+                    raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
+                RobberEvent.append(unit.get('id'))
+                continue
+
+            elif Discard1RegEx.search(event) != None: #<Y> needs to discard.
+                RobberEvent.append(unit.get('id'))
+                continue
+
+            elif Discard2RegEx.search(event) != None: #<Y> discarded <N> resources.
+                RobberEvent.append(unit.get('id'))
+                continue
+
+            elif Robber1RegEx.search(event) != None: #<X> will move the robber.
+                RobberEvent.append(unit.get('id'))
+                continue
+
+            elif Robber2RegEx.search(event) != None: #<X> moved the robber.
+                RobberEvent.append(unit.get('id'))
+                cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
+                append_relation(root, 'Result', RobberEvent[0], cdu)
+                for i in range(1,len(RobberEvent)-2):
+                    append_relation(root, 'Sequence', DiceEvent[i], DiceEvent[i+1])
+                RobberEvent[:] = []
+                continue
+
+            elif Robber3RegEx.search(event) != None: #<X> moved the robber, must choose a victim.
+                RobberEvent.append(unit.get('id'))
+                continue
+
+            elif StoleRegEx.search(event) != None: #<X> stole a resource from <Z>.
+                RobberEvent.append(unit.get('id'))
+                cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
+                append_relation(root, 'Result', RobberEvent[0], cdu)
+                for i in range(1,len(RobberEvent)-2):
+                    append_relation(root, 'Sequence', DiceEvent[i], DiceEvent[i+1])
+                RobberEvent[:] = []
+                continue
+
+            # Trade events
+            # HYPOTHESIS : only one offer can be made at a time (not sure if true, needs in/confirmation)
+
+            elif OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
+                if TradeEvent != "":
+                    TradeEvent = ""
+                TradeEvent = unit.get('id')
+                continue
+
+            elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
+                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                continue
+
+            elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
+                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                continue
+
+            # Monopoly events
+
+            elif CardRegEx.search(event) != None: #<X> played a monopoly card.
+                if MonopolyEvent != "":
+                    raise Exception("add_discourse_annotations : la chaîne MonopolyEvent n'a pas été vidée!")
+                MonopolyEvent = unit.get('id')
+                continue
+
+            elif MonopolyRegEx.search(event) != None: #<X> monopolized <R>.
+                append_relation(root, 'Sequence', MonopolyEvent, unit.get('id'))
+                MonopolyEvent = ""
+                continue
+
+
+    """
+    For resources distributions, we complete the XML tree and empty the list at the next dice roll.
+    So for the last turn we may have forgotten to annotate some events.
+    """
+    if len(DiceEvent) > 0:
+        if len(DiceEvent) == 2: # Resource distribution : 1 player
+            append_relation(root, 'Result', DiceEvent[0], DiceEvent[1])
+        else: # Resource Distribution : 2 or more players
+            cdu = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
+            append_relation(root, 'Result', DiceEvent[0], cdu)
+            for i in range(1,len(DiceEvent)-2):
+                append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
+        DiceEvent[:] = []
+
+    return root
+
+
+
+
+# ---------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------
 
 
 
