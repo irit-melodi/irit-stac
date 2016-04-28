@@ -5,11 +5,11 @@
 Takes a duet of aa/ac files and automatically adds annotations for non-linguistic events, such as trades or dice rollings.
 """
 
-#FIXME problem with the function mk_id() from irit-stac/intake/csvtoglozz.py, called in the function append_unit()
+#TODO "gets" events are not correctly implemented, need to work on the regular expression.
+#I thought there was one "get" entry from server for each resource, but it's one entry for the whole distribution.
+#Example : "Server : A gets 1 ore, 1 wheat. B gets 1 wood."
 
-#TODO for now only "units" annotations are added, "discourse" annotations also need to be implemented
-
-#TODO for now the script only takes a duet of aa/ac files for testing purpose, but we want to do this on a complete game
+#TODO for now the script only takes a duet of aa/ac files, but we want to do this on a complete game
 
 
 
@@ -21,7 +21,11 @@ import argparse
 import codecs
 import sys
 
-from csvtoglozz import append_unit, mk_id
+import datetime
+import time
+
+from csvtoglozz import append_unit, init_mk_id, mk_id
+
 from educe.stac.util.prettifyxml import prettify
 
 
@@ -31,7 +35,7 @@ from educe.stac.util.prettifyxml import prettify
 # ---------------------------------------------------------------------
 
 
-def add_units(tree, text):
+def add_units_annotations(tree, text):
     """
     Add units annotations for non-linguistical event
     
@@ -47,7 +51,6 @@ def add_units(tree, text):
     root :
         modified XML tree with units annotations for non-linguistical event
     """
-    #root = tree.getroot()
     root = tree
 
     OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood).')
@@ -63,27 +66,29 @@ def add_units(tree, text):
             event = text[start+1:end+1] #les fichiers .ac commencent par un espace, donc tous les index sont décalés de 1 pour la lecture
 
             if OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
-               mo = OfferRegEx.search(event)
-               X = mo.group(1)
-               M = mo.group(2)
-               R1 = mo.group(3)
-               N = mo.group(4)
-               R2 = mo.group(5)
+                mo = OfferRegEx.search(event)
+                X = mo.group(1)
+                M = mo.group(2)
+                R1 = mo.group(3)
+                N = mo.group(4)
+                R2 = mo.group(5)
 
-               unit.find('characterisation/type').text = 'Offer'
-               feats = unit.find('characterisation/featureSet')
-               f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
-               f_elm1.text = 'Question'
-               f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
-               f_elm2.text = '?'
+                unit.find('characterisation/type').text = 'Offer'
+                feats = unit.find('characterisation/featureSet')
+                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1.text = 'Question'
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+                f_elm2.text = '?'
 
-               left1 = start + len(X) + 24
-               append_unit(root, 'Resource', left1, left1 + len(M) + 1 + len(R1),
-                           [('Status', 'Givable'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)])
-               right2 = end - 1
-               append_unit(root, 'Resource', right2 - len(R2) - 1 - len(N), right2,
-                           [('Status', 'Receivable'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)])
-               continue
+                left1 = start + len(X) + 24
+                append_unit(root, 'Resource',
+                            [('Status', 'Givable'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)],
+                            left1, left1 + len(M) + 1 + len(R1))
+                right2 = end - 1
+                append_unit(root, 'Resource',
+                            [('Status', 'Receivable'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)],
+                            right2 - len(R2) - 1 - len(N), right2)
+                continue
 
 
             elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
@@ -114,8 +119,9 @@ def add_units(tree, text):
                 append_unit(root, 'Resource', left1, left1 + len(M) + 1 + len(R1),
                             [('Status', '?'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)])
                 right2 = end - len(Y) - 7
-                append_unit(root, 'Resource', right2 - len(R2) - 1 - len(N), right2,
-                            [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)])
+                append_unit(root, 'Resource',
+                            [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)],
+                            right2 - len(R2) - 1 - len(N), right2)
                 continue
 
 
@@ -147,8 +153,9 @@ def add_units(tree, text):
 
                 left = start + len(Y) + 6
                 right = end - 1
-                append_unit(root, 'Resource', left, right,
-                            [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)])
+                append_unit(root, 'Resource',
+                            [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
+                            left, right)
                 continue
 
 
@@ -166,8 +173,9 @@ def add_units(tree, text):
 
                 right = end - 1
                 left = right - len(R)
-                append_unit(root, 'Resource', left, right,
-                            [('Status', 'Possessed'), ('Quantity', '?'), ('Correctness', 'True'), ('Kind', R)])
+                append_unit(root, 'Resource',
+                            [('Status', 'Possessed'), ('Quantity', '?'), ('Correctness', 'True'), ('Kind', R)],
+                            left, right,)
                 continue
 
             else:
@@ -211,24 +219,22 @@ def append_relation(root, utype, id1, id2):
                 ('creation-date', str(date)),
                 ('lastModifier', 'n/a'),
                 ('lastModificationDate', '0')]
-    elm_relation = SubElement(root, 'relation', {'id': unit_id})
-    elm_metadata = SubElement(elm_relation, 'metadata')
+    elm_relation = ET.SubElement(root, 'relation', {'id': unit_id})
+    elm_metadata = ET.SubElement(elm_relation, 'metadata')
     for key, val in metadata:
-        SubElement(elm_metadata, key).text = val
-    elm_charact = SubElement(elm_relation, 'characterisation')
-    SubElement(elm_charact, 'type').text = utype
+        ET.SubElement(elm_metadata, key).text = val
+    elm_charact = ET.SubElement(elm_relation, 'characterisation')
+    ET.SubElement(elm_charact, 'type').text = utype
 
-    elm_features = SubElement(elm_charact, 'featureSet')
-    comments = SubElement(elm_features, 'feature', {'name': 'Comments'})
+    elm_features = ET.SubElement(elm_charact, 'featureSet')
+    comments = ET.SubElement(elm_features, 'feature', {'name': 'Comments'})
     comments.text = 'Please write in remarks...'
-    argument_scope = SubElement(elm_features, 'feature', {'name': 'Argument_scope'})
+    argument_scope = ET.SubElement(elm_features, 'feature', {'name': 'Argument_scope'})
     argument_scope.text = 'Please choose...'
 
-    positioning = SubElement(elm_relation, 'positioning')
-    edu1 = SubElement(positioning, 'term', {'name': 'id'})
-    edu1.text = id2
-    edu2 = SubElement(positioning, 'term', {'name': 'id'})
-    edu2.text = id2
+    positioning = ET.SubElement(elm_relation, 'positioning')
+    edu1 = ET.SubElement(positioning, 'term', {'id': id1})
+    edu2 = ET.SubElement(positioning, 'term', {'id': id2})
 
 
 def append_schema(root, utype, edus):
@@ -248,7 +254,7 @@ def append_schema(root, utype, edus):
     Returns
     -------
     cdu_id : string
-        id of the CDU (used to create a relation between this CDU and another element)
+        id of the CDU created (used later to create a relation between this CDU and another element)
     """
     cdu_id, date = mk_id()
 
@@ -256,17 +262,17 @@ def append_schema(root, utype, edus):
                 ('creation-date', str(date)),
                 ('lastModifier', 'n/a'),
                 ('lastModificationDate', '0')]
-    elm_relation = SubElement(root, 'schema', {'id': cdu_id})
-    elm_metadata = SubElement(elm_relation, 'metadata')
+    elm_schema = ET.SubElement(root, 'schema', {'id': cdu_id})
+    elm_metadata = ET.SubElement(elm_schema, 'metadata')
     for key, val in metadata:
-        SubElement(elm_metadata, key).text = val
-    elm_charact = SubElement(elm_relation, 'characterisation')
-    SubElement(elm_charact, 'type').text = utype # utype = 'Complex_discourse_unit'
-    elm_features = SubElement(elm_charact, 'featureSet')
+        ET.SubElement(elm_metadata, key).text = val
+    elm_charact = ET.SubElement(elm_schema, 'characterisation')
+    ET.SubElement(elm_charact, 'type').text = utype # utype = 'Complex_discourse_unit'
+    elm_features = ET.SubElement(elm_charact, 'featureSet')
 
-    positioning = SubElement(elm_relation, 'positioning')
+    positioning = ET.SubElement(elm_schema, 'positioning')
     for edu in edus:
-        SubElement(positioning, 'embedded-unit', {'id': edu})
+        ET.SubElement(positioning, 'embedded-unit', {'id': edu})
 
     return cdu_id
 
@@ -307,7 +313,7 @@ def add_discourse_annotations(tree, text):
     OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood).')
     TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+).')
     RejectRegEx = re.compile(r'(.+) rejected trade offer.')
-    CardRegEX = re.compile(r'(.+) played a monopoly card.')
+    CardRegEx = re.compile(r'(.+) played a monopoly card.')
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood).')
 
     """
@@ -346,7 +352,7 @@ def add_discourse_annotations(tree, text):
                 continue
 
             elif SitDownRegEx.search(event) != None: #<X> sat down at seat <N>.
-                mo = JoinRegEx.search(event)
+                mo = SitDownRegEx.search(event)
                 X = mo.group(1)
                 append_relation(root, 'Sequence', JoinEvents[X], unit.get('id'))
                 del JoinEvents[X]
@@ -484,30 +490,45 @@ def add_discourse_annotations(tree, text):
 
 def main():
 
-    #ligne de commande : python nonling_annotations.py test.aa test.ac
+    #ligne de commande : python nonling_annotations.py test_units.aa test_discourse test.ac
+
+    
+    init_mk_id()
 
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('aafile', help = 'file with annotations')
+    parser.add_argument('aaUfile', help = 'file with units annotations')
+    parser.add_argument('aaDfile', help = 'file with discourse annotations')
     parser.add_argument('acfile', help = 'file with rawtext')
 
     args = parser.parse_args()
-    aafile = args.aafile
+    aaUfile = args.aaUfile
+    aaDfile = args.aaDfile
     acfile = args.acfile
 
-    aaf = open(aafile, 'r')
+    aauf = open(aaUfile, 'r')
+    aadf = open(aaDfile, 'r')
     acf = open(acfile, 'r')
 
-    stringtree = aaf.read()
-    tree = ET.fromstring(stringtree)
+    stringtree_units = aauf.read()
+    units_tree = ET.fromstring(stringtree_units)
+    stringtree_discourse = aadf.read()
+    discourse_tree = ET.fromstring(stringtree_discourse)
     text = acf.read()
 
-    root = add_units(tree, text)
+    units_root = add_units_annotations(units_tree, text)
+    discourse_root = add_discourse_annotations(discourse_tree, text)
 
-    with codecs.open(basename+'-modified.aa', 'w', 'ascii') as out:
-        out.write(prettify(root))
+    basename_units = aaUfile.split(".")[0]
+    basename_discourse = aaDfile.split(".")[0]
 
-    aaf.close()
+    with codecs.open(basename_units+'-modified.aa', 'w', 'ascii') as out:
+        out.write(prettify(units_root))
+    with codecs.open(basename_discourse+'-modified.aa', 'w', 'ascii') as out:
+        out.write(prettify(discourse_root))
+
+    aauf.close()
+    aadf.close()
     acf.close()
 
 
