@@ -21,11 +21,7 @@ import argparse
 import codecs
 import sys
 
-import datetime
-import time
-
 from csvtoglozz import append_unit, init_mk_id, mk_id
-
 from educe.stac.util.prettifyxml import prettify
 
 
@@ -57,6 +53,8 @@ def add_units_annotations(tree, text):
     TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+).')
     RejectRegEx = re.compile(r'(.+) rejected trade offer.')
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood).')
+    #TODO à corriger en [X gets N R[, N R]*. ]*X gets N R [, N R]*.
+    #Probleme : comment récupérer ensuite toutes les données ?
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood).')
 
     for unit in root:
@@ -300,6 +298,8 @@ def add_discourse_annotations(tree, text):
     SitDownRegEx = re.compile(r'(.+) sat down at seat (\d).')
     DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d).')
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood).')
+    #TODO à corriger en [X gets N R[, N R]*. ]*X gets N R [, N R]*.
+    #Probleme : comment récupérer ensuite toutes les données ?
     NoGetRegEx = re.compile(r'No player gets anything.')
 
     SoldierRegEx = re.compile(r'(.+) played a soldier card.')
@@ -490,7 +490,7 @@ def add_discourse_annotations(tree, text):
 
 def main():
 
-    #ligne de commande : python nonling_annotations.py test_units.aa test_discourse test.ac
+    #ligne de commande : python nonling_annotations.py test_units.aa test_discourse.aa test.ac
 
     
     init_mk_id()
