@@ -5,12 +5,8 @@
 Takes a duet of aa/ac files and automatically adds annotations for non-linguistic events, such as trades or dice rollings.
 """
 
-#TODO "gets" events are not correctly implemented, need to work on the regular expression.
-#I thought there was one "get" entry from server for each resource, but it's one entry for the whole distribution.
-#Example : "Server : A gets 1 ore, 1 wheat. B gets 1 wood."
 
 #TODO for now the script only takes a duet of aa/ac files, but we want to do this on a complete game
-
 
 
 from __future__ import print_function
@@ -49,20 +45,22 @@ def add_units_annotations(tree, text):
     """
     root = tree
 
-    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood).')
-    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+).')
-    RejectRegEx = re.compile(r'(.+) rejected trade offer.')
-    GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood).')
-    #TODO à corriger en [X gets N R[, N R]*. ]*X gets N R [, N R]*.
-    #Probleme : comment récupérer ensuite toutes les données ?
-    MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood).')
+    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
+    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
+
+    GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
+    Get2RegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)\.')
+    #It is impossible in "Settlers of Catan" to get more than 2 different types of resources with one roll dice.
+    #That's why we actually don't need to bother with complex regular expression since there are in fact just two cases to consider. :)
+
+    MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
             start = int(unit.find('positioning/start/singlePosition').get('index'))
             end = int(unit.find('positioning/end/singlePosition').get('index'))
-            event = text[start+1:end+1] #les fichiers .ac commencent par un espace, donc tous les index sont décalés de 1 pour la lecture
-
+            event = text[start:end]
             if OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
                 mo = OfferRegEx.search(event)
                 X = mo.group(1)
@@ -154,6 +152,33 @@ def add_units_annotations(tree, text):
                 append_unit(root, 'Resource',
                             [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
                             left, right)
+                continue
+
+            elif Get2RegEx.search(event) != None: #<Y> gets <N1> <R1>, <N2> <R2>.
+                mo = Get2RegEx.search(event)
+                Y = mo.group(1)
+                N1 = mo.group(2)
+                R1 = mo.group(3)
+                N2 = mo.group(2)
+                R2 = mo.group(3)
+
+                unit.find('characterisation/type').text = 'Other'
+                feats = unit.find('characterisation/featureSet')
+                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1.text = 'Assertion'
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+                f_elm2.text = 'All'
+
+                left1 = start + len(Y) + 6
+                right1 = left1 + len(N1) + 1 + len(R1)
+                append_unit(root, 'Resource',
+                            [('Status', 'Possessed'), ('Quantity', N1), ('Correctness', 'True'), ('Kind', R1)],
+                            left1, right1)
+                left2 = right1 + 2
+                right2 = left2 + len(N2) + 1 + len(R2)
+                append_unit(root, 'Resource',
+                            [('Status', 'Possessed'), ('Quantity', N2), ('Correctness', 'True'), ('Kind', R2)],
+                            left2, right2)
                 continue
 
 
@@ -294,27 +319,30 @@ def add_discourse_annotations(tree, text):
     
     root = tree
 
-    JoinRegEx = re.compile(r'(.+) joined the game.')
-    SitDownRegEx = re.compile(r'(.+) sat down at seat (\d).')
-    DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d).')
-    GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood).')
-    #TODO à corriger en [X gets N R[, N R]*. ]*X gets N R [, N R]*.
-    #Probleme : comment récupérer ensuite toutes les données ?
-    NoGetRegEx = re.compile(r'No player gets anything.')
+    JoinRegEx = re.compile(r'(.+) joined the game\.')
+    SitDownRegEx = re.compile(r'(.+) sat down at seat (\d)\.')
+    DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d)\.')
+    GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
+    Get2RegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)\.')
+    #It is impossible in "Settlers of Catan" to get more than 2 different types of resources with one roll dice.
+    #That's why we actually don't need to bother with complex regular expression since there are in fact just two cases to consider. :)
+    NoGetRegEx = re.compile(r'No player gets anything\.')
 
-    SoldierRegEx = re.compile(r'(.+) played a soldier card.')
-    Discard1RegEx = re.compile(r'(.+) needs to discard.')
-    Discard2RegEx = re.compile(r'(.+) discarded (\d+) resources.')
-    Robber1RegEx = re.compile(r'(.+) will move the robber.')
-    Robber2RegEx = re.compile(r'(.+) moved the robber.')
-    Robber3RegEx = re.compile(r'(.+) moved the robber, must choose a victim.')
-    StoleRegEx = re.compile(r'(.+) stole a resource from (.+).')
+    SoldierRegEx = re.compile(r'(.+) played a soldier card\.')
+    Discard1RegEx = re.compile(r'(.+) needs to discard\.')
+    Discard2RegEx = re.compile(r'(.+) discarded (\d+) resources\.')
+    Robber1RegEx = re.compile(r'(.+) will move the robber\.')
+    Robber2RegEx = re.compile(r'(.+) moved the robber\.')
+    Robber3RegEx = re.compile(r'(.+) moved the robber, must choose a victim\.')
+    StoleRegEx = re.compile(r'(.+) stole a resource from (.+)')
+    #So it appears that there is no point at the end of "stole" events
+    #and I don't know where that comes from but it took me a while to realise this.
 
-    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood).')
-    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+).')
-    RejectRegEx = re.compile(r'(.+) rejected trade offer.')
-    CardRegEx = re.compile(r'(.+) played a monopoly card.')
-    MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood).')
+    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
+    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
+    CardRegEx = re.compile(r'(.+) played a monopoly card\.')
+    MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
     """
     For events composed of several segments,
@@ -328,7 +356,7 @@ def add_discourse_annotations(tree, text):
     we need a more complex structure than a list, like a dictionnary,
     to identify which "sit down" event is linked to which "join" event.
 
-    For trade / monopoly events, we only need to keep the offer / card drawn in memory,
+    For trade and monopoly events, we only need to keep the offer / card drawn in memory,
     so a single string is enough.
     """
     JoinEvents = dict()
@@ -341,7 +369,7 @@ def add_discourse_annotations(tree, text):
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
             start = int(unit.find('positioning/start/singlePosition').get('index'))
             end = int(unit.find('positioning/end/singlePosition').get('index'))
-            event = text[start+1:end+1] #les fichiers .ac commencent par un espace, donc tous les index sont décalés de 1 pour la lecture
+            event = text[start:end]
 
             # Join / sit down events
 
@@ -382,6 +410,10 @@ def add_discourse_annotations(tree, text):
                 continue
 
             elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
+                DiceEvent.append(unit.get('id'))
+                continue
+
+            elif Get2RegEx.search(event) != None: #<Y> gets <N1> <R1>, <N2> <R2>.
                 DiceEvent.append(unit.get('id'))
                 continue
 
