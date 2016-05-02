@@ -15,6 +15,7 @@ import re
 import argparse
 import codecs
 import sys
+import os
 
 from csvtoglozz import append_unit, init_mk_id, mk_id
 from educe.stac.util.prettifyxml import prettify
@@ -529,22 +530,22 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
 
 def main():
 
-    #ligne de commande : python nonling_annotations.py pilot14 13 ../../data/pilot_nonling/pilot14-copie/units/SILVER/ ../../data/pilot_nonling/pilot14-copie/discourse/SILVER/
+    #ligne de commande : python nonling_annotations.py ../../data/pilot_nonling/test/pilot14/ SILVER
 
     init_mk_id()
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('Name', help = 'name of the game')
-    parser.add_argument('Number', help = 'number of parts of the game')
-    parser.add_argument('UnitsFolder', help = 'folder with units annotations')
-    parser.add_argument('DiscourseFolder', help = 'folder with discourse annotations')
+    parser.add_argument('Folder', help = 'folder where the files to annotate are')
+    parser.add_argument('Metal', help = 'version of the game you want to annotate : BRONZE, SILVER, or GOLD (or other)')
 
     args = parser.parse_args()
-    Name = args.Name
-    N = int(args.Number)
-    UnitsFolder = args.UnitsFolder
-    DiscourseFolder = args.DiscourseFolder
+    Folder = args.Folder
+    Metal = args.Metal
+    Name = Folder.split('/')[-2]
+    
+    UnitsFolder = Folder + 'units/' + Metal + '/'
+    DiscourseFolder = Folder + 'discourse/' + Metal + '/'
 
     JoinEvents = dict()
     StartEvent = ""
@@ -552,6 +553,8 @@ def main():
     RobberEvent = []
     TradeEvent = ""
     MonopolyEvent = ""
+
+    N = len(os.listdir(UnitsFolder)) / 2
 
     for i in range(1, N+1):
         a = JoinEvents
@@ -578,12 +581,18 @@ def main():
         discourse_root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent = add_discourse_annotations(
                     discourse_tree, text, a, b, c, d, e, f)
         
+        """
         basename_units = unitsname[0:len(unitsname)-3]
         basename_discourse = discoursename[0:len(discoursename)-3]
-
-        with codecs.open(basename_units+'-modified.aa', 'w', 'ascii') as out:
+        with codecs.open(basename_units + '-modified.aa', 'w', 'ascii') as out:
             out.write(prettify(units_root))
-        with codecs.open(basename_discourse+'-modified.aa', 'w', 'ascii') as out:
+        with codecs.open(basename_discourse + '-modified.aa', 'w', 'ascii') as out:
+            out.write(prettify(discourse_root))
+        """
+
+        with codecs.open(unitsname, 'w', 'ascii') as out:
+            out.write(prettify(units_root))
+        with codecs.open(discoursename, 'w', 'ascii') as out:
             out.write(prettify(discourse_root))
 
         textfile.close()
