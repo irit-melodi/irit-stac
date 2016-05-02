@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Takes a duet of aa/ac files and automatically adds annotations for non-linguistic events, such as trades or dice rollings.
+Automatically adds annotations for non-linguistic events in a game of "Settlers of Catan"
 """
 
-
-#TODO for now the script only takes a duet of aa/ac files, but we want to do this on a complete game
+#TODO The script now works on a complete game, but maybe we can make it in a more dynamic and proper way
 
 
 from __future__ import print_function
@@ -112,8 +111,9 @@ def add_units_annotations(tree, text):
                 ressources serveur). Je ne sais pas si ça pose problème.
                 """
                 left1 = start + len(X) + 24
-                append_unit(root, 'Resource', left1, left1 + len(M) + 1 + len(R1),
-                            [('Status', '?'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)])
+                append_unit(root, 'Resource',
+                            [('Status', '?'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)],
+                            left1, left1 + len(M) + 1 + len(R1))
                 right2 = end - len(Y) - 7
                 append_unit(root, 'Resource',
                             [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)],
@@ -300,7 +300,7 @@ def append_schema(root, utype, edus):
     return cdu_id
 
 
-def add_discourse_annotations(tree, text):
+def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent):
     """
     Add discourse annotations for non-linguistical event
     
@@ -321,6 +321,7 @@ def add_discourse_annotations(tree, text):
 
     JoinRegEx = re.compile(r'(.+) joined the game\.')
     SitDownRegEx = re.compile(r'(.+) sat down at seat (\d)\.')
+
     DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d)\.')
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
     Get2RegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)\.')
@@ -359,11 +360,6 @@ def add_discourse_annotations(tree, text):
     For trade and monopoly events, we only need to keep the offer / card drawn in memory,
     so a single string is enough.
     """
-    JoinEvents = dict()
-    DiceEvent = []
-    RobberEvent = []
-    TradeEvent = ""
-    MonopolyEvent = ""
 
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
@@ -385,6 +381,17 @@ def add_discourse_annotations(tree, text):
                 append_relation(root, 'Sequence', JoinEvents[X], unit.get('id'))
                 del JoinEvents[X]
                 continue
+
+            # Game started / Board layout set events
+
+            elif event == "Game started.":
+                StartEvent = unit.get('id')
+                continue
+
+            elif event == "Board layout set.":
+                append_relation(root, 'Sequence', StartEvent, unit.get('id'))
+                continue
+                
 
             # Resource distribution events
 
@@ -447,7 +454,7 @@ def add_discourse_annotations(tree, text):
                 cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
                 append_relation(root, 'Result', RobberEvent[0], cdu)
                 for i in range(1,len(RobberEvent)-2):
-                    append_relation(root, 'Sequence', DiceEvent[i], DiceEvent[i+1])
+                    append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
                 RobberEvent[:] = []
                 continue
 
@@ -460,7 +467,7 @@ def add_discourse_annotations(tree, text):
                 cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
                 append_relation(root, 'Result', RobberEvent[0], cdu)
                 for i in range(1,len(RobberEvent)-2):
-                    append_relation(root, 'Sequence', DiceEvent[i], DiceEvent[i+1])
+                    append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
                 RobberEvent[:] = []
                 continue
 
@@ -509,7 +516,7 @@ def add_discourse_annotations(tree, text):
                 append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
         DiceEvent[:] = []
 
-    return root
+    return root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent
 
 
 
@@ -522,21 +529,85 @@ def add_discourse_annotations(tree, text):
 
 def main():
 
-    #ligne de commande : python nonling_annotations.py test_units.aa test_discourse.aa test.ac
+    #ligne de commande : python nonling_annotations.py pilot14 13 ../../data/pilot_nonling/pilot14-copie/units/SILVER/ ../../data/pilot_nonling/pilot14-copie/discourse/SILVER/
 
-    
     init_mk_id()
 
     parser = argparse.ArgumentParser()
-    
+
+    parser.add_argument('Name', help = 'name of the game')
+    parser.add_argument('Number', help = 'number of parts of the game')
+    parser.add_argument('UnitsFolder', help = 'folder with units annotations')
+    parser.add_argument('DiscourseFolder', help = 'folder with discourse annotations')
+
+    args = parser.parse_args()
+    Name = args.Name
+    N = int(args.Number)
+    UnitsFolder = args.UnitsFolder
+    DiscourseFolder = args.DiscourseFolder
+
+    JoinEvents = dict()
+    StartEvent = ""
+    DiceEvent = []
+    RobberEvent = []
+    TradeEvent = ""
+    MonopolyEvent = ""
+
+    for i in range(1, N+1):
+        a = JoinEvents
+        b = StartEvent
+        c = DiceEvent
+        d = RobberEvent
+        e = TradeEvent
+        f = MonopolyEvent
+
+        textname = UnitsFolder + Name + '_%02d.ac' % i
+        unitsname = UnitsFolder + Name + '_%02d.aa' % i
+        discoursename = DiscourseFolder + Name + '_%02d.aa' % i
+        textfile = open (textname, 'r')
+        unitsfile = open(unitsname, 'r')
+        discoursefile = open (discoursename, 'r')
+
+        text = textfile.read()
+        stringtree_units = unitsfile.read()
+        units_tree = ET.fromstring(stringtree_units)
+        stringtree_discourse = discoursefile.read()
+        discourse_tree = ET.fromstring(stringtree_discourse)
+
+        units_root = add_units_annotations(units_tree, text)
+        discourse_root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent = add_discourse_annotations(
+                    discourse_tree, text, a, b, c, d, e, f)
+        
+        basename_units = unitsname[0:len(unitsname)-3]
+        basename_discourse = discoursename[0:len(discoursename)-3]
+
+        with codecs.open(basename_units+'-modified.aa', 'w', 'ascii') as out:
+            out.write(prettify(units_root))
+        with codecs.open(basename_discourse+'-modified.aa', 'w', 'ascii') as out:
+            out.write(prettify(discourse_root))
+
+        textfile.close()
+        unitsfile.close()
+        discoursefile.close()
+
+
+
+
+    """
+    #ligne de commande : python nonling_annotations.py test_units.aa test_discourse.aa test.ac
+
+    init_mk_id()
+
+    parser = argparse.ArgumentParser()
+
     parser.add_argument('aaUfile', help = 'file with units annotations')
     parser.add_argument('aaDfile', help = 'file with discourse annotations')
     parser.add_argument('acfile', help = 'file with rawtext')
 
-    args = parser.parse_args()
     aaUfile = args.aaUfile
     aaDfile = args.aaDfile
     acfile = args.acfile
+
 
     aauf = open(aaUfile, 'r')
     aadf = open(aaDfile, 'r')
@@ -562,6 +633,7 @@ def main():
     aauf.close()
     aadf.close()
     acf.close()
+    """
 
 
 if __name__ == '__main__':
