@@ -574,7 +574,7 @@ def main():
         e = TradeEvent
         f = MonopolyEvent
 
-        textname = UnitsFolder + Name + '_%02d.ac' % i
+        textname = Folder + 'unannotated/' + Name + '_%02d.ac' % i
         unitsname = UnitsFolder + Name + '_%02d.aa' % i
         discoursename = DiscourseFolder + Name + '_%02d.aa' % i
         textfile = open (textname, 'r')
@@ -608,51 +608,6 @@ def main():
         textfile.close()
         unitsfile.close()
         discoursefile.close()
-
-
-
-
-    """
-    #ligne de commande : python nonling_annotations.py test_units.aa test_discourse.aa test.ac
-
-    init_mk_id()
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('aaUfile', help = 'file with units annotations')
-    parser.add_argument('aaDfile', help = 'file with discourse annotations')
-    parser.add_argument('acfile', help = 'file with rawtext')
-
-    aaUfile = args.aaUfile
-    aaDfile = args.aaDfile
-    acfile = args.acfile
-
-
-    aauf = open(aaUfile, 'r')
-    aadf = open(aaDfile, 'r')
-    acf = open(acfile, 'r')
-
-    stringtree_units = aauf.read()
-    units_tree = ET.fromstring(stringtree_units)
-    stringtree_discourse = aadf.read()
-    discourse_tree = ET.fromstring(stringtree_discourse)
-    text = acf.read()
-
-    units_root = add_units_annotations(units_tree, text)
-    discourse_root = add_discourse_annotations(discourse_tree, text)
-
-    basename_units = aaUfile.split(".")[0]
-    basename_discourse = aaDfile.split(".")[0]
-
-    with codecs.open(basename_units+'-modified.aa', 'w', 'ascii') as out:
-        out.write(prettify(units_root))
-    with codecs.open(basename_discourse+'-modified.aa', 'w', 'ascii') as out:
-        out.write(prettify(discourse_root))
-
-    aauf.close()
-    aadf.close()
-    acf.close()
-    """
 
 
 if __name__ == '__main__':
