@@ -73,6 +73,7 @@ discourse_rel_types =\
         , 'Alternation'
         , 'Acknowledgement'
         , 'Background'
+        , 'Sequence'
         ]
 
 

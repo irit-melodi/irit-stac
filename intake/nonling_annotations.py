@@ -301,7 +301,7 @@ def append_schema(root, utype, edus):
     return cdu_id
 
 
-def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent):
+def add_discourse_annotations(tree, text, a, b, c, d, e, f):
     """
     Add discourse annotations for non-linguistical event
     
@@ -317,7 +317,14 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
     root :
         modified XML tree with discourse annotations for non-linguistical events
     """
-    
+
+    JoinEvents = a
+    StartEvent = b
+    DiceEvent = c
+    RobberEvent = d
+    TradeEvent = e
+    MonopolyEvent = f
+  
     root = tree
 
     JoinRegEx = re.compile(r'(.+) joined the game\.')
@@ -345,22 +352,6 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
     CardRegEx = re.compile(r'(.+) played a monopoly card\.')
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
-
-    """
-    For events composed of several segments,
-    these lists will keep in memory the ids
-    of the segments of the event currently happening.
-
-    The lists are then emptied when the event is finished,
-    in order to start the next event.
-
-    For join / sit down events, since they happen at the same time,
-    we need a more complex structure than a list, like a dictionnary,
-    to identify which "sit down" event is linked to which "join" event.
-
-    For trade and monopoly events, we only need to keep the offer / card drawn in memory,
-    so a single string is enough.
-    """
 
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
@@ -407,11 +398,11 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
                         else: # Resource Distribution : 2 or more players
                             cdu = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
                             append_relation(root, 'Result', DiceEvent[0], cdu)
-                            for i in range(1,len(DiceEvent)-2):
+                            for i in range(1,len(DiceEvent)-1):
                                 append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
                         DiceEvent[:] = []
                     DiceEvent.append(unit.get('id'))
-                else: # Robber event
+                else: # M1 + M2 == 7 : Robber event
                     if RobberEvent != []:
                         raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                     RobberEvent.append(unit.get('id'))
@@ -454,7 +445,7 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
                 RobberEvent.append(unit.get('id'))
                 cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
                 append_relation(root, 'Result', RobberEvent[0], cdu)
-                for i in range(1,len(RobberEvent)-2):
+                for i in range(1,len(RobberEvent)-1):
                     append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
                 RobberEvent[:] = []
                 continue
@@ -467,7 +458,7 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
                 RobberEvent.append(unit.get('id'))
                 cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
                 append_relation(root, 'Result', RobberEvent[0], cdu)
-                for i in range(1,len(RobberEvent)-2):
+                for i in range(1,len(RobberEvent)-1):
                     append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
                 RobberEvent[:] = []
                 continue
@@ -482,7 +473,10 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
                 continue
 
             elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
-                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                mo = TradeRegEx.search(event)
+                Y = mo.group(6)
+                if Y != "the bank": #when you trade from the bank, you don't answer to a trade offer so there is no relation to make
+                    append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
                 continue
 
             elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
@@ -513,7 +507,7 @@ def add_discourse_annotations(tree, text, JoinEvents, StartEvent, DiceEvent, Rob
         else: # Resource Distribution : 2 or more players
             cdu = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
             append_relation(root, 'Result', DiceEvent[0], cdu)
-            for i in range(1,len(DiceEvent)-2):
+            for i in range(1,len(DiceEvent)-1):
                 append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
         DiceEvent[:] = []
 
@@ -546,6 +540,22 @@ def main():
     
     UnitsFolder = Folder + 'units/' + Metal + '/'
     DiscourseFolder = Folder + 'discourse/' + Metal + '/'
+
+    """
+    For events composed of several segments,
+    these lists will keep in memory the ids
+    of the segments of the event currently happening.
+
+    The lists are then emptied when the event is finished,
+    in order to start the next event.
+
+    For join / sit down events, since they happen at the same time,
+    we need a more complex structure than a list, like a dictionnary,
+    to identify which "sit down" event is linked to which "join" event.
+
+    For trade and monopoly events, we only need to keep the offer / card drawn in memory,
+    so a single string is enough.
+    """
 
     JoinEvents = dict()
     StartEvent = ""
