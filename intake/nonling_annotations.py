@@ -111,7 +111,7 @@ def add_units_annotations(tree, text):
                 dans l'ordre (d'abord les ressources utilisateurs, ensuite les
                 ressources serveur). Je ne sais pas si ça pose problème.
                 """
-                left1 = start + len(X) + 24
+                left1 = start + len(X) + 8
                 append_unit(root, 'Resource',
                             [('Status', '?'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)],
                             left1, left1 + len(M) + 1 + len(R1))
