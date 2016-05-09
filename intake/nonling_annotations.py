@@ -467,8 +467,6 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
             # HYPOTHESIS : only one offer can be made at a time (not sure if true, needs in/confirmation)
 
             elif OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
-                if TradeEvent != "":
-                    TradeEvent = ""
                 TradeEvent = unit.get('id')
                 continue
 
