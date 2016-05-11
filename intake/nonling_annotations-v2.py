@@ -15,8 +15,8 @@ import codecs
 import sys
 import os
 
-import educe.stac
-import educe.annotation
+import educe.stac as STAC
+import educe.annotation as ANNO
 
 from csvtoglozz import append_unit, init_mk_id, mk_id
 from educe.stac.util.prettifyxml import prettify
@@ -56,11 +56,14 @@ def add_units_annotations(doc):
 
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
+    NewPartialUnits = []
+
     for anno in doc.units:
         if anno.type == 'NonplayerSegment':
             start = anno.span.char_start
             end = anno.span.char_end
             event = doc.text(anno.text_span())
+
             if OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
                 mo = OfferRegEx.search(event)
                 X = mo.group(1)
@@ -75,15 +78,19 @@ def add_units_annotations(doc):
 
                 left1 = start + len(X) + 24
                 right1 = left1 + len(M) + 1 + len(R1)
-                spanR1 = Span(left1, right1)
+                spanR1 = ANNO.Span(left1, right1)
                 featsR1 = [('Status', 'Givable'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)]
-                Res1 = Unit(unit_id, spanR1, 'Resource', featsR1, metadata, origin)
+                #Res1 = ANNO.Unit(unit_id, spanR1, 'Resource', featsR1, metadata, origin) #comment initialiser unit_id, metadata, et origin ?
+                Res1 = STAC.PartialUnit(spanR1, 'Resource', featsR1)
+                NewPartialUnits.append(Res1)
                 
                 right2 = end - 1
                 left2 = right2 - len(R2) - 1 - len(N)
-                spanR2 = Span(left2, right2)
+                spanR2 = ANNO.Span(left2, right2)
                 featsR2 = [('Status', 'Receivable'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)]
-                Res2 = Unit(unit_id, spanR2, 'Resource', featsR2, metadata, origin)
+                #Res2 = ANNO.Unit(unit_id, spanR2, 'Resource', featsR2, metadata, origin)
+                Res2 = STAC.PartialUnit(spanR2, 'Resource', featsR2)
+                NewPartialUnits.append(Res2)
                 continue
 
 
@@ -111,15 +118,19 @@ def add_units_annotations(doc):
 
                 left1 = start + len(X) + 8
                 right1 = left1 + len(M) + 1 + len(R1)
-                spanR1 = Span(left1, right1)
+                spanR1 = ANNO.Span(left1, right1)
                 featsR1 = [('Status', '?'), ('Quantity', M), ('Correctness', 'True'), ('Kind', R1)]
-                Res1 = Unit(unit_id, spanR1, 'Resource', featsR1, metadata, origin)
+                #Res1 = ANNO.Unit(unit_id, spanR1, 'Resource', featsR1, metadata, origin)
+                Res1 = STAC.PartialUnit(spanR1, 'Resource', featsR1)
+                NewPartialUnits.append(Res1)
                 
                 left2 = right1 + 5
                 right2 = left2 + len(N) + 1 + len(R2)
-                spanR2 = Span(left2, right2)
+                spanR2 = ANNO.Span(left2, right2)
                 featsR2 = [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R2)]
-                Res2 = Unit(unit_id, spanR2, 'Resource', featsR2, metadata, origin)
+                #Res2 = ANNO.Unit(unit_id, spanR2, 'Resource', featsR2, metadata, origin)
+                Res2 = STAC.PartialUnit(spanR2, 'Resource', featsR2)
+                NewPartialUnits.append(Res2)
                 continue
 
 
@@ -145,9 +156,11 @@ def add_units_annotations(doc):
 
                 left = start + len(Y) + 6
                 right = end - 1
-                spanR = (left, right)
+                spanR = ANNO.Span(left, right)
                 featsR = [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)]
-                Res = Unit(unit_id, spanR, 'Resource', featsR, metadata, origin)
+                #Res = ANNO.Unit(unit_id, spanR, 'Resource', featsR, metadata, origin)
+                Res = STAC.PartialUnit(spanR, 'Resource', featsR)
+                NewPartialUnits.append(Res)
                 continue
 
             elif Get2RegEx.search(event) != None: #<Y> gets <N1> <R1>, <N2> <R2>.
@@ -164,15 +177,19 @@ def add_units_annotations(doc):
 
                 left1 = start + len(Y) + 6
                 right1 = left1 + len(N1) + 1 + len(R1)
-                spanR1 = (left1, right1)
+                spanR1 = ANNO.Span(left1, right1)
                 featsR1 = [('Status', 'Possessed'), ('Quantity', N1), ('Correctness', 'True'), ('Kind', R1)]
-                Res1 = Unit(unit_id, spanR1, 'Resource', featsR1, metadata, origin)
+                #Res1 = ANNO.Unit(unit_id, spanR1, 'Resource', featsR1, metadata, origin)
+                Res1 = STAC.PartialUnit(spanR1, 'Resource', featsR1)
+                NewPartialUnits.append(Res1)
 
                 left2 = right1 + 2
                 right2 = left2 + len(N2) + 1 + len(R2)
-                spanR2 = (left2, right2)
+                spanR2 = ANNO.Span(left2, right2)
                 featsR2 = [('Status', 'Possessed'), ('Quantity', N2), ('Correctness', 'True'), ('Kind', R2)]
-                Res2 = Unit(unit_id, spanR2, 'Resource', featsR2, metadata, origin)
+                #Res2 = ANNO.Unit(unit_id, spanR2, 'Resource', featsR2, metadata, origin)
+                Res2 = STAC.PartialUnit(spanR2, 'Resource', featsR2)
+                NewPartialUnits.append(Res2)
                 continue
 
 
@@ -187,9 +204,11 @@ def add_units_annotations(doc):
 
                 right = end - 1
                 left = right - len(R)
-                spanR = (left, right)
+                spanR = ANNO.Span(left, right)
                 featsR = [('Status', 'Possessed'), ('Quantity', '?'), ('Correctness', 'True'), ('Kind', R)]
-                Res = Unit(unit_id, spanR, 'Resource', featsR, metadata, origin)
+                #Res = ANNO.Unit(unit_id, spanR, 'Resource', featsR, metadata, origin)
+                Res = STAC.PartialUnit(spanR, 'Resource', featsR)
+                NewPartialUnits.append(Res)
                 continue
 
             else:
@@ -198,7 +217,8 @@ def add_units_annotations(doc):
                 anno.features['Addresse'] = 'All'
                 continue
 
-    return root
+    NewUnits = STAC.create_units('', doc, 'stac', NewUnits)
+    return doc
 
 
 
@@ -242,7 +262,7 @@ def add_discourse_annotations(doc):
     #That's why we actually don't need to bother with complex regular expression since there are in fact just two cases to consider. :)
     NoGetRegEx = re.compile(r'No player gets anything\.')
 
-    SoldierRegEx = re.compile(r'(.+) played a soldier card\.')
+    SoldierRegEx = re.compile(r'(.+) played a Soldier card\.')
     Discard1RegEx = re.compile(r'(.+) needs to discard\.')
     Discard2RegEx = re.compile(r'(.+) discarded (\d+) resources\.')
     Robber1RegEx = re.compile(r'(.+) will move the robber\.')
@@ -275,8 +295,8 @@ def add_discourse_annotations(doc):
             elif SitDownRegEx.search(event) != None: #<X> sat down at seat <N>.
                 mo = SitDownRegEx.search(event)
                 X = mo.group(1)
-                rspan = RelSpan(X, JoinEvents[X])
-                rel = Relation(rel_id, rspan, 'Sequence', features, metadata)
+                rspan = ANNO.RelSpan(X, JoinEvents[X])
+                rel = ANNO.Relation(rel_id, rspan, 'Sequence', features, metadata)
                 del JoinEvents[X]
                 continue
 
@@ -287,8 +307,8 @@ def add_discourse_annotations(doc):
                 continue
 
             elif event == "Board layout set.":
-                rspan = RelSpan(StartEvent, anno._anno_id)
-                rel = Relation(rel_id, rspan, 'Sequence', features, metadata)
+                rspan = ANNO.RelSpan(StartEvent, anno._anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Sequence', features, metadata)
                 continue
                 
 
@@ -301,15 +321,15 @@ def add_discourse_annotations(doc):
                 if M1 + M2 != 7: # Resource distribution event
                     if len(DiceEvent) > 0:
                         if len(DiceEvent) == 2: # Resource distribution : 1 player
-                            rspan = RelSpan(DiceEvent[0], DiceEvent[1])
-                            rel = Relation(rel_id, rspan, 'Sequence', features, metadata)
+                            rspan = ANNO.RelSpan(DiceEvent[0], DiceEvent[1])
+                            rel = ANNO.Relation(rel_id, rspan, 'Sequence', features, metadata)
                         else: # Resource Distribution : 2 or more players
-                            cdu = Schema(rel_id, DiceEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
-                            rspan = RelSpan(DiceEvent[0], cdu._anno_id)
-                            rel = Relation(rel_id, rspan, 'Result', features, metadata)
+                            cdu = ANNO.Schema(rel_id, DiceEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
+                            rspan = ANNO.RelSpan(DiceEvent[0], cdu._anno_id)
+                            rel = ANNO.Relation(rel_id, rspan, 'Result', features, metadata)
                             for i in range(1,len(DiceEvent)-1):
-                                rspan = RelSpan(DiceEvent[i], DiceEvent[i+1])
-                                rel = Relation(rel_id, rspan, 'Continuation', features, metadata)
+                                ANNO.rspan = RelSpan(DiceEvent[i], DiceEvent[i+1])
+                                ANNO.rel = Relation(rel_id, rspan, 'Continuation', features, metadata)
                         DiceEvent[:] = []
                     DiceEvent.append(anno._anno_id)
                 else: # M1 + M2 == 7 : Robber event
@@ -327,14 +347,14 @@ def add_discourse_annotations(doc):
                 continue
 
             elif NoGetRegEx.search(event) != None: #No player gets anything.
-                rspan = (DiceEvent[0], anno._anno_id)
-                rel = Relation(rel_id, rspan, 'Result', features, metadata)
+                rspan = ANNO.RelSpan(DiceEvent[0], anno._anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Result', features, metadata)
                 DiceEvent[:] = []
                 continue
 
             # Robber events
 
-            elif SoldierRegEx.search(event) != None: #<X> played a soldier card.
+            elif SoldierRegEx.search(event) != None: #<X> played a Soldier card.
                 if RobberEvent != []:
                     raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                 RobberEvent.append(anno._anno_id)
@@ -354,12 +374,12 @@ def add_discourse_annotations(doc):
 
             elif Robber2RegEx.search(event) != None: #<X> moved the robber.
                 RobberEvent.append(anno._anno_id)
-                cdu = Schema(rel_id, RobberEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
-                rspan = (RobberEvent[0], cdu._anno_id)
-                rel = Relation(rel_id, rspan, 'Result', features, metadata)
+                cdu = ANNO.Schema(rel_id, RobberEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
+                rspan = ANNO.RelSpan(RobberEvent[0], cdu._anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Result', features, metadata)
                 for i in range(1,len(RobberEvent)-1):
-                    rspan = (RobberEvent[i], RobberEvent[i+1])
-                    rel = Relation(rel_id, rspan, 'Sequence', features, metadata)
+                    rspan = ANNO.RelSpan(RobberEvent[i], RobberEvent[i+1])
+                    rel = ANNO.Relation(rel_id, rspan, 'Sequence', features, metadata)
                 RobberEvent[:] = []
                 continue
 
@@ -369,11 +389,11 @@ def add_discourse_annotations(doc):
 
             elif StoleRegEx.search(event) != None: #<X> stole a resource from <Z>.
                 RobberEvent.append(anno._anno_id)
-                cdu = Schema(rel_id, RobberEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
-                rspan = (RobberEvent[0], cdu._anno_id)
+                cdu = ANNO.Schema(rel_id, RobberEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
+                rspan = ANNO.RelSpan(RobberEvent[0], cdu._anno_id)
                 for i in range(1,len(RobberEvent)-1):
-                    rspan = (RobberEvent[i], RobberEvent[i+1])
-                    rel = Relation(rel_id, rspan, 'Sequence', features, metadata)
+                    rspan = ANNO.RelSpan(RobberEvent[i], RobberEvent[i+1])
+                    rel = ANNO.Relation(rel_id, rspan, 'Sequence', features, metadata)
                 RobberEvent[:] = []
                 continue
 
@@ -388,13 +408,13 @@ def add_discourse_annotations(doc):
                 mo = TradeRegEx.search(event)
                 Y = mo.group(6)
                 if Y != "the bank": #when you trade from the bank, you don't answer to a trade offer so there is no relation to make
-                    rspan = (TradeEvent, anno._anno_id)
-                    rel = Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
+                    rspan = ANNO.RelSpan(TradeEvent, anno._anno_id)
+                    rel = ANNO.Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
                 continue
 
             elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
-                rspan = (TradeEvent, anno._anno_id)
-                rel = Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
+                rspan = ANNO.RelSpan(TradeEvent, anno._anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
                 continue
 
             # Monopoly events
@@ -406,8 +426,8 @@ def add_discourse_annotations(doc):
                 continue
 
             elif MonopolyRegEx.search(event) != None: #<X> monopolized <R>.
-                rspan = (MonopolyEvent, anno._anno_id)
-                rel = Relation(rel_id, rspan, 'Sequence', features, metadata)
+                rspan = ANNO.RelSpan(MonopolyEvent, anno._anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Sequence', features, metadata)
                 MonopolyEvent = ""
                 continue
 
@@ -418,15 +438,15 @@ def add_discourse_annotations(doc):
     """
     if len(DiceEvent) > 0:
         if len(DiceEvent) == 2: # Resource distribution : 1 player
-            rspan = (DiceEvent[0], DiceEvent[1])
-            rel = Relation(rel_id, rspan, 'Result', features, metadata)
+            rspan = ANNO.RelSpan(DiceEvent[0], DiceEvent[1])
+            rel = ANNO.Relation(rel_id, rspan, 'Result', features, metadata)
         else: # Resource Distribution : 2 or more players
-            cdu = Schema(rel_id, RobberEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
-            rspan = (DiceEvent[0], cdu._anno_id)
-            rel = Relation(rel_id, rspan, 'Result', features, metadata)
+            cdu = ANNO.Schema(rel_id, RobberEvent[1:], relations, schemas, 'Complex_discourse_unit', features, metadata)
+            rspan = ANNO.RelSpan(DiceEvent[0], cdu._anno_id)
+            rel = ANNO.Relation(rel_id, rspan, 'Result', features, metadata)
             for i in range(1,len(DiceEvent)-1):
-                rspan = (DiceEvent[i], DiceEvent[i+1])
-                rel = Relation(rel_id, rspan, 'Continuation', features, metadata)
+                rspan = ANNO.RelSpan(DiceEvent[i], DiceEvent[i+1])
+                rel = ANNO.Relation(rel_id, rspan, 'Continuation', features, metadata)
         DiceEvent[:] = []
 
     return doc
@@ -444,22 +464,32 @@ def main():
 
     #ligne de commande : python nonling_annotations-v2.py ../../data/pilotnonling/test/
 
+    def to_annotate(fileId):
+        stage = fileId.stage
+        return stage == 'units' or stage == 'discourse'
+
     parser = argparse.ArgumentParser()
     parser.add_argument('Directory', help = 'directory where the files to annotate are')
     args = parser.parse_args()
     Directory = args.Directory
-    reader = educe.stac.Reader(Directory)
-    corpus = reader.slurp(verbose=True)
+
+    reader = STAC.Reader(Directory)
+    subset = reader.filter(reader.files(), lambda k: to_annotate(k))
+    corpus= reader.slurp(subset, verbose=True)
 
     for key in corpus.keys():
         doc = corpus[key]
         print(key)
-        if 'units' in str(vars(key)): #ceci est un test très moche
+        if 'units' in str(key):
+            #print('units : pass (pour le moment)')
             add_units_annotations(doc)
-        elif 'discourse' in str(vars(key)):
+            continue
+        elif 'discourse' in str(key):
             print('discourse : pass (pour le moment)')
             #add_discourse_annotations(doc)
+            continue
         else:
+            raise Exception("main : you shouldn't be here!")
             continue
 
 

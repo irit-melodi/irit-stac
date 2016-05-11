@@ -337,7 +337,7 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
     #That's why we actually don't need to bother with complex regular expression since there are in fact just two cases to consider. :)
     NoGetRegEx = re.compile(r'No player gets anything\.')
 
-    SoldierRegEx = re.compile(r'(.+) played a soldier card\.')
+    SoldierRegEx = re.compile(r'(.+) played a Soldier card\.')
     Discard1RegEx = re.compile(r'(.+) needs to discard\.')
     Discard2RegEx = re.compile(r'(.+) discarded (\d+) resources\.')
     Robber1RegEx = re.compile(r'(.+) will move the robber\.')
@@ -423,7 +423,7 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
 
             # Robber events
 
-            elif SoldierRegEx.search(event) != None: #<X> played a soldier card.
+            elif SoldierRegEx.search(event) != None: #<X> played a Soldier card.
                 if RobberEvent != []:
                     raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                 RobberEvent.append(unit.get('id'))
