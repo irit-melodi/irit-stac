@@ -217,7 +217,7 @@ def add_units_annotations(doc):
                 anno.features['Addresse'] = 'All'
                 continue
 
-    NewUnits = STAC.create_units('', doc, 'stac', NewUnits)
+    NewUnits = STAC.create_units('', doc, 'stac', NewPartialUnits)
     return doc
 
 
