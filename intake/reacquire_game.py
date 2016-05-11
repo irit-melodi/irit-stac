@@ -18,7 +18,7 @@ from educe.stac.annotation import parse_turn_id
 
 
 # path to the folder containing the intake scripts (including this one)
-PATH_TO_INTAKE = os.path.dirname(__file__)
+PATH_TO_INTAKE = os.path.dirname(os.path.abspath(__file__))
 
 
 def read_portioning(seg_file):
@@ -213,9 +213,11 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
     Parameters
     ----------
     f_orig : File
-        Version of the file with higher priority.
+        Version of the file with higher priority (typically, the
+        currently annotated version).
     f_dest : File
-        Version of the file with lower priority.
+        Version of the file with lower priority (typically, the
+        unannotated but finer-grained version).
     f_res : File
         `f_dest` with turns transfered from `f_orig`.
     verbose : int
@@ -244,13 +246,60 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
             writer_res.writerow(line_dest)
             continue
 
-        # transfer empty lines, they mark subdoc split
-        # TODO? get rid of spurious empty lines
-        while (not line_orig or
-               not ''.join(line_orig).strip()):
-            writer_res.writerow(line_orig)  # transfer split
+        # otherwise:
+        # * empty lines mark subdoc split:
+        #   we need to be careful to avoid splitting inside chunks of
+        #   game messages
+        buff_orig = []
+        while (not line_orig
+               or not ''.join(line_orig).strip()):
+            # TODO? get rid of spurious empty lines
+            # look ahead for the next turn in _orig
+            buff_orig.append(line_orig)
             line_orig = reader_orig.next()
+        # adjust subdoc split: append extra turns from _dest until
+        # either we reach a safe split point
+        # or all extra turns have been consumed
+        if buff_orig:
+            try:  # why try/catch: cf. DEBUG below
+                turn_id_orig = parse_turn_id(line_orig[0])
+            except ValueError:
+                print([i for i, c in enumerate(line_orig[0])
+                       if c == '\t'])
+                print('\n'.join(line_orig))
+                print(line_orig[0].split('\t'))
+                raise
+            # new turns in _dest should be appended to the current subdoc,
+            # until we reach "It's X's turn to roll the dice." (or none
+            # remains)
+            try:
+                turn_id_dest = parse_turn_id(line_dest[0])
+            except ValueError:
+                print([i for i, c in enumerate(line_dest[0])
+                       if c == '\t'])
+                print('\n'.join(line_dest))
+                print(line_dest[0].split('\t'))
+                raise
+            while (turn_id_dest < turn_id_orig
+                   and not (
+                       line_dest[2] == 'Server'
+                       and line_dest[5].endswith('turn to roll the dice.'))):
+                writer_res.writerow(line_dest)
+                # read next turn from _dest
+                line_dest = reader_dest.next()
+                try:
+                    turn_id_dest = parse_turn_id(line_dest[0])
+                except ValueError:
+                    print([i for i, c in enumerate(line_dest[0])
+                           if c == '\t'])
+                    print('\n'.join(line_dest))
+                    print(line_dest[0].split('\t'))
+                    raise
+            # finally, write the (buffered) subdoc split
+            for buff_line in buff_orig:
+                writer_res.writerow(buff_line)
 
+        # write extra turns from _dest
         # DEBUG
         # FIXME csv reader (doublequote=True) fails to split fields on
         # if one field contains a doubled double quote (supposedly read
@@ -507,7 +556,7 @@ def main():
     parser.add_argument('doc', metavar='DOC',
                         help='document')
     # select generation
-    parser.add_argument('--gen',  metavar='N', type=int, default=2,
+    parser.add_argument('--gen', metavar='N', type=int, default=2,
                         help='max generation of turns to include (1, 2, 3)')
     # select steps
     parser.add_argument('--steps', metavar='steps',
