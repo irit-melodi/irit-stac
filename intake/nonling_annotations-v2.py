@@ -46,13 +46,16 @@ def add_units_annotations(doc):
     """
 
     OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
+    #OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*\.')
+    #TODO this new regex for offer works for discourse annotations
+    #but for units, how do we fetch the data ???
     TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    #TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* from (.+)\.')
+    #TODO same as offers : it is complicated to fetch the data properly...
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
 
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
     Get2RegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)\.')
-    #It is impossible in "Settlers of Catan" to get more than 2 different types of resources with one roll dice.
-    #That's why we actually don't need to bother with complex regular expression since there are in fact just two cases to consider. :)
 
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
@@ -258,8 +261,6 @@ def add_discourse_annotations(doc):
     DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d)\.')
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
     Get2RegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)\.')
-    #It is impossible in "Settlers of Catan" to get more than 2 different types of resources with one roll dice.
-    #That's why we actually don't need to bother with complex regular expression since there are in fact just two cases to consider. :)
     NoGetRegEx = re.compile(r'No player gets anything\.')
 
     SoldierRegEx = re.compile(r'(.+) played a Soldier card\.')
@@ -269,13 +270,15 @@ def add_discourse_annotations(doc):
     Robber2RegEx = re.compile(r'(.+) moved the robber\.')
     Robber3RegEx = re.compile(r'(.+) moved the robber, must choose a victim\.')
     StoleRegEx = re.compile(r'(.+) stole a resource from (.+)')
-    #So it appears that there is no point at the end of "stole" events
-    #and I don't know where that comes from but it took me a while to realise this.
 
-    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
-    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    #OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
+    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*\.')
+    BankRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from the bank or a port\.')
+    CantRegEx = re.compile(r"You can't make that trade\.")
+    #TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* from (.+)\.')
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
-    CardRegEx = re.compile(r'(.+) played a monopoly card\.')
+    CardRegEx = re.compile(r'(.+) played a Monopoly card\.')
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
     for anno in doc.units:
@@ -404,12 +407,18 @@ def add_discourse_annotations(doc):
                 TradeEvent = anno._anno_id
                 continue
 
+            elif BankRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2> from the bank or a port.
+                TradeEvent = anno.anno_id
+                continue
+
+            elif CantRegEx.search(event) != None: #You can't make that trade.
+                rspan = ANNO.RelSpan(TradeEvent, anno.anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
+                continue
+
             elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
-                mo = TradeRegEx.search(event)
-                Y = mo.group(6)
-                if Y != "the bank": #when you trade from the bank, you don't answer to a trade offer so there is no relation to make
-                    rspan = ANNO.RelSpan(TradeEvent, anno._anno_id)
-                    rel = ANNO.Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
+                rspan = ANNO.RelSpan(TradeEvent, anno._anno_id)
+                rel = ANNO.Relation(rel_id, rspan, 'Question-answer_pair', features, metadata)
                 continue
 
             elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
@@ -485,7 +494,7 @@ def main():
             add_units_annotations(doc)
             continue
         elif 'discourse' in str(key):
-            print('discourse : pass (pour le moment)')
+            #print('discourse : pass (pour le moment)')
             #add_discourse_annotations(doc)
             continue
         else:

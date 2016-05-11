@@ -46,7 +46,12 @@ def add_units_annotations(tree, text):
     root = tree
 
     OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
+    #OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*\.')
+    #TODO this new regex for offer works for discourse annotations
+    #but for units, how do we fetch the data ???
     TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    #TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* from (.+)\.')
+    #TODO same as offers : it is complicated to fetch the data properly...
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
 
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
@@ -344,13 +349,17 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
     Robber2RegEx = re.compile(r'(.+) moved the robber\.')
     Robber3RegEx = re.compile(r'(.+) moved the robber, must choose a victim\.')
     StoleRegEx = re.compile(r'(.+) stole a resource from (.+)')
-    #So it appears that there is no point at the end of "stole" events
-    #and I don't know where that comes from but it took me a while to realise this.
 
-    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
-    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    #OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)\.')
+    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*\.')
+
+    BankRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from the bank or a port\.')
+    CantRegEx = re.compile(r"You can't make that trade\.")
+    #TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
+    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* from (.+)\.')
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
-    CardRegEx = re.compile(r'(.+) played a monopoly card\.')
+
+    CardRegEx = re.compile(r'(.+) played a Monopoly card\.')
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
     for unit in root:
@@ -470,11 +479,16 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
                 TradeEvent = unit.get('id')
                 continue
 
+            elif BankRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2> from the bank or a port.
+                TradeEvent = unit.get('id')
+                continue
+
+            elif CantRegEx.search(event) != None: #You can't make that trade.
+                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                continue
+
             elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
-                mo = TradeRegEx.search(event)
-                Y = mo.group(6)
-                if Y != "the bank": #when you trade from the bank, you don't answer to a trade offer so there is no relation to make
-                    append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
                 continue
 
             elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
@@ -483,7 +497,7 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
 
             # Monopoly events
 
-            elif CardRegEx.search(event) != None: #<X> played a monopoly card.
+            elif CardRegEx.search(event) != None: #<X> played a Monopoly card.
                 if MonopolyEvent != "":
                     raise Exception("add_discourse_annotations : la chaîne MonopolyEvent n'a pas été vidée!")
                 MonopolyEvent = unit.get('id')
