@@ -18,7 +18,7 @@ from educe.stac.annotation import parse_turn_id
 
 
 # path to the folder containing the intake scripts (including this one)
-PATH_TO_INTAKE = os.path.dirname(__file__)
+PATH_TO_INTAKE = os.path.dirname(os.path.abspath(__file__))
 
 
 def read_portioning(seg_file):
@@ -556,7 +556,7 @@ def main():
     parser.add_argument('doc', metavar='DOC',
                         help='document')
     # select generation
-    parser.add_argument('--gen',  metavar='N', type=int, default=2,
+    parser.add_argument('--gen', metavar='N', type=int, default=2,
                         help='max generation of turns to include (1, 2, 3)')
     # select steps
     parser.add_argument('--steps', metavar='steps',
