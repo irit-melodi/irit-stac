@@ -397,7 +397,7 @@ def append_schema(root, utype, edus):
     return cdu_id
 
 
-def add_discourse_annotations(tree, text, a, b, c, d, e, f):
+def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
     """
     Add discourse annotations for non-linguistical event
     
@@ -420,12 +420,19 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
     RobberEvent = d
     TradeEvent = e
     MonopolyEvent = f
-  
+
+    BuildingEvents = g
+    RollEvent = h
+
     root = tree
 
     JoinRegEx = re.compile(r'(.+) joined the game\.')
     SitDownRegEx = re.compile(r'(.+) sat down at seat (\d)\.')
 
+    TurnToBuildRegEx = re.compile(r"It's (.+)'s turn to build a (road|settlement)\.")
+    BuiltRegEx = re.compile(r'(.+) built a (road|settlement)\.')
+
+    TurnToRollRegEx = re.compile(r"It's (.+)'s turn to roll the dice\.")
     DiceRegEx = re.compile(r'(.+) rolled a (\d) and a (\d)\.')
     GetRegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood)\.')
     Get2RegEx = re.compile(r'(.+) gets (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)\.')
@@ -444,6 +451,7 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
     #For discourse annotations, we can afford to use a single regex for every offer/trade events
     #since we don't need to parse every resource that is exchanged.
     OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*( from the bank or a port)?\.')
+    FromRegEx = re.compile(r'from (.+)')
     CantRegEx = re.compile(r"You can't make that trade\.")
     TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* from (.+)\.')
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
@@ -481,9 +489,31 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
             elif event == "Board layout set.":
                 append_relation(root, 'Sequence', StartEvent, unit.get('id'))
                 continue
+
+            # Building events
+
+            elif TurnToBuildRegEx.search(event) != None: #It's <X>'s turn to build a <C>.
+                mo = TurnToBuildRegEx.search(event)
+                X = mo.group(1)
+                C = mo.group(2)
+                BuildingEvents[(X,C)] = unit.get('id')
+                continue
+
+            elif BuiltRegEx.search(event) != None: #<X> built a <C>.
+                mo = BuiltRegEx.search(event)
+                X = mo.group(1)
+                C = mo.group(2)
+                if BuildingEvents.has_key((X,C)):
+                    append_relation(root, 'Result', BuildingEvents[(X,C)], unit.get('id'))
+                    del BuildingEvents[(X,C)]
+                continue
                 
 
             # Resource distribution events
+
+            elif TurnToRollRegEx.search(event) != None: #It's <X>'s turn to roll the dice.
+                RollEvent = unit.get('id')
+                continue
 
             elif DiceRegEx.search(event) != None: #<X> rolled a <M1> and a <M2>.
                 mo = DiceRegEx.search(event)
@@ -494,8 +524,8 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
                         if len(DiceEvent) == 2: # Resource distribution : 1 player
                             append_relation(root, 'Result', DiceEvent[0], DiceEvent[1])
                         else: # Resource Distribution : 2 or more players
-                            cdu = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
-                            append_relation(root, 'Result', DiceEvent[0], cdu)
+                            cdu_dice = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
+                            append_relation(root, 'Result', DiceEvent[0], cdu_dice)
                             for i in range(1,len(DiceEvent)-1):
                                 append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
                         DiceEvent[:] = []
@@ -504,6 +534,7 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
                     if RobberEvent != []:
                         raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                     RobberEvent.append(unit.get('id'))
+                append_relation(root, 'Result', RollEvent, unit.get('id'))
                 continue
 
             elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
@@ -541,8 +572,8 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
 
             elif Robber2RegEx.search(event) != None: #<X> moved the robber.
                 RobberEvent.append(unit.get('id'))
-                cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
-                append_relation(root, 'Result', RobberEvent[0], cdu)
+                cdu_robber = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
+                append_relation(root, 'Result', RobberEvent[0], cdu_robber)
                 for i in range(1,len(RobberEvent)-1):
                     append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
                 RobberEvent[:] = []
@@ -554,8 +585,8 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
 
             elif StoleRegEx.search(event) != None: #<X> stole a resource from <Z>.
                 RobberEvent.append(unit.get('id'))
-                cdu = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
-                append_relation(root, 'Result', RobberEvent[0], cdu)
+                cdu_robber = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
+                append_relation(root, 'Result', RobberEvent[0], cdu_robber)
                 for i in range(1,len(RobberEvent)-1):
                     append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
                 RobberEvent[:] = []
@@ -565,19 +596,34 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
             # HYPOTHESIS : only one offer can be made at a time (not sure if true, needs in/confirmation)
 
             elif OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
-                TradeEvent = unit.get('id')
+                TradeEvent[:] = []
+                TradeEvent.append(unit.get('id'))
+                continue
+
+            elif event == '...':
+                TradeEvent.append(unit.get('id'))
+                continue
+
+            elif FromRegEx.search(event) != None and TradeRegEx.search(event) == None: #from <X>
+                TradeEvent.append(unit.get('id'))
+                append_relation(root, 'Continuation', TradeEvent[0], unit.get('id'))
+                cdu_offer = append_schema(root, 'Complex_discourse_unit', TradeEvent)
+                TradeEvent[0] = cdu_offer
                 continue
 
             elif CantRegEx.search(event) != None: #You can't make that trade.
-                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                append_relation(root, 'Question-answer_pair', TradeEvent[0], unit.get('id'))
+                TradeEvent[:] = []
                 continue
 
             elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
-                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                append_relation(root, 'Question-answer_pair', TradeEvent[0], unit.get('id'))
+                TradeEvent[:] = []
                 continue
 
             elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
-                append_relation(root, 'Question-answer_pair', TradeEvent, unit.get('id'))
+                append_relation(root, 'Question-answer_pair', TradeEvent[0], unit.get('id'))
+                TradeEvent[:] = []
                 continue
 
             # Monopoly events
@@ -602,13 +648,13 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f):
         if len(DiceEvent) == 2: # Resource distribution : 1 player
             append_relation(root, 'Result', DiceEvent[0], DiceEvent[1])
         else: # Resource Distribution : 2 or more players
-            cdu = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
-            append_relation(root, 'Result', DiceEvent[0], cdu)
+            cdu_dice = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
+            append_relation(root, 'Result', DiceEvent[0], cdu_dice)
             for i in range(1,len(DiceEvent)-1):
                 append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
         DiceEvent[:] = []
 
-    return root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent
+    return root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent, BuildingEvents, RollEvent
 
 
 
@@ -658,8 +704,11 @@ def main():
     StartEvent = ""
     DiceEvent = []
     RobberEvent = []
-    TradeEvent = ""
+    TradeEvent = []
     MonopolyEvent = ""
+
+    BuildingEvents = dict()
+    RollEvent = ""
 
     N = len(os.listdir(UnitsFolder)) / 2
 
@@ -670,6 +719,9 @@ def main():
         d = RobberEvent
         e = TradeEvent
         f = MonopolyEvent
+
+        g = BuildingEvents
+        h = RollEvent
 
         textname = Folder + 'unannotated/' + Name + '_%02d.ac' % i
         unitsname = UnitsFolder + Name + '_%02d.aa' % i
@@ -685,8 +737,8 @@ def main():
         discourse_tree = ET.fromstring(stringtree_discourse)
 
         units_root = add_units_annotations(units_tree, text)
-        discourse_root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent = add_discourse_annotations(
-                    discourse_tree, text, a, b, c, d, e, f)
+        discourse_root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent, BuildingEvents, RollEvent = add_discourse_annotations(
+                    discourse_tree, text, a, b, c, d, e, f, g, h)
         
         """
         basename_units = unitsname[0:len(unitsname)-3]
