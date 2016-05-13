@@ -97,7 +97,8 @@ def backport_portioning(seg_file, first_idx):
     with open(seg_file, 'rb') as seg_f:
         with open(seg_file_res, 'w') as seg_f_res:
             reader = csv.reader(seg_f, delimiter='\t')
-            writer = csv.writer(seg_f_res, delimiter='\t')
+            writer = csv.writer(seg_f_res, delimiter='\t',
+                                lineterminator='\n')
             # leave header line
             line = reader.next()
             writer.writerow(line)
@@ -136,7 +137,8 @@ def _backport_turn_text(f_orig, f_dest, f_res, verbose=0):
     """
     reader_orig = csv.reader(f_orig, delimiter='\t')
     reader_dest = csv.reader(f_dest, delimiter='\t')
-    writer_res = csv.writer(f_res, delimiter='\t')
+    writer_res = csv.writer(f_res, delimiter='\t',
+                            lineterminator='\n')
 
     # read and write header
     header_orig = reader_orig.next()
@@ -225,7 +227,8 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
     """
     reader_orig = csv.reader(f_orig, delimiter='\t')
     reader_dest = csv.reader(f_dest, delimiter='\t')
-    writer_res = csv.writer(f_res, delimiter='\t')
+    writer_res = csv.writer(f_res, delimiter='\t',
+                            lineterminator='\n')
 
     # read and write header
     header_orig = reader_orig.next()
