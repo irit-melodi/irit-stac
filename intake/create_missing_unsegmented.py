@@ -17,21 +17,9 @@ import subprocess
 import sys
 
 from csvtoglozz import utf8_csv_reader
-from educe.stac.util import csv as stac_csv
-
-def remove_ampersands(lines_csv):
-    processed_lines = []
-    for line in lines_csv:
-        processed_cell = []
-        for cell in line:
-            processed_cell.append(cell.replace('&', ''))            
-        processed_lines.append(processed_cell)
-    return processed_lines
-
-
 
 def create_unsegmented_file(dir_corpus, doc, seg_path=''):
-    """Do the augmentation
+    """remove empty lines and ampersands and write contents to unsegmented/
 
     Parameters
     ----------
@@ -77,16 +65,13 @@ def create_unsegmented_file(dir_corpus, doc, seg_path=''):
     
     with open(seg_file, 'rb') as incsvfile:  # bytestring
         csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
-        nonempty_lines = [row for row in list(csvreader) 
-                           if ''.join(row).strip()]
-        processed_nonempty_lines = remove_ampersands(nonempty_lines)
         outcsv = csv.writer(open(useg_file, "wb"), dialect='excel', delimiter='\t')
-        for line in processed_nonempty_lines:
-            outcsv.writerow(line)        
-        
-           
-    
-
+        for row in list(csvreader):
+            processed_row = []
+            if ''.join(row).strip():
+               for cell in row:
+                   processed_row.append(cell.replace('&', ''))
+               outcsv.writerow(processed_row)    
 
 def main():
     # parse command line
