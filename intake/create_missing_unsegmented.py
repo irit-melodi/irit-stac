@@ -1,10 +1,10 @@
-"""Script to re-create an unsegmented csv file from already segmented files. 
+"""Script to re-create an unsegmented csv file from already segmented file. 
 
 This script re-creates file "unsegmented/[file_name].soclog.csv" from existing
 "segmented/[file_name].soclog.seg.csv" file.
-The weaving scripts assumes the structure "unsegmented/*.soclog.csv" to exists. 
-However for some games, it is not found and therefore, it must be re-created 
-by this script.   
+The weaving scripts assumes the structure "unsegmented/[file_name].soclog.csv" 
+to exist. However for some games, it is not found and therefore, it can be 
+re-created by this script. 
 """
 
 from __future__ import print_function
