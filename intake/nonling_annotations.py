@@ -80,13 +80,16 @@ def add_units_annotations(tree, text):
 
     MonopolyRegEx = re.compile(r'(.+) monopolized (clay|ore|sheep|wheat|wood)\.')
 
+
+    Trader = ''
+
     def parseOffer(mo, i, j, start, end, unit, root):
         X = mo.group(1)
         unit.find('characterisation/type').text = 'Offer'
         feats = unit.find('characterisation/featureSet')
         f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
         f_elm1.text = 'Question'
-        f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+        f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
         f_elm2.text = '?'
         #maybe we can shorten this function and make a single loop
         for index in range(1, i+1):
@@ -121,7 +124,7 @@ def add_units_annotations(tree, text):
         feats = unit.find('characterisation/featureSet')
         f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
         f_elm1.text = 'Assertion'
-        f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+        f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
         f_elm2.text = Y
         #maybe we can shorten this function and make a single loop
         for index in range(1, i+1):
@@ -156,34 +159,54 @@ def add_units_annotations(tree, text):
             event = text[start:end]
 
             if Offer11RegEx.search(event) != None: #<X> made an offer to trade <N1> <R1> for <N2> <R2>.
-                parseOffer(Offer11RegEx.search(event), 1, 1, start, end, unit, root)
+                mo = Offer11RegEx.search(event)
+                parseOffer(mo, 1, 1, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer12RegEx.search(event) != None:
-                parseOffer(Offer12RegEx.search(event), 1, 2, start, end, unit, root)
+                mo = Offer12RegEx.search(event)
+                parseOffer(mo, 1, 2, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer21RegEx.search(event) != None:
-                parseOffer(Offer21RegEx.search(event), 2, 1, start, end, unit, root)
+                mo = Offer21RegEx.search(event)
+                parseOffer(mo, 2, 1, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer13RegEx.search(event) != None:
-                parseOffer(Offer13RegEx.search(event), 1, 3, start, end, unit, root)
+                mo = Offer13RegEx.search(event)
+                parseOffer(mo, 1, 3, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer22RegEx.search(event) != None:
-                parseOffer(Offer22RegEx.search(event), 2, 2, start, end, unit, root)
+                mo = Offer22RegEx.search(event)
+                parseOffer(mo, 2, 2, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer31RegEx.search(event) != None:
-                parseOffer(Offer31RegEx.search(event), 3, 1, start, end, unit, root)
+                mo = Offer31RegEx.search(event)
+                parseOffer(mo, 3, 1, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer14RegEx.search(event) != None:
-                parseOffer(Offer14RegEx.search(event), 1, 4, start, end, unit, root)
+                mo = Offer14RegEx.search(event)
+                parseOffer(mo, 1, 4, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer23RegEx.search(event) != None:
-                parseOffer(Offer23RegEx.search(event), 2, 3, start, end, unit, root)
+                mo = Offer23RegEx.search(event)
+                parseOffer(mo, 2, 3, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer32RegEx.search(event) != None:
-                parseOffer(Offer32RegEx.search(event), 3, 2, start, end, unit, root)
+                mo = Offer32RegEx.search(event)
+                parseOffer(mo, 3, 2, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
             elif Offer41RegEx.search(event) != None:
-                parseOffer(Offer41RegEx.search(event), 4, 1, start, end, unit, root)
+                mo = Offer41RegEx.search(event)
+                parseOffer(mo, 4, 1, start, end, unit, root)
+                Trader = mo.group(1)
                 continue
 
             elif Trade11RegEx.search(event) != None: #<X> traded <N1> <R1> for <N2> <R2> from <Y>.
@@ -222,12 +245,21 @@ def add_units_annotations(tree, text):
                 mo = RejectRegEx.search(event)
                 Y = mo.group(1)
 
-                unit.find('characterisation/type').text = 'Reject'
+                unit.find('characterisation/type').text = 'Refusal'
                 feats = unit.find('characterisation/featureSet')
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
-                f_elm2.text = 'All'
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2.text = Trader
+                continue
+
+            elif event == "You can't make that trade.":
+                unit.find('characterisation/type').text = 'Other'
+                feats = unit.find('characterisation/featureSet')
+                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1.text = 'Assertion'
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2.text = Trader
                 continue
 
 
@@ -241,7 +273,7 @@ def add_units_annotations(tree, text):
                 feats = unit.find('characterisation/featureSet')
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
                 f_elm2.text = 'All'
 
                 left = start + len(Y) + 6
@@ -263,7 +295,7 @@ def add_units_annotations(tree, text):
                 feats = unit.find('characterisation/featureSet')
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
                 f_elm2.text = 'All'
 
                 left1 = start + len(Y) + 6
@@ -288,7 +320,7 @@ def add_units_annotations(tree, text):
                 feats = unit.find('characterisation/featureSet')
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
                 f_elm2.text = 'All'
 
                 right = end - 1
@@ -303,7 +335,7 @@ def add_units_annotations(tree, text):
                 feats = unit.find('characterisation/featureSet')
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addresse'})
+                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
                 f_elm2.text = 'All'
                 continue
 

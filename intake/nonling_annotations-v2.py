@@ -17,6 +17,7 @@ import os
 
 import educe.stac as STAC
 import educe.annotation as ANNO
+import educe.glozz as GLOZZ
 
 from csvtoglozz import append_unit, init_mk_id, mk_id
 from educe.stac.util.prettifyxml import prettify
@@ -221,6 +222,15 @@ def add_units_annotations(doc):
                 continue
 
     NewUnits = STAC.create_units('', doc, 'stac', NewPartialUnits)
+    doc.units.extend(NewUnits)
+
+    print("Exemple d'unit initialement dans le document :\n", doc.units[100])
+    #pilot14_09_stac_1462890913 [NonplayerTurn] (1259,1301) {'Timestamp': '10:57:26:748', 'Comments': 'Please write in remarks...', 'Developments': None, 'Identifier': '255.0.1', 'Emitter': 'Server', 'Resources': None}
+    print("Exemple d'unit ajouté avec create_units :\n", doc.units[182])
+    #stac_11 [Resource] (2303,2309) [('Status', 'Possessed'), ('Quantity', u'1'), ('Correctness', 'True'), ('Kind', u'clay')]
+
+    #les deux ont des structures très differentes ce qui pose problème ensuite lorsqu'il faut réécrire tout le doc en XML
+    #du coup je ne sais pas comment faire...
     return doc
 
 
@@ -488,12 +498,19 @@ def main():
 
     for key in corpus.keys():
         doc = corpus[key]
-        print(key)
-        if 'units' in str(key):
+        data = str(key).split(' ')
+        game = data[0]
+        part = data[1][1:-1] #the integer that interests us is between brackets
+        stage = data[2]
+        metal = data[3]
+        path = Directory + game + '/' + stage + '/' + metal + '/'
+        print(game, part, stage, metal)
+        if stage == 'units':
             #print('units : pass (pour le moment)')
-            add_units_annotations(doc)
+            newdoc = add_units_annotations(doc)
+            GLOZZ.write_annotation_file(path + game + '_' + part + '.aa', newdoc)
             continue
-        elif 'discourse' in str(key):
+        elif stage == 'discourse':
             #print('discourse : pass (pour le moment)')
             #add_discourse_annotations(doc)
             continue
