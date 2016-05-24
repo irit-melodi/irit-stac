@@ -413,7 +413,8 @@ def augment_game(dir_orig, dir_dest, doc, gen, steps='all', seg_path=''):
     if not os.path.isdir(useg_dir_orig):
         useg_dir_orig = os.path.join(game_dir_orig, 'csv')
         if not os.path.isdir(useg_dir_orig):
-            err_msg = 'The original game does not follow a known layout'
+            err_msg = ('Unable to locate unsegmented file in original game:'
+                       ' no subfolder unsegmented/ or csv/')
             raise ValueError(err_msg)
     useg_orig = glob(os.path.join(useg_dir_orig,
                                   doc + '*.soclog.csv'))
