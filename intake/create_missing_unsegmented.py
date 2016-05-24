@@ -1,10 +1,9 @@
-"""Script to re-create an unsegmented csv file from already segmented file. 
+"""Re-create an unsegmented csv file given an existing segmented file.
 
-This script re-creates file "unsegmented/[file_name].soclog.csv" from existing
-"segmented/[file_name].soclog.seg.csv" file.
-The weaving scripts assumes the structure "unsegmented/[file_name].soclog.csv" 
-to exist. However for some games, it is not found and therefore, it can be 
-re-created by this script. 
+This script re-creates a file "unsegmented/[file_name].soclog.csv" from
+an existing "segmented/[file_name].soclog.seg.csv" file.
+This enables to regenerate missing unsegmented files that are required
+by the weaving scripts.
 """
 
 from __future__ import print_function
@@ -13,10 +12,9 @@ import argparse
 import csv
 from glob import glob
 import os
-import subprocess
-import sys
 
 from csvtoglozz import utf8_csv_reader
+
 
 def create_unsegmented_file(dir_corpus, doc, seg_path=''):
     """remove empty lines and ampersands and write contents to unsegmented/
@@ -56,27 +54,28 @@ def create_unsegmented_file(dir_corpus, doc, seg_path=''):
         err_msg = 'Weird error on locating segmented file {}'.format(
             seg_file)
         raise ValueError(err_msg)
-        
+
     useg_dir = os.path.join(game_dir, 'unsegmented')
     if not os.path.isdir(useg_dir):
-        os.mkdir(useg_dir)  
-    
+        os.mkdir(useg_dir)
+
     useg_file = os.path.join(useg_dir, doc + '.soclog.csv')
-    
+
     with open(seg_file, 'rb') as incsvfile:  # bytestring
         csvreader = utf8_csv_reader(incsvfile, delimiter='\t')
-        outcsv = csv.writer(open(useg_file, "wb"), dialect='excel', delimiter='\t')
-        for row in list(csvreader):
-            processed_row = []
-            if ''.join(row).strip():
-               for cell in row:
-                   processed_row.append(cell.replace('&', ''))
-               outcsv.writerow(processed_row)    
+        with open(useg_file, 'wb') as outcsvfile:
+            outcsv = csv.writer(outcsvfile, dialect='excel', delimiter='\t',
+                                lineterminator='\n')
+            for row in csvreader:
+                if ''.join(row).strip():
+                    outcsv.writerow([cell.replace('&', '') for cell in row])
+
 
 def main():
+    """Main"""
     # parse command line
     parser = argparse.ArgumentParser(
-        description='Re-create an unsegmented csv file from segmented files of a game')
+        description='Re-create an unsegmented csv file from segmented')
     parser.add_argument('dir_corpus', metavar='DIR',
                         help='folder of the corpus')
     parser.add_argument('doc', metavar='DOC',
