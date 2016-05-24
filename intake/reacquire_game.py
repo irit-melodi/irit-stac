@@ -310,7 +310,9 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
         try:
             parse_turn_id(line_orig[0])
         except ValueError:
-            print([i for i, c in enumerate(line_orig[0])
+            print('line_orig[0]', line_orig[0])
+            print('Positions of \\t in line_orig[0]',
+                  [i for i, c in enumerate(line_orig[0])
                    if c == '\t'])
             print('\n'.join(line_orig))
             print(line_orig[0].split('\t'))
