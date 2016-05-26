@@ -41,12 +41,12 @@ and irit-stac (to make your training procedure available for experiments).
     git clone https://github.com/<yourgithubusername>/irit-stac.git
     ```
 
-This will fetch the latest source code from your repository onto your local
-machine. Your local copy keeps a pointer to your fork on github: the latter
-is a "remote repository" named "origin".
+   This will fetch the latest source code from your repository onto your local
+   machine. Your local copy keeps a pointer to your fork on github: the latter
+   is a "remote repository" named "origin".
 3. Add to your local copy another remote repository: the original
-irit-melodi/irit-stac repository
-[Source: GitHub help](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
+   irit-melodi/irit-stac repository
+   [Source: GitHub help](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
 
     ```sh
     cd irit-stac
@@ -60,15 +60,15 @@ irit-melodi/irit-stac repository
     source activate irit-stac
     ```
 
-The first command creates a conda environment (a sort of sandbox) from the
-specifications contained in the file `environment.yml`.
-This environment is named `irit-stac` and includes
-python 2.7, graphviz 2.38.0, scipy, pip, scikit-learn and a specific version
-of pydot.
-The second command activates the environment, which you have to do every time
-you want to run experiments.
+   The first command creates a conda environment (a sort of sandbox) from the
+   specifications contained in the file `environment.yml`.
+   This environment is named `irit-stac` and includes
+   python 2.7, graphviz 2.38.0, scipy, pip, scikit-learn and a specific version
+   of pydot.
+   The second command activates the environment, which you have to do every time
+   you want to run experiments.
 5. Install irit-stac from the local version on your machine. This should
-automatically fetch the educe/attelo dependencies.
+   automatically fetch the educe/attelo dependencies.
 
     ```sh
     pip install -r requirements.txt
@@ -93,7 +93,7 @@ automatically fetch the educe/attelo dependencies.
     irit-stac gather
     ```
 2. Run an experiment on these instances: learn models and evaluate their
-performances.
+   performances.
 
     ```sh
     irit-stac evaluate
@@ -107,7 +107,7 @@ performances.
     ```
 
 2. Fetch the latest version of the source code for irit-stac from your fork
-on github.
+   on github.
 
     ```sh
     git pull
@@ -119,8 +119,8 @@ on github.
     pip install -r requirements.txt
     ```
 
-This will also fetch and install the latest version of the dependencies,
-including educe and attelo.
+   This will also fetch and install the latest version of the dependencies,
+   including educe and attelo.
 
 ### Keep your fork in sync
 Keeping your fork in sync with changes in the upstream repository involves
@@ -146,7 +146,7 @@ at least four steps, in its simplest form.
     ```
 
 4. Push the commits from your local master branch to the master branch of
-your remote fork.
+   your remote fork.
 
     ```sh
     git push
@@ -177,9 +177,9 @@ anyway.
     git clone https://github.com/<yourgithubusername>/irit-stac.git
     ```
 
-If you were still in the irit-stac folder, you might want to get out first
-(e.g. go one level up with "cd .."), so that attelo and irit-stac are cloned
-into distinct folders.
+   If you were still in the irit-stac folder, you might want to get out first
+   (e.g. go one level up with "cd .."), so that attelo and irit-stac are cloned
+   into distinct folders.
 3. Declare an upstream remote repository for your local attelo.
 
     ```sh
@@ -188,8 +188,8 @@ into distinct folders.
     ```
 
 4. Have your local copy of irit-stac depend on your local copy of attelo.
-You need to edit `irit-stac/requirements.txt`, comment the line about attelo
-and point to your local version of attelo instead:
+   You need to edit `irit-stac/requirements.txt`, comment the line about attelo
+   and point to your local version of attelo instead:
 
     ```
     # -e git+https://github.com/irit-melodi/attelo.git#egg=attelo
@@ -218,8 +218,8 @@ Let us assume for this example that you want to implement a new loss function
 in attelo.
 
 1. Create a local branch, named "fancy-loss", from the master branch of
-attelo.
-Inside your attelo folder:
+   attelo.
+   Inside your attelo folder:
 
     ```sh
     git checkout master
@@ -227,9 +227,9 @@ Inside your attelo folder:
     ```
 
 2. Implement your fancy loss in several local commits. As long as you have
-not made your commits public by pushing them on github, you are absolutely
-free to rewrite the history of your local branch (for example by amending
-or deleting commits).
+   not made your commits public by pushing them on github, you are absolutely
+   free to rewrite the history of your local branch (for example by amending
+   or deleting commits).
 
     ```sh
     git add attelo/metrics/fancy_loss.py
@@ -241,41 +241,41 @@ or deleting commits).
     git commit -m "FIX bad default value for fancy loss"
     ```
 
-etc
+   etc
 3. Create a "fancy-loss" branch on your fork on GitHub (aka "origin") and
-push the commits from your local "fancy-loss" branch to this new
-"fancy-loss" branch on origin.
+   push the commits from your local "fancy-loss" branch to this new
+   "fancy-loss" branch on origin.
 
     ```sh
     git push -u origin fancy-loss
     ```
 
 4. You can continue to work on your branch if necessary. New commits can
-then be pushed in the most simple way from local/fancy-loss to
-origin/fancy-loss.
+   then be pushed in the most simple way from local/fancy-loss to
+   origin/fancy-loss.
 
     ```sh
     git push
     ```
 
 5. When you are done, go to the GitHub page of your attelo fork and create
-a Pull Request from "fancy-loss" to "master".
-You will be asked to provide a title and description for your Pull Request,
-and you will be shown the summary diff of your changes.
-If you notice that you forgot to change anything, you can make new commits
-on local/fancy-loss, push them to origin/fancy-loss. Your new commits will
-be automatically added to your Pull Request.
-When you are really done, you can click on "merge the Pull Request", then
-"Close Pull Request and delete branch".
+   a Pull Request from "fancy-loss" to "master".
+   You will be asked to provide a title and description for your Pull Request,
+   and you will be shown the summary diff of your changes.
+   If you notice that you forgot to change anything, you can make new commits
+   on local/fancy-loss, push them to origin/fancy-loss. Your new commits will
+   be automatically added to your Pull Request.
+   When you are really done, you can click on "merge the Pull Request", then
+   "Close Pull Request and delete branch".
 6. If you are sure you pushed all your changes, it is time to clean up
-your local fancy-loss branch.
+   your local fancy-loss branch.
 
     ```sh
     git checkout -D fancy-loss
     ```
 
 7. Delete your local copy of origin/fancy-loss (or: prune dead branches
-from origin).
+   from origin).
 
     ```sh
     git remote prune origin
