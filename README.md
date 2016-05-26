@@ -13,24 +13,23 @@ processed by pip
 
 1. Switch into your STAC sandbox
 
-       source activate irit-stac
+        source activate irit-stac
 
 2. Linux users: (Debian/Ubuntu)
+   (NB: this step may be obsoleted by requiring conda)
 
-       sudo apt-get install python-dev libyaml-dev
-       # NB: this step may be obsoleted by requiring conda
-
+        sudo apt-get install python-dev libyaml-dev
 
 3. Fetch the irit-stac code if you have not done so already
 
-       git clone https://github.com/irit-melodi/irit-stac.git
-       cd irit-stac
+        git clone https://github.com/irit-melodi/irit-stac.git
+        cd irit-stac
 
 4. Create a sandbox environment.  We assume you will be using Anaconda
    (miniconda on Linux).  Once you have installed it, you should be able to
    create the environment with
 
-       conda env create
+        conda env create
 
    If that doesn't work, make sure your anaconda version is up to date,
    and the conda bin directory is in your path (it might be installed in
@@ -39,13 +38,13 @@ processed by pip
    Note that whenever you want to use STAC things, you would need to run
    this command
 
-       source activate irit-stac
+        source activate irit-stac
 
 5. Install the irit-stac code in development mode.
    This should automatically fetch the educe/attelo dependencies
    automatically
 
-       pip install -r requirements.txt
+        pip install -r requirements.txt
 
    At this point, if somebody tells you to update the STAC code, it
    should be possible to just `git pull` and maybe
@@ -54,12 +53,12 @@ processed by pip
 
 6. Install NLTK data files
 
-       python setup-nltk.py
+        python setup-nltk.py
 
 7. Link the STAC corpus in (STAC has not yet been released, so here
    the directory "Stac" refers to the STAC SVN directory)
 
-       ln -s /path/to/Stac/data data
+        ln -s /path/to/Stac/data data
 
 
 ## Full installation (Toulouse/Edinburgh)
