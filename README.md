@@ -2,29 +2,9 @@ This is the STAC codebase.
 
 ## Prerequisites
 
-1. Python 2.7. Python 3 might also work.
-2. pip 1.5 or higher (see educe README if you do not)
-3. Anacoda or miniconda (`conda --version` should say 2.2.6 or higher)
-4. git (to keep up with educe/attelo changes)
-5. graphviz (for visualising graphs)
-6. STAC corpus (released separately)
-
-## Sandboxing
-
-A sandbox environment is required.  We assume you will be using Anaconda
-(miniconda on Linux).  Once you have installed it, you should be able to
-create the environment with
-
-    conda create -n irit-stac scipy pip scikit-learn
-
-If that doesn't work, make sure your anaconda version is up to date,
-and the conda bin directory is in your path (it might be installed in
-`/anaconda` instead of `$HOME/anaconda`).
-
-Note that whenever you want to use STAC things, you would need to run
-this command
-
-    source activate irit-stac
+1. git (to keep up with educe/attelo changes)
+2. Anaconda or miniconda (`conda --version` should say 2.2.6 or higher)
+3. STAC corpus (released separately)
 
 ## Installation (basics, development mode)
 
@@ -46,7 +26,22 @@ processed by pip
        git clone https://github.com/irit-melodi/irit-stac.git
        cd irit-stac
 
-4. Install the irit-stac code in development mode.
+4. Create a sandbox environment.  We assume you will be using Anaconda
+   (miniconda on Linux).  Once you have installed it, you should be able to
+   create the environment with
+
+       conda env create
+
+   If that doesn't work, make sure your anaconda version is up to date,
+   and the conda bin directory is in your path (it might be installed in
+   `/anaconda` instead of `$HOME/anaconda`).
+
+   Note that whenever you want to use STAC things, you would need to run
+   this command
+
+       source activate irit-stac
+
+5. Install the irit-stac code in development mode.
    This should automatically fetch the educe/attelo dependencies
    automatically
 
@@ -57,11 +52,11 @@ processed by pip
    `pip install -r requirements.txt` again if attelo/educe need to be
    updated. No further installation will be needed
 
-5. Install NLTK data files
+6. Install NLTK data files
 
        python setup-nltk.py
 
-6. Link the STAC corpus in (STAC has not yet been released, so here
+7. Link the STAC corpus in (STAC has not yet been released, so here
    the directory "Stac" refers to the STAC SVN directory)
 
        ln -s /path/to/Stac/data data
