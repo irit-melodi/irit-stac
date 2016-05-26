@@ -43,12 +43,12 @@ This will fetch the latest source code from your repository onto your local
 machine. Your local copy keeps a pointer to your fork on github: the latter
 is a "remote repository" named "origin".
 3. Add to your local copy another remote repository: the original
-irit-melodi/irit-stac repository.
+irit-melodi/irit-stac repository
+[Source: GitHub help](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
 ```sh
 cd irit-stac
 git remote add upstream https://github.com/irit-melodi/irit-stac.git
 ```
-[Source: GitHub help](https://help.github.com/articles/configuring-a-remote-for-a-fork/)
 4. Create and activate a conda environment named `irit-stac`:
 ```sh
 conda env create
