@@ -214,11 +214,29 @@ def indent(elem, level=0):
 # reading soclog (csv)
 # ---------------------------------------------------------------------
 
-def read_players(filename):
+def read_players(filename, gen):
+    """Get the list of players for the game from a CSV file.
+
+    Parameters
+    ----------
+    filename: string
+        Path to the CSV file.
+    gen: int
+        Targeted generation for the annotations.
+
+    Returns
+    -------
+    players: set of string
+        Set of player names.
+    """
     with open(filename, 'rb') as infile:
         reader = stac_csv.mk_csv_reader(infile)
         players = frozenset([r['Emitter'] for r in reader])
-        return (players - frozenset(['Server']))
+        if gen < 3:
+            # generations 1, 2: the CSV files contain Server turns
+            # but the glozz files do not
+            players = players - frozenset(['Server'])
+        return players
 
 
 def emitter_combinations(s):
@@ -250,9 +268,13 @@ def main():
                      help="output aam file")
     psr.add_argument("--players", nargs='+', metavar="NAME",
                      help="override player set")
+    # NEW 2016-05-26 select generation
+    psr.add_argument('--gen', metavar='N', type=int, default=2,
+                     help='max generation of turns to include (1, 2, 3)')
+
     args = psr.parse_args(sys.argv[1:])  # ugh, assume Python interpreter
 
-    players = args.players or read_players(args.input)
+    players = args.players or read_players(args.input, args.gen)
     model = create_model(players)
     indent(model)  # sigh, imperative
     ET.ElementTree(model).write(args.output,
