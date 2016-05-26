@@ -349,7 +349,7 @@ def add_units_annotations(tree, text):
 
 
 
-def append_relation(root, utype, id1, id2):
+def append_relation(root, utype, global_id1, global_id2):
     """
     Append a new relation level annotation to the given root element.
     Note that this generates a new identifier behind the scenes.
@@ -367,26 +367,54 @@ def append_relation(root, utype, id1, id2):
     """
     unit_id, date = mk_id()
 
-    metadata = [('author', 'stac'),
-                ('creation-date', str(date)),
-                ('lastModifier', 'n/a'),
-                ('lastModificationDate', '0')]
-    elm_relation = ET.SubElement(root, 'relation', {'id': unit_id})
-    elm_metadata = ET.SubElement(elm_relation, 'metadata')
-    for key, val in metadata:
-        ET.SubElement(elm_metadata, key).text = val
-    elm_charact = ET.SubElement(elm_relation, 'characterisation')
-    ET.SubElement(elm_charact, 'type').text = utype
+    id1 = global_id1.split('_')
+    id2 = global_id2.split('_')
 
-    elm_features = ET.SubElement(elm_charact, 'featureSet')
-    comments = ET.SubElement(elm_features, 'feature', {'name': 'Comments'})
-    comments.text = 'Please write in remarks...'
-    argument_scope = ET.SubElement(elm_features, 'feature', {'name': 'Argument_scope'})
-    argument_scope.text = 'Please choose...'
+    subdoc1 = id1[0]
+    subdoc2 = id2[0]
 
-    positioning = ET.SubElement(elm_relation, 'positioning')
-    edu1 = ET.SubElement(positioning, 'term', {'id': id1})
-    edu2 = ET.SubElement(positioning, 'term', {'id': id2})
+    if subdoc1 == subdoc2:
+        local_id1 = '_'.join([id1[-2], id1[-1]])
+        local_id2 = '_'.join([id2[-2], id2[-1]])
+
+        metadata = [('author', 'stac'),
+                    ('creation-date', str(date)),
+                    ('lastModifier', 'n/a'),
+                    ('lastModificationDate', '0')]
+        elm_relation = ET.SubElement(root, 'relation', {'id': unit_id})
+        elm_metadata = ET.SubElement(elm_relation, 'metadata')
+        for key, val in metadata:
+            ET.SubElement(elm_metadata, key).text = val
+        elm_charact = ET.SubElement(elm_relation, 'characterisation')
+        ET.SubElement(elm_charact, 'type').text = utype
+
+        elm_features = ET.SubElement(elm_charact, 'featureSet')
+        comments = ET.SubElement(elm_features, 'feature', {'name': 'Comments'})
+        comments.text = 'Please write in remarks...'
+        argument_scope = ET.SubElement(elm_features, 'feature', {'name': 'Argument_scope'})
+        argument_scope.text = 'Please choose...'
+
+        positioning = ET.SubElement(elm_relation, 'positioning')
+        edu1 = ET.SubElement(positioning, 'term', {'id': local_id1})
+        edu2 = ET.SubElement(positioning, 'term', {'id': local_id2})
+
+        return True
+
+    else:
+        print("Implicit relation from subdoc %s to subdoc %s." % (subdoc1, subdoc2))
+        return False
+
+
+class Events:
+    def __init__(self):
+        self.Join = dict()
+        self.Start = ""
+        self.Dice = []
+        self.Robber = []
+        self.Trade = []
+        self.Monopoly = ""
+        self.Building = dict()
+        self.Roll = ""
 
 
 def append_schema(root, utype, edus):
@@ -424,12 +452,14 @@ def append_schema(root, utype, edus):
 
     positioning = ET.SubElement(elm_schema, 'positioning')
     for edu in edus:
-        ET.SubElement(positioning, 'embedded-unit', {'id': edu})
+        edusplit = edu.split('_')
+        local_id = '_'.join([edusplit[-2], edusplit[-1]])
+        ET.SubElement(positioning, 'embedded-unit', {'id': local_id})
 
     return cdu_id
 
 
-def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
+def add_discourse_annotations(tree, text, e, subdoc):
     """
     Add discourse annotations for non-linguistical event
     
@@ -446,17 +476,9 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
         modified XML tree with discourse annotations for non-linguistical events
     """
 
-    JoinEvents = a
-    StartEvent = b
-    DiceEvent = c
-    RobberEvent = d
-    TradeEvent = e
-    MonopolyEvent = f
-
-    BuildingEvents = g
-    RollEvent = h
-
     root = tree
+    events = e
+    errors = []
 
     JoinRegEx = re.compile(r'(.+) joined the game\.')
     SitDownRegEx = re.compile(r'(.+) sat down at seat (\d)\.')
@@ -493,33 +515,40 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
 
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
+
             start = int(unit.find('positioning/start/singlePosition').get('index'))
             end = int(unit.find('positioning/end/singlePosition').get('index'))
             event = text[start:end]
+
+            global_id = '_'.join([('%02d' % subdoc), unit.get('id')])
 
             # Join / sit down events
 
             if JoinRegEx.search(event) != None: #<X> joined the game.
                 mo = JoinRegEx.search(event)
                 X = mo.group(1)
-                JoinEvents[X] = unit.get('id')
+                events.Join[X] = global_id
                 continue
 
             elif SitDownRegEx.search(event) != None: #<X> sat down at seat <N>.
                 mo = SitDownRegEx.search(event)
                 X = mo.group(1)
-                append_relation(root, 'Sequence', JoinEvents[X], unit.get('id'))
-                del JoinEvents[X]
+                if events.Join.has_key(X):
+                    if not append_relation(root, 'Sequence', events.Join[X], global_id):
+                        errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                    del events.Join[X]
                 continue
 
             # Game started / Board layout set events
 
             elif event == "Game started.":
-                StartEvent = unit.get('id')
+                events.Start = global_id
                 continue
 
             elif event == "Board layout set.":
-                append_relation(root, 'Sequence', StartEvent, unit.get('id'))
+                if events.Start != '':
+                    if not append_relation(root, 'Sequence', events.Start, global_id):
+                        errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
                 continue
 
             # Building events
@@ -528,23 +557,24 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
                 mo = TurnToBuildRegEx.search(event)
                 X = mo.group(1)
                 C = mo.group(2)
-                BuildingEvents[(X,C)] = unit.get('id')
+                events.Building[(X,C)] = global_id
                 continue
 
             elif BuiltRegEx.search(event) != None: #<X> built a <C>.
                 mo = BuiltRegEx.search(event)
                 X = mo.group(1)
                 C = mo.group(2)
-                if BuildingEvents.has_key((X,C)):
-                    append_relation(root, 'Result', BuildingEvents[(X,C)], unit.get('id'))
-                    del BuildingEvents[(X,C)]
+                if events.Building.has_key((X,C)):
+                    if not append_relation(root, 'Result', events.Building[(X,C)], global_id):
+                        errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                    del events.Building[(X,C)]
                 continue
                 
 
             # Resource distribution events
 
             elif TurnToRollRegEx.search(event) != None: #It's <X>'s turn to roll the dice.
-                RollEvent = unit.get('id')
+                events.Roll = global_id
                 continue
 
             elif DiceRegEx.search(event) != None: #<X> rolled a <M1> and a <M2>.
@@ -552,123 +582,143 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
                 M1 = int(mo.group(2))
                 M2 = int(mo.group(3))
                 if M1 + M2 != 7: # Resource distribution event
-                    if len(DiceEvent) > 0:
-                        if len(DiceEvent) == 2: # Resource distribution : 1 player
-                            append_relation(root, 'Result', DiceEvent[0], DiceEvent[1])
+                    # Since we don't know when finishes a resource distribution,
+                    # the trick is to compute a resource distribution when the next one starts.
+                    # So here we first need to compute the preceding resource distribution.
+                    if len(events.Dice) > 0:
+                        if len(events.Dice) == 2: # Resource distribution : 1 player
+                            if not append_relation(root, 'Result', events.Dice[0], events.Dice[1]):
+                                errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
                         else: # Resource Distribution : 2 or more players
-                            cdu_dice = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
-                            append_relation(root, 'Result', DiceEvent[0], cdu_dice)
-                            for i in range(1,len(DiceEvent)-1):
-                                append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
-                        DiceEvent[:] = []
-                    DiceEvent.append(unit.get('id'))
+                            cdu_dice = append_schema(root, 'Complex_discourse_unit', events.Dice[1:])
+                            global_cdu_dice = '_'.join([('%02d' % subdoc), cdu_dice])
+                            if not append_relation(root, 'Result', events.Dice[0], global_cdu_dice):
+                                errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                            for i in range(1,len(events.Dice)-1):
+                                if not append_relation(root, 'Continuation', events.Dice[i], events.Dice[i+1]):
+                                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                        events.Dice[:] = []
+                    events.Dice.append(global_id)
                 else: # M1 + M2 == 7 : Robber event
-                    if RobberEvent != []:
+                    if events.Robber != []:
                         raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
-                    RobberEvent.append(unit.get('id'))
-                append_relation(root, 'Result', RollEvent, unit.get('id'))
+                    events.Robber.append(global_id)
+                if not append_relation(root, 'Result', events.Roll, global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
                 continue
 
             elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
-                DiceEvent.append(unit.get('id'))
+                events.Dice.append(global_id)
                 continue
 
             elif Get2RegEx.search(event) != None: #<Y> gets <N1> <R1>, <N2> <R2>.
-                DiceEvent.append(unit.get('id'))
+                events.Dice.append(global_id)
                 continue
 
             elif NoGetRegEx.search(event) != None: #No player gets anything.
-                append_relation(root, 'Result', DiceEvent[0], unit.get('id'))
-                DiceEvent[:] = []
+                if not append_relation(root, 'Result', events.Dice[0], global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Dice[:] = []
                 continue
 
             # Robber events
 
             elif SoldierRegEx.search(event) != None: #<X> played a Soldier card.
-                if RobberEvent != []:
+                if events.Robber != []:
                     raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
-                RobberEvent.append(unit.get('id'))
+                events.Robber.append(global_id)
                 continue
 
             elif Discard1RegEx.search(event) != None: #<Y> needs to discard.
-                RobberEvent.append(unit.get('id'))
+                events.Robber.append(global_id)
                 continue
 
             elif Discard2RegEx.search(event) != None: #<Y> discarded <N> resources.
-                RobberEvent.append(unit.get('id'))
+                events.Robber.append(global_id)
                 continue
 
             elif Robber1RegEx.search(event) != None: #<X> will move the robber.
-                RobberEvent.append(unit.get('id'))
+                events.Robber.append(global_id)
                 continue
 
             elif Robber2RegEx.search(event) != None: #<X> moved the robber.
-                RobberEvent.append(unit.get('id'))
-                cdu_robber = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
-                append_relation(root, 'Result', RobberEvent[0], cdu_robber)
-                for i in range(1,len(RobberEvent)-1):
-                    append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
-                RobberEvent[:] = []
+                events.Robber.append(global_id)
+                cdu_robber = append_schema(root, 'Complex_discourse_unit', events.Robber[1:])
+                global_cdu_robber = '_'.join([('%02d' % subdoc), cdu_robber])
+                if not append_relation(root, 'Result', events.Robber[0], global_cdu_robber):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                for i in range(1,len(events.Robber)-1):
+                    if not append_relation(root, 'Sequence', events.Robber[i], events.Robber[i+1]):
+                        errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Robber[:] = []
                 continue
 
             elif Robber3RegEx.search(event) != None: #<X> moved the robber, must choose a victim.
-                RobberEvent.append(unit.get('id'))
+                events.Robber.append(global_id)
                 continue
 
             elif StoleRegEx.search(event) != None: #<X> stole a resource from <Z>.
-                RobberEvent.append(unit.get('id'))
-                cdu_robber = append_schema(root, 'Complex_discourse_unit', RobberEvent[1:])
-                append_relation(root, 'Result', RobberEvent[0], cdu_robber)
-                for i in range(1,len(RobberEvent)-1):
-                    append_relation(root, 'Sequence', RobberEvent[i], RobberEvent[i+1])
-                RobberEvent[:] = []
+                events.Robber.append(global_id)
+                cdu_robber = append_schema(root, 'Complex_discourse_unit', events.Robber[1:])
+                global_cdu_robber = '_'.join([('%02d' % subdoc), cdu_robber])
+                if not append_relation(root, 'Result', events.Robber[0], global_cdu_robber):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                for i in range(1,len(events.Robber)-1):
+                    if not append_relation(root, 'Sequence', events.Robber[i], events.Robber[i+1]):
+                        errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Robber[:] = []
                 continue
 
             # Trade events
-            # HYPOTHESIS : only one offer can be made at a time (not sure if true, needs in/confirmation)
 
             elif OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
-                TradeEvent[:] = []
-                TradeEvent.append(unit.get('id'))
+                events.Trade[:] = []
+                events.Trade.append(global_id)
                 continue
 
             elif event == '...':
-                TradeEvent.append(unit.get('id'))
+                events.Trade.append(global_id)
                 continue
 
             elif FromRegEx.search(event) != None and TradeRegEx.search(event) == None: #from <X>
-                TradeEvent.append(unit.get('id'))
-                append_relation(root, 'Continuation', TradeEvent[0], unit.get('id'))
-                cdu_offer = append_schema(root, 'Complex_discourse_unit', TradeEvent)
-                TradeEvent[0] = cdu_offer
+                events.Trade.append(global_id)
+                if not append_relation(root, 'Continuation', events.Trade[0], global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                cdu_offer = append_schema(root, 'Complex_discourse_unit', events.Trade)
+                global_cdu_offer = '_'.join([('%02d' % subdoc), cdu_offer])
+                events.Trade[0] = global_cdu_offer
                 continue
 
             elif CantRegEx.search(event) != None: #You can't make that trade.
-                append_relation(root, 'Question-answer_pair', TradeEvent[0], unit.get('id'))
-                TradeEvent[:] = []
+                if not append_relation(root, 'Question-answer_pair', events.Trade[0], global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Trade[:] = []
                 continue
 
             elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
-                append_relation(root, 'Question-answer_pair', TradeEvent[0], unit.get('id'))
-                TradeEvent[:] = []
+                if not append_relation(root, 'Question-answer_pair', events.Trade[0], global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Trade[:] = []
                 continue
 
             elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
-                append_relation(root, 'Question-answer_pair', TradeEvent[0], unit.get('id'))
-                TradeEvent[:] = []
+                if not append_relation(root, 'Question-answer_pair', events.Trade[0], global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Trade[:] = []
                 continue
 
             # Monopoly events
 
             elif CardRegEx.search(event) != None: #<X> played a Monopoly card.
-                if MonopolyEvent != "":
+                if events.Monopoly != "":
                     raise Exception("add_discourse_annotations : la chaîne MonopolyEvent n'a pas été vidée!")
-                MonopolyEvent = unit.get('id')
+                events.Monopoly = global_id
                 continue
 
             elif MonopolyRegEx.search(event) != None: #<X> monopolized <R>.
-                append_relation(root, 'Sequence', MonopolyEvent, unit.get('id'))
-                MonopolyEvent = ""
+                if not append_relation(root, 'Sequence', events.Monopoly, global_id):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+                events.Monopoly = ""
                 continue
 
 
@@ -676,17 +726,21 @@ def add_discourse_annotations(tree, text, a, b, c, d, e, f, g, h):
     For resources distributions, we complete the XML tree and empty the list at the next dice roll.
     So for the last turn we may have forgotten to annotate some events.
     """
-    if len(DiceEvent) > 0:
-        if len(DiceEvent) == 2: # Resource distribution : 1 player
-            append_relation(root, 'Result', DiceEvent[0], DiceEvent[1])
+    if len(events.Dice) > 0:
+        if len(events.Dice) == 2: # Resource distribution : 1 player
+            if not append_relation(root, 'Result', events.Dice[0], events.Dice[1]):
+                errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
         else: # Resource Distribution : 2 or more players
-            cdu_dice = append_schema(root, 'Complex_discourse_unit', DiceEvent[1:])
-            append_relation(root, 'Result', DiceEvent[0], cdu_dice)
-            for i in range(1,len(DiceEvent)-1):
-                append_relation(root, 'Continuation', DiceEvent[i], DiceEvent[i+1])
-        DiceEvent[:] = []
+            cdu_dice = append_schema(root, 'Complex_discourse_unit', events.Dice[1:])
+            global_cdu_dice = '_'.join([('%02d' % subdoc), cdu_dice])
+            if not append_relation(root, 'Result', events.Dice[0], global_cdu_dice):
+                errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+            for i in range(1,len(events.Dice)-1):
+                if not append_relation(root, 'Continuation', events.Dice[i], events.Dice[i+1]):
+                    errors.append("Implicit relation from subdoc %02d to subdoc %02d." % (subdoc-1, subdoc))
+        events.Dice[:] = []
 
-    return root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent, BuildingEvents, RollEvent
+    return root, events, errors
 
 
 
@@ -732,35 +786,21 @@ def main():
     so a single string is enough.
     """
 
-    JoinEvents = dict()
-    StartEvent = ""
-    DiceEvent = []
-    RobberEvent = []
-    TradeEvent = []
-    MonopolyEvent = ""
-
-    BuildingEvents = dict()
-    RollEvent = ""
 
     N = len(os.listdir(UnitsFolder)) / 2
+    
+    Implicit_Relations = []
+    events = Events()
 
     for i in range(1, N+1):
-        a = JoinEvents
-        b = StartEvent
-        c = DiceEvent
-        d = RobberEvent
-        e = TradeEvent
-        f = MonopolyEvent
-
-        g = BuildingEvents
-        h = RollEvent
-
         textname = Folder + 'unannotated/' + Name + '_%02d.ac' % i
         unitsname = UnitsFolder + Name + '_%02d.aa' % i
         discoursename = DiscourseFolder + Name + '_%02d.aa' % i
-        textfile = open (textname, 'r')
+        textfile = open(textname, 'r')
         unitsfile = open(unitsname, 'r')
-        discoursefile = open (discoursename, 'r')
+        discoursefile = open(discoursename, 'r')
+
+        e = events
 
         text = textfile.read()
         stringtree_units = unitsfile.read()
@@ -769,17 +809,9 @@ def main():
         discourse_tree = ET.fromstring(stringtree_discourse)
 
         units_root = add_units_annotations(units_tree, text)
-        discourse_root, JoinEvents, StartEvent, DiceEvent, RobberEvent, TradeEvent, MonopolyEvent, BuildingEvents, RollEvent = add_discourse_annotations(
-                    discourse_tree, text, a, b, c, d, e, f, g, h)
-        
-        """
-        basename_units = unitsname[0:len(unitsname)-3]
-        basename_discourse = discoursename[0:len(discoursename)-3]
-        with codecs.open(basename_units + '-modified.aa', 'w', 'ascii') as out:
-            out.write(prettify(units_root))
-        with codecs.open(basename_discourse + '-modified.aa', 'w', 'ascii') as out:
-            out.write(prettify(discourse_root))
-        """
+        discourse_root, events, errors = add_discourse_annotations(discourse_tree, text, e, i)
+
+        Implicit_Relations.extend(errors)
 
         with codecs.open(unitsname, 'w', 'ascii') as out:
             out.write(prettify(units_root))
@@ -789,6 +821,12 @@ def main():
         textfile.close()
         unitsfile.close()
         discoursefile.close()
+
+    if Implicit_Relations != []:
+        error_report = '\n'.join(Implicit_Relations)
+        filename = Folder + 'Implicit_Relations.txt'
+        with codecs.open(filename, 'w', 'ascii') as out:
+            out.write(error_report)
 
 
 if __name__ == '__main__':
