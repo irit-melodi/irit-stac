@@ -59,7 +59,7 @@ turn_attrs = [
     'Timestamp', 'Identifier', 'Emitter', 'Developments', 'Resources'
 ]
 speech_acts = ['Accept', 'Refusal', 'Other', 'Offer', 'Counteroffer']
-discourse_rel_types = [
+DISCOURSE_REL_TYPES = [
     'Question-answer_pair',
     'Result',
     'Comment',
@@ -75,7 +75,8 @@ discourse_rel_types = [
     'Parallel',
     'Alternation',
     'Acknowledgement',
-    'Background'
+    'Background',
+    'Sequence',  # NEW gen >= 3
 ]
 
 
@@ -139,7 +140,13 @@ def mk_discourse_relation(name):
     return elm
 
 
-def create_model(players):
+def create_model(players, gen):
+    # local copy of the list of discourse relations
+    disc_rel_types = list(DISCOURSE_REL_TYPES)
+    if gen < 3:
+        # the 'Sequence' discourse relation type was introduced at gen 3
+        disc_rel_types.remove('Sequence')
+
     combos_ = emitter_combinations(players)
     combos = [', '.join(sorted(list(c))) for c in combos_]
 
@@ -173,7 +180,7 @@ def create_model(players):
     ty_anaphora.attrib['oriented'] = 'true'
 
     relations.extend([ty_anaphora])
-    relations.extend([mk_discourse_relation(x) for x in discourse_rel_types])
+    relations.extend([mk_discourse_relation(x) for x in disc_rel_types])
 
     # schemas
     ty_bblock = mk_type('Bargaining_block', 'Blocks', [
@@ -275,7 +282,7 @@ def main():
     args = psr.parse_args(sys.argv[1:])  # ugh, assume Python interpreter
 
     players = args.players or read_players(args.input, args.gen)
-    model = create_model(players)
+    model = create_model(players, args.gen)
     indent(model)  # sigh, imperative
     ET.ElementTree(model).write(args.output,
                                 encoding='utf-8',
