@@ -29,7 +29,7 @@ CLEAN_SOCLOG=$OUTPUT_BNAME/unsegmented/${OUTPUT_BNAME}.soclog.csv
 python $CODE_DIR/intake/soclogtocsv.py "$INPUT_FILE" --output "$CLEAN_SOCLOG" --gen "$GEN"
 
 # create aam file
-python $SCRIPT_DIR/create-glozz-aam.py $CLEAN_SOCLOG $OUTPUT_BNAME/$OUTPUT_BNAME.aam
+python $SCRIPT_DIR/create-glozz-aam.py $CLEAN_SOCLOG $OUTPUT_BNAME/$OUTPUT_BNAME.aam --gen "$GEN"
 
 # presegment automatically (human would still have to clean up)
 python $CODE_DIR/segmentation/simple-segments  --csv\
