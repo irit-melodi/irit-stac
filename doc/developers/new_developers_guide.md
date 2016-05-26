@@ -125,7 +125,7 @@ and irit-stac (to make your training procedure available for experiments).
 ### Keep your fork in sync
 Keeping your fork in sync with changes in the upstream repository involves
 at least four steps, in its simplest form.
-(Source: GitHub help)[https://help.github.com/articles/syncing-a-fork/]
+[Source: GitHub help](https://help.github.com/articles/syncing-a-fork/)
 
 1. Fetch upstream branches and their commits on your machine.
 
