@@ -23,42 +23,44 @@ and irit-stac (to make your training procedure available for experiments).
 ## Initial setup of parsing systems for the STAC corpus (irit-stac)
 
 ### Prerequisites
-1. Python 2.7. Python 3 might also work.
-2. pip >= 1.5
-3. Anaconda or miniconda >= 2.2.6
-4. git
-5. graphviz (via your package manager or via conda)
-6. STAC corpus (released separately, ask your contact from the STAC project)
-7. A GitHub account
+1. git
+2. Anaconda or miniconda >= 2.2.6
+3. STAC corpus (released separately, ask your contact from the STAC project)
+4. A GitHub account
 
 ### Basic setup for irit-stac
-1. Create and activate a sandbox
-```sh
-conda create -n irit-stac scipy pip scikit-learn
-source activate irit-stac
-```
-The first command creates a conda environment (the sandbox) named
-"irit-stac", that includes scipy, pip and scikit-learn.
-The second command activates your sandbox, which you have to do every time
-you want to run experiments.
-2. Fork the irit-stac repository on github: Log into github, go to the home
-page for the [irit-stac](https://github.com/irit-melodi/irit-stac/)
-repository, then click on the "Fork" button.
-3. Clone your fork of irit-stac onto your machine:
+1. Fork the irit-stac repository on github:
+   * Log into github,
+   * Go to the home page for the
+   [irit-stac](https://github.com/irit-melodi/irit-stac/)
+   repository,
+   * Click on the "Fork" button.
+2. Clone your fork of irit-stac onto your machine:
 ```sh
 git clone https://github.com/<yourgithubusername>/irit-stac.git
 ```
 This will fetch the latest source code from your repository onto your local
 machine. Your local copy keeps a pointer to your fork on github: the latter
 is a "remote repository" named "origin".
-4. Add to your local copy another remote repository: the original
+3. Add to your local copy another remote repository: the original
 irit-melodi/irit-stac repository.
 ```sh
 cd irit-stac
 git remote add upstream https://github.com/irit-melodi/irit-stac.git
 ```
-(Source: GitHub help)
-[https://help.github.com/articles/configuring-a-remote-for-a-fork/]
+[Source: GitHub help](https://help.github.com/articles/configuring-a-remote-for-a-fork/)
+4. Create and activate a conda environment named `irit-stac`:
+```sh
+conda env create
+source activate irit-stac
+```
+The first command creates a conda environment (a sort of sandbox) from the
+specifications contained in the file `environment.yml`.
+This environment is named `irit-stac` and includes
+python 2.7, graphviz 2.38.0, scipy, pip, scikit-learn and a specific version
+of pydot.
+The second command activates the environment, which you have to do every time
+you want to run experiments.
 5. Install irit-stac from the local version on your machine. This should
 automatically fetch the educe/attelo dependencies.
 ```sh
@@ -153,7 +155,7 @@ cd attelo
 git remote add upstream https://github.com/irit-melodi/attelo.git
 ```
 4. Have your local copy of irit-stac depend on your local copy of attelo.
-You need to edit irit-stac/requirements.txt, comment the line about attelo
+You need to edit `irit-stac/requirements.txt`, comment the line about attelo
 and point to your local version of attelo instead:
 ```
 # -e git+https://github.com/irit-melodi/attelo.git#egg=attelo
@@ -162,7 +164,9 @@ and point to your local version of attelo instead:
 
 ## Developing
 ### Feature requests and bug reports
-To report a bug or request a feature, please open an issue on GitHub in the relevant repository, for example https://github.com/irit-melodi/educe/issues for educe.
+To report a bug or request a feature, please open an issue on GitHub in the
+relevant repository, for example https://github.com/irit-melodi/educe/issues
+for educe.
 
 ### Develop a new feature
 The most common git workflow consists in creating a new branch each time you
@@ -247,5 +251,9 @@ datasets, vectorizers and learners of various types: linear and non-linear
 models, ensembles...
 We try to follow their good practices:
 * follow the same guidelines for coding (pep8, pylint),
-* use the docstring specification from [the numpy project](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt), of which a concise example is available [here](http://sphinxcontrib-napoleon.readthedocs.org/en/latest/example_numpy.html),
-* adopt a similar [design and API](http://arxiv.org/abs/1309.0238) (from 2013 but still relevant, for the most part).
+* use the docstring specification from
+[the numpy project](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt),
+of which a concise example is available
+[here](http://sphinxcontrib-napoleon.readthedocs.org/en/latest/example_numpy.html),
+* adopt a similar [design and API](http://arxiv.org/abs/1309.0238)
+(from 2013 but still relevant, for the most part).
