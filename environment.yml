@@ -1,0 +1,8 @@
+name: irit-stac
+dependencies:
+  - python=2.7
+  - graphviz=2.38.0
+  - scipy
+  - scikit-learn
+  - pip:
+    - "--editable=git+https://github.com/nlhepler/pydot.git#egg=pydot"

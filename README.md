@@ -2,69 +2,60 @@ This is the STAC codebase.
 
 ## Prerequisites
 
-1. Python 2.7. Python 3 might also work.
-2. pip 1.5 or higher (see educe README if you do not)
-3. Anacoda or miniconda (`conda --version` should say 2.2.6 or higher)
-4. git (to keep up with educe/attelo changes)
-5. graphviz (for visualising graphs)
-6. STAC corpus (released separately)
-
-## Sandboxing
-
-A sandbox environment is required.  We assume you will be using Anaconda
-(miniconda on Linux).  Once you have installed it, you should be able to
-create the environment with
-
-    conda create -n irit-stac scipy pip scikit-learn
-
-If that doesn't work, make sure your anaconda version is up to date,
-and the conda bin directory is in your path (it might be installed in
-`/anaconda` instead of `$HOME/anaconda`).
-
-Note that whenever you want to use STAC things, you would need to run
-this command
-
-    source activate irit-stac
+1. git (to keep up with educe/attelo changes)
+2. Anaconda or miniconda (`conda --version` should say 2.2.6 or higher)
+3. STAC corpus (released separately)
 
 ## Installation (basics, development mode)
 
-Both educe and attelo supply requirements.txt files which can be
-processed by pip
+Both educe and attelo supply `requirements.txt` files which can be
+processed by pip.
 
-1. Switch into your STAC sandbox
+1. Linux users: (Debian/Ubuntu)
+   (NB: this step may be obsoleted by requiring conda)
 
-       source activate irit-stac
+        sudo apt-get install python-dev libyaml-dev
 
-2. Linux users: (Debian/Ubuntu)
+2. Fetch the irit-stac code if you have not done so already
 
-       sudo apt-get install python-dev libyaml-dev
-       # NB: this step may be obsoleted by requiring conda
+        git clone https://github.com/irit-melodi/irit-stac.git
+        cd irit-stac
 
+3. Create a sandbox environment.  We assume you will be using Anaconda
+   or miniconda.  Once you have installed it, you should be able to
+   create the environment with
 
-3. Fetch the irit-stac code if you have not done so already
+        conda env create
 
-       git clone https://github.com/irit-melodi/irit-stac.git
-       cd irit-stac
+   If that doesn't work, make sure your anaconda version is up to date,
+   and the conda bin directory is in your path (it might be installed in
+   `/anaconda` instead of `$HOME/anaconda`).
 
-4. Install the irit-stac code in development mode.
-   This should automatically fetch the educe/attelo dependencies
-   automatically
+4. Switch into your STAC sandbox
 
-       pip install -r requirements.txt
+        source activate irit-stac
+
+   Note that whenever you want to use STAC things, you would need to run
+   this command.
+
+5. Install the irit-stac code in development mode.
+   This should automatically fetch the educe/attelo dependencies.
+
+        pip install -r requirements.txt
 
    At this point, if somebody tells you to update the STAC code, it
    should be possible to just `git pull` and maybe
    `pip install -r requirements.txt` again if attelo/educe need to be
-   updated. No further installation will be needed
+   updated. No further installation will be needed.
 
-5. Install NLTK data files
+6. Install NLTK data files
 
-       python setup-nltk.py
+        python setup-nltk.py
 
-6. Link the STAC corpus in (STAC has not yet been released, so here
+7. Link the STAC corpus in (STAC has not yet been released, so here
    the directory "Stac" refers to the STAC SVN directory)
 
-       ln -s /path/to/Stac/data data
+        ln -s /path/to/Stac/data data
 
 
 ## Full installation (Toulouse/Edinburgh)
@@ -74,12 +65,12 @@ or `irit-stac serve` command, i.e. if you're participating in
 discourse parser experiments or integration work between the
 parsing pipeline and the dialogue manager.
 
-1. Do the basic install above
+1. Do the basic install above.
 
 2. Download [tweet-nlp][tweet-nlp] part of speech tagger
    and put the jar file (ark-tweet- in the
    lib/ directory (ie. on the STAC SVN root at the same level as
-   code/ and data/)
+   code/ and data/).
 
 3. Download and install corenlp-server (needs Apache Maven!)
 
@@ -137,21 +128,21 @@ using models built from features you have collected.
 ### Scores and reports
 
 You can get a sense of how things are going by inspecting the various
-intermediary results
+intermediary results:
 
 1. output files: Outputs for any decoders in a fold that happen to
    have finished running (for a given fold N, see
-   `TMP/latest/scratch-current/fold-N/output.*`)
+   `TMP/latest/scratch-current/fold-N/output.*`),
 
 2. fold reports : At the end of each fold, we will summarise all of
    the counts into a simple Precision/Recall/F1 report for attachment
-   and labelling. (for a given fold N, see
-   `TMP/latest/scratch-current/fold-N/reports-*`)
+   and labelling (for a given fold N, see
+   `TMP/latest/scratch-current/fold-N/reports-*`),
 
 3. full reports: If we make it through the entire experiment, we will
    produce a cross-validation summary combining the counts from all
    folds and several other things
-   (`TMP/latest/eval-current/reports-*`)
+   (`TMP/latest/eval-current/reports-*`).
 
 ### Cleanup
 
@@ -166,16 +157,16 @@ directories that look incomplete (no scores).
 
 ### Output files
 
-There are two main directories for output.
+There are two main directories for output:
 
-* The data/SNAPSHOTS directory is meant for intermediary results that
+* The `data/SNAPSHOTS` directory is meant for intermediary results that
 you want to save. You have to copy files into here manually (more on
 that later).
 Because this directory can take up space, it does not feel quite right
 to dump it on the public GitHub repo. We'll need to think about where to
-store our snapshots later (possibly some IRIT-local SVN?)
+store our snapshots later (possibly some IRIT-local SVN?).
 
-* The TMP directory is where the test harness does all its work.  Each
+* The `TMP` directory is where the test harness does all its work.  Each
 `TMP/<timestamp>` directory corresponds to a set of feature files
 generated by `irit-stac gather`.  For convenience, the harness will
 maintain a `TMP/latest` symlink pointing to one of these directories.
