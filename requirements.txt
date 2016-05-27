@@ -1,4 +1,3 @@
 -e git+https://github.com/irit-melodi/educe.git#egg=educe
 -e git+https://github.com/irit-melodi/attelo.git#egg=attelo
--e git+https://github.com/nlhepler/pydot.git#egg=pydot
 -e .
