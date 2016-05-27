@@ -532,7 +532,6 @@ def add_discourse_annotations(tree, text, e, subdoc):
             event = text[start:end]
 
             global_id = '_'.join([subdoc, unit.get('id')])
-            k = int(subdoc.split('_')[1])
 
             # Join / sit down events
 
@@ -610,7 +609,9 @@ def add_discourse_annotations(tree, text, e, subdoc):
                     if events.Robber != []:
                         raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                     events.Robber.append(global_id)
-                errors.extend(append_relation(root, 'Result', events.Roll, global_id))
+                if events.Roll != '':
+                    errors.extend(append_relation(root, 'Result', events.Roll, global_id))
+                    events.Roll = ''
                 continue
 
             elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
