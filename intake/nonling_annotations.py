@@ -58,6 +58,8 @@ def add_units_annotations(tree, text):
     Offer32RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
     Offer41RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
 
+    FromRegEx = re.compile(r'from (.+)')
+
     Trade11RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
     Trade12RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
     Trade21RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
@@ -125,7 +127,10 @@ def add_units_annotations(tree, text):
         f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
         f_elm1.text = 'Assertion'
         f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
-        f_elm2.text = Y
+        if Y == 'the bank' or Y == 'a port':
+            f_elm2.text = 'All'
+        else:
+            f_elm2.text = Y
         #maybe we can shorten this function and make a single loop
         for index in range(1, i+1):
             N = mo.group(2*index)
@@ -209,6 +214,7 @@ def add_units_annotations(tree, text):
                 Trader = mo.group(1)
                 continue
 
+
             elif Trade11RegEx.search(event) != None: #<X> traded <N1> <R1> for <N2> <R2> from <Y>.
                 parseTrade(Trade11RegEx.search(event), 1, 1, start, end, unit, root)
                 continue
@@ -250,7 +256,10 @@ def add_units_annotations(tree, text):
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
                 f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
-                f_elm2.text = Trader
+                if Trader != '':
+                    f_elm2.text = Trader
+                else:
+                    f_elm2.text = 'All'
                 continue
 
             elif event == "You can't make that trade.":
@@ -259,7 +268,10 @@ def add_units_annotations(tree, text):
                 f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
                 f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
-                f_elm2.text = Trader
+                if Trader != '':
+                    f_elm2.text = Trader
+                else:
+                    f_elm2.text = 'All'
                 continue
 
 
@@ -412,12 +424,12 @@ class Events:
     def __init__(self):
         self.Join = dict()
         self.Start = ""
+        self.Building = dict()
+        self.Roll = ""
         self.Dice = []
         self.Robber = []
         self.Trade = []
         self.Monopoly = ""
-        self.Building = dict()
-        self.Roll = ""
 
 
 def append_schema(root, utype, edus):
@@ -568,6 +580,9 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 X = mo.group(1)
                 C = mo.group(2)
                 events.Building[(X,C)] = global_id
+                if events.Building.has_key(('','')):
+                    errors.extend(append_relation(root, 'Result', events.Building[('','')], global_id))
+                    del events.Building[('','')]
                 continue
 
             elif BuiltRegEx.search(event) != None: #<X> built a <C>.
@@ -577,6 +592,9 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 if events.Building.has_key((X,C)):
                     errors.extend(append_relation(root, 'Result', events.Building[(X,C)], global_id))
                     del events.Building[(X,C)]
+                    events.Building[('','')] = global_id
+                elif events.Building.has_key(('','')):
+                    del events.Building[('','')]
                 continue
                 
 
@@ -684,7 +702,8 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
             elif FromRegEx.search(event) != None and TradeRegEx.search(event) == None: #from <X>
                 events.Trade.append(global_id)
-                errors.extend(append_relation(root, 'Continuation', events.Trade[0], global_id))
+                errors.extend(append_relation(root, 'Elaboration', events.Trade[0], events.Trade[1]))
+                errors.extend(append_relation(root, 'Continuation', events.Trade[1], global_id))
                 cdu_offer = append_schema(root, 'Complex_discourse_unit', events.Trade)
                 global_cdu_offer = '_'.join([subdoc, cdu_offer])
                 events.Trade[0] = global_cdu_offer
