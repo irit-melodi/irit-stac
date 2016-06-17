@@ -462,6 +462,10 @@ def process_turns(turns, gen):
     prev_dialogue = None
     i_old = 0
 
+    turn_to_roll_idc = [i for i, turn in enumerate(turns)
+                        if ("turn to roll the dice" in
+                            turn.rawtext)]
+
     for i, turn in enumerate(turns):
         # right boundary of dialogue
         if gen < 3:
@@ -492,8 +496,10 @@ def process_turns(turns, gen):
                     i_old = i
                     # Generate the actual annotation !
                     append_dialogue(root, event, span)
+
         else:
             # situated versions
+
             # * current turn
             emit_cur = turn.emitter
             txt_cur = turn.rawtext
@@ -560,7 +566,8 @@ def process_turns(turns, gen):
                                     # Generate the actual annotation !
                                     append_dialogue(root, event, span)
 
-                        elif "built a road" in txt_prev:
+                        elif (i == turn_to_roll_idc[0]
+                              and "built a road" in txt_prev):
                             # first standard game turn, following the
                             # initial setup phase when each player
                             # builds a settlement and a road, twice
