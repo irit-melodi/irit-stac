@@ -534,6 +534,7 @@ def augment_game(dir_orig, dir_dest, doc, gen, steps='all', seg_path=''):
         # weaving
         weave_cmd = ['stac-oneoff', 'weave',
                      dir_dest, dir_orig,
+                     '--gen', str(gen),
                      '--doc', doc,
                      '--annotator', '[GOLD|SILVER|BRONZE]',
                      '-o', dir_dest]
