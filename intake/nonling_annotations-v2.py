@@ -3,6 +3,18 @@
 
 """
 Automatically adds annotations for non-linguistic events in a game of "Settlers of Catan"
+
+This 'v2' version uses the educe API and not only the python base libraries.
+But for now it only works for units annotations, so it's better to use the first version of the script.
+
+NB : this version of the script is not up to date, since a few rules of annotations have been changed.
+So if you want to use this specific version, you should compare with the first version and make some changes.
+
+Command line :
+python nonling_annotations-v2.py <path to the game>
+
+Example :
+python nonling_annotations-v2.py ../../data/pilotnonling/test/
 """
 
 

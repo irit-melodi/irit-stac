@@ -3,6 +3,20 @@
 
 """
 Automatically adds annotations for non-linguistic events in a game of "Settlers of Catan"
+
+When a relation goes from one sub-file to another (e.g.: from pilot02_03 to pilot02_03),
+it is not added to the files but written in a separate file : "Implicit_Relations.txt"
+
+Only uses functions from the basic libraries of python, but it works well for 'units' and 'discourses' annotations,
+and it also simulates the system of local / global ids from the educe api.
+
+Command line :
+python nonling_annotations.py <path to the game> <version of the game>
+
+Example :
+python nonling_annotations.py ../../data/pilot_nonling/test/pilot14/ SILVER
+
+NB : it would be wise to not use this script twice on the same files, since it would add the same annotations twice.
 """
 
 from __future__ import print_function
