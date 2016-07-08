@@ -693,19 +693,24 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 events.Robber.append(global_id)
                 continue
 
-            elif StoleRegEx.search(event) != None: #<X> stole a resource from <Z>.
+            elif StoleRegEx.search(event) != None:
+                # <X> stole a resource from <Z>.
                 events.Robber.append(global_id)
-                cdu_robber = append_schema(root, 'Complex_discourse_unit', events.Robber[1:])
+                cdu_robber = append_schema(
+                    root, 'Complex_discourse_unit', events.Robber[1:])
                 global_cdu_robber = '_'.join([subdoc, cdu_robber])
-                errors.extend(append_relation(root, 'Result', events.Robber[0], global_cdu_robber))
-                for i in range(1,len(events.Robber)-1):
-                    errors.extend(append_relation(root, 'Sequence', events.Robber[i], events.Robber[i+1]))
+                errors.extend(append_relation(
+                    root, 'Result', events.Robber[0], global_cdu_robber))
+                for i in range(1, len(events.Robber) - 1):
+                    errors.extend(append_relation(
+                        root, 'Sequence', events.Robber[i], events.Robber[i+1]))
                 events.Robber[:] = []
                 continue
 
             # Trade events
 
-            elif OfferRegEx.search(event) != None: #<X> made an offer to trade <M> <R1> for <N> <R2>.
+            elif OfferRegEx.search(event) != None:
+                # <X> made an offer to trade <M> <R1> for <N> <R2>.
                 events.Trade[:] = []
                 events.Trade.append(global_id)
                 continue
@@ -714,40 +719,54 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 events.Trade.append(global_id)
                 continue
 
-            elif FromRegEx.search(event) != None and TradeRegEx.search(event) == None: #from <X>
+            elif (FromRegEx.search(event) != None
+                  and TradeRegEx.search(event) == None):
+                # from <X>
                 events.Trade.append(global_id)
-                errors.extend(append_relation(root, 'Elaboration', events.Trade[0], events.Trade[1]))
-                errors.extend(append_relation(root, 'Continuation', events.Trade[1], global_id))
-                cdu_offer = append_schema(root, 'Complex_discourse_unit', events.Trade)
+                errors.extend(append_relation(
+                    root, 'Elaboration', events.Trade[0], events.Trade[1]))
+                errors.extend(append_relation(
+                    root, 'Continuation', events.Trade[1], global_id))
+                cdu_offer = append_schema(
+                    root, 'Complex_discourse_unit', events.Trade)
                 global_cdu_offer = '_'.join([subdoc, cdu_offer])
                 events.Trade[0] = global_cdu_offer
                 continue
 
-            elif CantRegEx.search(event) != None: #You can't make that trade.
-                errors.extend(append_relation(root, 'Question-answer_pair', events.Trade[0], global_id))
+            elif CantRegEx.search(event) != None:
+                # You can't make that trade.
+                errors.extend(append_relation(
+                    root, 'Question-answer_pair', events.Trade[0], global_id))
                 events.Trade[:] = []
                 continue
 
-            elif TradeRegEx.search(event) != None: #<X> traded <M> <R1> for <N> <R2> from <Y>.
-                errors.extend(append_relation(root, 'Question-answer_pair', events.Trade[0], global_id))
+            elif TradeRegEx.search(event) != None:
+                # <X> traded <M> <R1> for <N> <R2> from <Y>.
+                errors.extend(append_relation(
+                    root, 'Question-answer_pair', events.Trade[0], global_id))
                 events.Trade[:] = []
                 continue
 
-            elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
-                errors.extend(append_relation(root, 'Question-answer_pair', events.Trade[0], global_id))
+            elif RejectRegEx.search(event) != None:
+                # <Y> rejected trade offer.
+                errors.extend(append_relation(
+                    root, 'Question-answer_pair', events.Trade[0], global_id))
                 events.Trade[:] = []
                 continue
 
             # Monopoly events
 
-            elif CardRegEx.search(event) != None: #<X> played a Monopoly card.
+            elif CardRegEx.search(event) != None:
+                # <X> played a Monopoly card.
                 if events.Monopoly != "":
                     raise Exception("add_discourse_annotations : la chaîne MonopolyEvent n'a pas été vidée!")
                 events.Monopoly = global_id
                 continue
 
-            elif MonopolyRegEx.search(event) != None: #<X> monopolized <R>.
-                errors.extend(append_relation(root, 'Sequence', events.Monopoly, global_id))
+            elif MonopolyRegEx.search(event) != None:
+                # <X> monopolized <R>.
+                errors.extend(append_relation(
+                    root, 'Sequence', events.Monopoly, global_id))
                 events.Monopoly = ""
                 continue
 
