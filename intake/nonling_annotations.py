@@ -556,7 +556,6 @@ def add_discourse_annotations(tree, text, e, subdoc):
             start = int(unit.find('positioning/start/singlePosition').get('index'))
             end = int(unit.find('positioning/end/singlePosition').get('index'))
             event = text[start:end]
-
             global_id = '_'.join([subdoc, unit.get('id')])
 
             # Join / sit down events
@@ -829,9 +828,9 @@ def main():
         textname = Folder + 'unannotated/' + subdoc + '.ac'
         unitsname = UnitsFolder + subdoc + '.aa'
         discoursename = DiscourseFolder + subdoc + '.aa'
-        textfile = open(textname, 'r')
-        unitsfile = open(unitsname, 'r')
-        discoursefile = open(discoursename, 'r')
+        textfile = codecs.open(textname, 'r', 'utf-8')
+        unitsfile = codecs.open(unitsname, 'r', 'ascii')
+        discoursefile = codecs.open(discoursename, 'r', 'ascii')
 
         text = textfile.read()
         stringtree_units = unitsfile.read()
