@@ -78,13 +78,20 @@ class Events(namedtuple('Events',
 # timestamps
 # ---------------------------------------------------------------------
 
-def mk_id():
+def mk_id(author=None):
     """
     Pair containing a brand new id and (false) creation-date
+
+    Parameters
+    ----------
+    author: string, optional
+        If no author is given, use 'stac'.
     """
+    if author is None:
+        author = 'stac'
     mk_id.counter += 1
     fake_timestamp = mk_id.starting_time + mk_id.counter
-    the_id = '_'.join(['stac', str(fake_timestamp)])
+    the_id = '_'.join([author, str(fake_timestamp)])
     return (the_id, fake_timestamp)
 
 
@@ -227,16 +234,23 @@ def append_span(parent, left, right):
     single(elm, 'end', right)
 
 
-def append_unit(root, utype, features, left, right):
+def append_unit(root, utype, features, left, right, author=None):
     """
     Append a new unit level annotation to the given root element.
     Note that this generates a new identifier behind the scenes.
+
+    Parameters
+    ----------
+    author: string, optional
+        If None, 'stac' is used (default value).
     """
-    unit_id, date = mk_id()
+    if author is None:
+        author = 'stac'
+    unit_id, date = mk_id(author=author)
     if right < left:
         raise Exception("Span with right boundary less than left")
 
-    metadata = [('author', 'stac'),
+    metadata = [('author', author),
                 ('creation-date', str(date)),
                 ('lastModifier', 'n/a'),
                 ('lastModificationDate', '0')]

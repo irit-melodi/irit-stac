@@ -24,16 +24,22 @@ since it would add the same annotations twice.
 
 from __future__ import print_function
 
-import xml.etree.ElementTree as ET
-import re
 import argparse
 import codecs
-import sys
+import datetime
 import os
+import re
+import sys
+import time
+import xml.etree.ElementTree as ET
+
 
 from csvtoglozz import append_unit, init_mk_id, mk_id
+from educe.stac.util.glozz import anno_date
 from educe.stac.util.prettifyxml import prettify
 
+
+_AUTHOR = 'stacnl'
 
 # ---------------------------------------------------------------------
 # "Units" annotations
@@ -54,7 +60,7 @@ def add_units_annotations(tree, text):
     Returns
     -------
     root :
-        modified XML tree with units annotations for non-linguistical event
+        modified XML tree with units annotations for non-linguistic event
     """
     root = tree
 
@@ -123,7 +129,7 @@ def add_units_annotations(tree, text):
                                            ('Quantity', N),
                                            ('Correctness', 'True'),
                                            ('Kind', R)],
-                        left, right)
+                        left, right, author=_AUTHOR)
         for index in range(i+1, i+j+1):
             N = mo.group(2*index)
             R = mo.group(2*index+1)
@@ -137,7 +143,7 @@ def add_units_annotations(tree, text):
                                            ('Quantity', N),
                                            ('Correctness', 'True'),
                                            ('Kind', R)],
-                        left, right)
+                        left, right, author=_AUTHOR)
 
     def parseTrade(mo, i, j, start, end, unit, root):
         X = mo.group(1)
@@ -165,7 +171,7 @@ def add_units_annotations(tree, text):
                                            ('Quantity', N),
                                            ('Correctness', 'True'),
                                            ('Kind', R)],
-                        left, right)
+                        left, right, author=_AUTHOR)
         for index in range(i+1, i+j+1):
             N = mo.group(2*index)
             R = mo.group(2*index+1)
@@ -179,7 +185,7 @@ def add_units_annotations(tree, text):
                                            ('Quantity', N),
                                            ('Correctness', 'True'),
                                            ('Kind', R)],
-                        left, right)
+                        left, right, author=_AUTHOR)
 
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
@@ -338,7 +344,7 @@ def add_units_annotations(tree, text):
                                                ('Quantity', N),
                                                ('Correctness', 'True'),
                                                ('Kind', R)],
-                            left, right)
+                            left, right, author=_AUTHOR)
                 continue
 
             elif Get2RegEx.search(event) != None:
@@ -365,14 +371,14 @@ def add_units_annotations(tree, text):
                                                ('Quantity', N1),
                                                ('Correctness', 'True'),
                                                ('Kind', R1)],
-                            left1, right1)
+                            left1, right1, author=_AUTHOR)
                 left2 = right1 + 2
                 right2 = left2 + len(N2) + 1 + len(R2)
                 append_unit(root, 'Resource', [('Status', 'Possessed'),
                                                ('Quantity', N2),
                                                ('Correctness', 'True'),
                                                ('Kind', R2)],
-                            left2, right2)
+                            left2, right2, author=_AUTHOR)
                 continue
 
 
@@ -397,7 +403,7 @@ def add_units_annotations(tree, text):
                                                ('Quantity', '?'),
                                                ('Correctness', 'True'),
                                                ('Kind', R)],
-                            left, right,)
+                            left, right, author=_AUTHOR)
                 continue
 
             else:
@@ -436,7 +442,7 @@ def append_relation(root, utype, global_id1, global_id2):
     global_id2 : string
         global id of the second element (EDU or CDU) of the relation
     """
-    unit_id, date = mk_id()
+    unit_id, date = mk_id(author=_AUTHOR)
 
     id1 = global_id1.split('_')
     id2 = global_id2.split('_')
@@ -448,7 +454,7 @@ def append_relation(root, utype, global_id1, global_id2):
         local_id1 = '_'.join([id1[-2], id1[-1]])
         local_id2 = '_'.join([id2[-2], id2[-1]])
 
-        metadata = [('author', 'stac'),
+        metadata = [('author', _AUTHOR),
                     ('creation-date', str(date)),
                     ('lastModifier', 'n/a'),
                     ('lastModificationDate', '0')]
@@ -515,9 +521,9 @@ def append_schema(root, utype, edus):
         local id of the CDU created (used later to create a relation
         between this CDU and another element)
     """
-    cdu_id, date = mk_id()
+    cdu_id, date = mk_id(author=_AUTHOR)
 
-    metadata = [('author', 'stac'),
+    metadata = [('author', _AUTHOR),
                 ('creation-date', str(date)),
                 ('lastModifier', 'n/a'),
                 ('lastModificationDate', '0')]
