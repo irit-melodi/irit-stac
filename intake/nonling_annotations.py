@@ -2,21 +2,24 @@
 # -*- coding: utf-8 -*-
 
 """
-Automatically adds annotations for non-linguistic events in a game of "Settlers of Catan"
+Automatically adds annotations on non-linguistic events in a STAC game.
 
-When a relation goes from one sub-file to another (e.g.: from pilot02_03 to pilot02_03),
-it is not added to the files but written in a separate file : "Implicit_Relations.txt"
+When a relation goes from one subdoc to another (e.g.: from pilot02_03
+to pilot02_03), it is not added to the files but written to a separate
+file `Implicit_Relations.txt`.
 
-Only uses functions from the basic libraries of python, but it works well for 'units' and 'discourses' annotations,
-and it also simulates the system of local / global ids from the educe api.
+This script only uses functions from the standard python library and
+reimplements the generation of local and global ids as it is implemented
+in educe.
 
-Command line :
+Usage :
 python nonling_annotations.py <path to the game> <version of the game>
 
 Example :
 python nonling_annotations.py ../../data/pilot_nonling/test/pilot14/ SILVER
 
-NB : it would be wise to not use this script twice on the same files, since it would add the same annotations twice.
+NB : it would be wise to not use this script twice on the same files,
+since it would add the same annotations twice.
 """
 
 from __future__ import print_function
@@ -32,7 +35,6 @@ from csvtoglozz import append_unit, init_mk_id, mk_id
 from educe.stac.util.prettifyxml import prettify
 
 
-
 # ---------------------------------------------------------------------
 # "Units" annotations
 # ---------------------------------------------------------------------
@@ -41,7 +43,7 @@ from educe.stac.util.prettifyxml import prettify
 def add_units_annotations(tree, text):
     """
     Add units annotations for non-linguistical event
-    
+
     Parameters
     ----------
     tree :
@@ -84,7 +86,7 @@ def add_units_annotations(tree, text):
     Trade23RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
     Trade32RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
     Trade41RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    
+
     #That's the moment I hope I didn't make any typo...
 
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
@@ -117,8 +119,10 @@ def add_units_annotations(tree, text):
             else:
                 left = right + 2
                 right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource',
-                        [('Status', 'Givable'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
+            append_unit(root, 'Resource', [('Status', 'Givable'),
+                                           ('Quantity', N),
+                                           ('Correctness', 'True'),
+                                           ('Kind', R)],
                         left, right)
         for index in range(i+1, i+j+1):
             N = mo.group(2*index)
@@ -129,9 +133,11 @@ def add_units_annotations(tree, text):
             else:
                 left = right + 2
                 right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource',
-                            [('Status', 'Receivable'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
-                            left, right)
+            append_unit(root, 'Resource', [('Status', 'Receivable'),
+                                           ('Quantity', N),
+                                           ('Correctness', 'True'),
+                                           ('Kind', R)],
+                        left, right)
 
     def parseTrade(mo, i, j, start, end, unit, root):
         X = mo.group(1)
@@ -155,8 +161,10 @@ def add_units_annotations(tree, text):
             else:
                 left = right + 2
                 right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource',
-                        [('Status', '?'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
+            append_unit(root, 'Resource', [('Status', '?'),
+                                           ('Quantity', N),
+                                           ('Correctness', 'True'),
+                                           ('Kind', R)],
                         left, right)
         for index in range(i+1, i+j+1):
             N = mo.group(2*index)
@@ -167,17 +175,22 @@ def add_units_annotations(tree, text):
             else:
                 left = right + 2
                 right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource',
-                        [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
+            append_unit(root, 'Resource', [('Status', 'Possessed'),
+                                           ('Quantity', N),
+                                           ('Correctness', 'True'),
+                                           ('Kind', R)],
                         left, right)
-            
+
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
-            start = int(unit.find('positioning/start/singlePosition').get('index'))
-            end = int(unit.find('positioning/end/singlePosition').get('index'))
+            start = int(unit.find('positioning/start/singlePosition').get(
+                'index'))
+            end = int(unit.find('positioning/end/singlePosition').get(
+                'index'))
             event = text[start:end]
 
-            if Offer11RegEx.search(event) != None: #<X> made an offer to trade <N1> <R1> for <N2> <R2>.
+            if Offer11RegEx.search(event) != None:
+                # <X> made an offer to trade <N1> <R1> for <N2> <R2>.
                 mo = Offer11RegEx.search(event)
                 parseOffer(mo, 1, 1, start, end, unit, root)
                 Trader = mo.group(1)
@@ -228,36 +241,46 @@ def add_units_annotations(tree, text):
                 Trader = mo.group(1)
                 continue
 
-
-            elif Trade11RegEx.search(event) != None: #<X> traded <N1> <R1> for <N2> <R2> from <Y>.
-                parseTrade(Trade11RegEx.search(event), 1, 1, start, end, unit, root)
+            elif Trade11RegEx.search(event) != None:
+                # <X> traded <N1> <R1> for <N2> <R2> from <Y>.
+                parseTrade(Trade11RegEx.search(event),
+                           1, 1, start, end, unit, root)
                 continue
             elif Trade12RegEx.search(event) != None:
-                parseTrade(Trade12RegEx.search(event), 1, 2, start, end, unit, root)
+                parseTrade(Trade12RegEx.search(event),
+                           1, 2, start, end, unit, root)
                 continue
             elif Trade21RegEx.search(event) != None:
-                parseTrade(Trade21RegEx.search(event), 2, 1, start, end, unit, root)
+                parseTrade(Trade21RegEx.search(event),
+                           2, 1, start, end, unit, root)
                 continue
             elif Trade13RegEx.search(event) != None:
-                parseTrade(Trade13RegEx.search(event), 1, 3, start, end, unit, root)
+                parseTrade(Trade13RegEx.search(event),
+                           1, 3, start, end, unit, root)
                 continue
             elif Trade22RegEx.search(event) != None:
-                parseTrade(Trade22RegEx.search(event), 2, 2, start, end, unit, root)
+                parseTrade(Trade22RegEx.search(event),
+                           2, 2, start, end, unit, root)
                 continue
             elif Trade31RegEx.search(event) != None:
-                parseTrade(Trade31RegEx.search(event), 3, 1, start, end, unit, root)
+                parseTrade(Trade31RegEx.search(event),
+                           3, 1, start, end, unit, root)
                 continue
             elif Trade14RegEx.search(event) != None:
-                parseTrade(Trade14RegEx.search(event), 1, 4, start, end, unit, root)
+                parseTrade(Trade14RegEx.search(event),
+                           1, 4, start, end, unit, root)
                 continue
             elif Trade23RegEx.search(event) != None:
-                parseTrade(Trade23RegEx.search(event), 2, 3, start, end, unit, root)
+                parseTrade(Trade23RegEx.search(event),
+                           2, 3, start, end, unit, root)
                 continue
             elif Trade32RegEx.search(event) != None:
-                parseTrade(Trade32RegEx.search(event), 3, 2, start, end, unit, root)
+                parseTrade(Trade32RegEx.search(event),
+                           3, 2, start, end, unit, root)
                 continue
             elif Trade41RegEx.search(event) != None:
-                parseTrade(Trade41RegEx.search(event), 4, 1, start, end, unit, root)
+                parseTrade(Trade41RegEx.search(event),
+                           4, 1, start, end, unit, root)
                 continue
 
 
@@ -267,9 +290,11 @@ def add_units_annotations(tree, text):
 
                 unit.find('characterisation/type').text = 'Refusal'
                 feats = unit.find('characterisation/featureSet')
-                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Addressee'})
                 if Trader != '':
                     f_elm2.text = Trader
                 else:
@@ -279,9 +304,11 @@ def add_units_annotations(tree, text):
             elif event == "You can't make that trade.":
                 unit.find('characterisation/type').text = 'Other'
                 feats = unit.find('characterisation/featureSet')
-                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Addressee'})
                 if Trader != '':
                     f_elm2.text = Trader
                 else:
@@ -289,7 +316,8 @@ def add_units_annotations(tree, text):
                 continue
 
 
-            elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
+            elif GetRegEx.search(event) != None:
+                # <Y> gets <N> <R>.
                 mo = GetRegEx.search(event)
                 Y = mo.group(1)
                 N = mo.group(2)
@@ -297,19 +325,24 @@ def add_units_annotations(tree, text):
 
                 unit.find('characterisation/type').text = 'Other'
                 feats = unit.find('characterisation/featureSet')
-                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Addressee'})
                 f_elm2.text = 'All'
 
                 left = start + len(Y) + 6
                 right = end - 1
-                append_unit(root, 'Resource',
-                            [('Status', 'Possessed'), ('Quantity', N), ('Correctness', 'True'), ('Kind', R)],
+                append_unit(root, 'Resource', [('Status', 'Possessed'),
+                                               ('Quantity', N),
+                                               ('Correctness', 'True'),
+                                               ('Kind', R)],
                             left, right)
                 continue
 
-            elif Get2RegEx.search(event) != None: #<Y> gets <N1> <R1>, <N2> <R2>.
+            elif Get2RegEx.search(event) != None:
+                # <Y> gets <N1> <R1>, <N2> <R2>.
                 mo = Get2RegEx.search(event)
                 Y = mo.group(1)
                 N1 = mo.group(2)
@@ -319,60 +352,71 @@ def add_units_annotations(tree, text):
 
                 unit.find('characterisation/type').text = 'Other'
                 feats = unit.find('characterisation/featureSet')
-                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Addressee'})
                 f_elm2.text = 'All'
 
                 left1 = start + len(Y) + 6
                 right1 = left1 + len(N1) + 1 + len(R1)
-                append_unit(root, 'Resource',
-                            [('Status', 'Possessed'), ('Quantity', N1), ('Correctness', 'True'), ('Kind', R1)],
+                append_unit(root, 'Resource', [('Status', 'Possessed'),
+                                               ('Quantity', N1),
+                                               ('Correctness', 'True'),
+                                               ('Kind', R1)],
                             left1, right1)
                 left2 = right1 + 2
                 right2 = left2 + len(N2) + 1 + len(R2)
-                append_unit(root, 'Resource',
-                            [('Status', 'Possessed'), ('Quantity', N2), ('Correctness', 'True'), ('Kind', R2)],
+                append_unit(root, 'Resource', [('Status', 'Possessed'),
+                                               ('Quantity', N2),
+                                               ('Correctness', 'True'),
+                                               ('Kind', R2)],
                             left2, right2)
                 continue
 
 
-            elif MonopolyRegEx.search(event) != None: #<X> monopolized <R>.
+            elif MonopolyRegEx.search(event) != None:
+                # <X> monopolized <R>.
                 mo = MonopolyRegEx.search(event)
                 X = mo.group(1)
                 R = mo.group(2)
 
                 unit.find('characterisation/type').text = 'Other'
                 feats = unit.find('characterisation/featureSet')
-                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Addressee'})
                 f_elm2.text = 'All'
 
                 right = end - 1
                 left = right - len(R)
-                append_unit(root, 'Resource',
-                            [('Status', 'Possessed'), ('Quantity', '?'), ('Correctness', 'True'), ('Kind', R)],
+                append_unit(root, 'Resource', [('Status', 'Possessed'),
+                                               ('Quantity', '?'),
+                                               ('Correctness', 'True'),
+                                               ('Kind', R)],
                             left, right,)
                 continue
 
             else:
                 unit.find('characterisation/type').text = 'Other'
                 feats = unit.find('characterisation/featureSet')
-                f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
+                f_elm1 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Surface_act'})
                 f_elm1.text = 'Assertion'
-                f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
+                f_elm2 = ET.SubElement(feats, 'feature',
+                                       {'name': 'Addressee'})
                 f_elm2.text = 'All'
                 continue
 
     return root
 
 
-
 # ---------------------------------------------------------------------
 # "Discourse" annotations
 # ---------------------------------------------------------------------
-
 
 
 def append_relation(root, utype, global_id1, global_id2):
@@ -385,7 +429,8 @@ def append_relation(root, utype, global_id1, global_id2):
     root :
         node of the XML tree to which we want to add a "relation" child
     utype : string
-        type of the relation we want to create (sequence, continuation, QAP...)
+        type of the relation we want to create (sequence, continuation,
+        QAP...)
     global_id1 : string
         global id of the first element (EDU or CDU) of the relation
     global_id2 : string
@@ -415,9 +460,11 @@ def append_relation(root, utype, global_id1, global_id2):
         ET.SubElement(elm_charact, 'type').text = utype
 
         elm_features = ET.SubElement(elm_charact, 'featureSet')
-        comments = ET.SubElement(elm_features, 'feature', {'name': 'Comments'})
+        comments = ET.SubElement(elm_features, 'feature',
+                                 {'name': 'Comments'})
         comments.text = 'Please write in remarks...'
-        argument_scope = ET.SubElement(elm_features, 'feature', {'name': 'Argument_scope'})
+        argument_scope = ET.SubElement(elm_features, 'feature',
+                                       {'name': 'Argument_scope'})
         argument_scope.text = 'Please choose...'
 
         positioning = ET.SubElement(elm_relation, 'positioning')
@@ -427,7 +474,8 @@ def append_relation(root, utype, global_id1, global_id2):
         return []
 
     else:
-        err1 = "Implicit relation from subdoc %s to subdoc %s :" % (subdoc1, subdoc2)
+        err1 = "Implicit relation from subdoc %s to subdoc %s :" % (
+            subdoc1, subdoc2)
         print(err1)
         err2 = "%s ------ %s -----> %s" % (global_id1, utype, global_id2)
         print(err2)
@@ -456,14 +504,16 @@ def append_schema(root, utype, edus):
     root :
         node of the XML tree to which we want to add a "schema" child
     utype : string
-        type of the schema we want to create. Usually, a "Complex_discourse_unit"
+        type of the schema we want to create. Usually, a
+        "Complex_discourse_unit".
     edus :
         list of the global ids of the EDUs that compose the CDU
 
     Returns
     -------
     cdu_id : string
-        local id of the CDU created (used later to create a relation between this CDU and another element)
+        local id of the CDU created (used later to create a relation
+        between this CDU and another element)
     """
     cdu_id, date = mk_id()
 
@@ -476,7 +526,8 @@ def append_schema(root, utype, edus):
     for key, val in metadata:
         ET.SubElement(elm_metadata, key).text = val
     elm_charact = ET.SubElement(elm_schema, 'characterisation')
-    ET.SubElement(elm_charact, 'type').text = utype # utype = 'Complex_discourse_unit'
+    # utype = 'Complex_discourse_unit'
+    ET.SubElement(elm_charact, 'type').text = utype
     elm_features = ET.SubElement(elm_charact, 'featureSet')
 
     positioning = ET.SubElement(elm_schema, 'positioning')
@@ -489,9 +540,8 @@ def append_schema(root, utype, edus):
 
 
 def add_discourse_annotations(tree, text, e, subdoc):
-    """
-    Add discourse annotations for non-linguistical event
-    
+    """Add discourse annotations for non-linguistical event.
+
     Parameters
     ----------
     tree :
@@ -501,12 +551,14 @@ def add_discourse_annotations(tree, text, e, subdoc):
     e : Events
         set of global ids for events currently happenning
     subdoc : string
-        name of the subdoc currently annotated : GameName_XX (ex : pilot02_09)
+        name of the subdoc currently annotated : GameName_XX (ex:
+        pilot02_09)
 
     Returns
     -------
     root :
-        modified XML tree with discourse annotations for non-linguistical events
+        modified XML tree with discourse annotations for non-linguistical
+        events
     events : Events
         set of global ids for events currently happenning
     errors : string list
@@ -553,24 +605,29 @@ def add_discourse_annotations(tree, text, e, subdoc):
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
 
-            start = int(unit.find('positioning/start/singlePosition').get('index'))
-            end = int(unit.find('positioning/end/singlePosition').get('index'))
+            start = int(unit.find('positioning/start/singlePosition').get(
+                'index'))
+            end = int(unit.find('positioning/end/singlePosition').get(
+                'index'))
             event = text[start:end]
             global_id = '_'.join([subdoc, unit.get('id')])
 
             # Join / sit down events
 
-            if JoinRegEx.search(event) != None: #<X> joined the game.
+            if JoinRegEx.search(event) != None:
+                # <X> joined the game.
                 mo = JoinRegEx.search(event)
                 X = mo.group(1)
                 events.Join[X] = global_id
                 continue
 
-            elif SitDownRegEx.search(event) != None: #<X> sat down at seat <N>.
+            elif SitDownRegEx.search(event) != None:
+                # <X> sat down at seat <N>.
                 mo = SitDownRegEx.search(event)
                 X = mo.group(1)
                 if events.Join.has_key(X):
-                    errors.extend(append_relation(root, 'Sequence', events.Join[X], global_id))
+                    errors.extend(append_relation(
+                        root, 'Sequence', events.Join[X], global_id))
                     del events.Join[X]
                 continue
 
@@ -582,58 +639,70 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
             elif event == "Board layout set.":
                 if events.Start != '':
-                    errors.extend(append_relation(root, 'Sequence', events.Start, global_id))
+                    errors.extend(append_relation(
+                        root, 'Sequence', events.Start, global_id))
                     events.Start = ''
                 continue
 
             # Building events
 
-            elif TurnToBuildRegEx.search(event) != None: #It's <X>'s turn to build a <C>.
+            elif TurnToBuildRegEx.search(event) != None:
+                # It's <X>'s turn to build a <C>.
                 mo = TurnToBuildRegEx.search(event)
                 X = mo.group(1)
                 C = mo.group(2)
-                events.Building[(X,C)] = global_id
-                if events.Building.has_key(('','')):
-                    errors.extend(append_relation(root, 'Result', events.Building[('','')], global_id))
-                    del events.Building[('','')]
+                events.Building[(X, C)] = global_id
+                if events.Building.has_key(('', '')):
+                    errors.extend(append_relation(
+                        root, 'Result', events.Building[('', '')], global_id))
+                    del events.Building[('', '')]
                 continue
 
-            elif BuiltRegEx.search(event) != None: #<X> built a <C>.
+            elif BuiltRegEx.search(event) != None:
+                # <X> built a <C>.
                 mo = BuiltRegEx.search(event)
                 X = mo.group(1)
                 C = mo.group(2)
-                if events.Building.has_key((X,C)):
-                    errors.extend(append_relation(root, 'Result', events.Building[(X,C)], global_id))
-                    del events.Building[(X,C)]
-                    events.Building[('','')] = global_id
-                elif events.Building.has_key(('','')):
-                    del events.Building[('','')]
+                if events.Building.has_key((X, C)):
+                    errors.extend(append_relation(
+                        root, 'Result', events.Building[(X, C)], global_id))
+                    del events.Building[(X, C)]
+                    events.Building[('', '')] = global_id
+                elif events.Building.has_key(('', '')):
+                    del events.Building[('', '')]
                 continue
-                
 
             # Resource distribution events
-
-            elif TurnToRollRegEx.search(event) != None: #It's <X>'s turn to roll the dice.
+            elif TurnToRollRegEx.search(event) != None:
+                # It's <X>'s turn to roll the dice.
                 events.Roll = global_id
                 continue
 
-            elif DiceRegEx.search(event) != None: #<X> rolled a <M1> and a <M2>.
+            elif DiceRegEx.search(event) != None:
+                # <X> rolled a <M1> and a <M2>.
                 mo = DiceRegEx.search(event)
                 M1 = int(mo.group(2))
                 M2 = int(mo.group(3))
                 if M1 + M2 != 7: # Resource distribution event
-                    # Since we don't know when finishes a resource distribution,
-                    # the trick is to compute a resource distribution when the next one starts.
-                    # So here we first need to compute the preceding resource distribution.
+                    # Since we don't know when finishes a resource
+                    # distribution, the trick is to compute a resource
+                    # distribution when the next one starts.
+                    # So here we first need to compute the preceding
+                    # resource distribution.
                     if len(events.Dice) > 0:
-                        if len(events.Dice) == 2: # Resource distribution : 1 player
-                            errors.extend(append_relation(root, 'Result', events.Dice[0], events.Dice[1]))
+                        if len(events.Dice) == 2:
+                            # Resource distribution: 1 player
+                            errors.extend(append_relation(
+                                root, 'Result', events.Dice[0], events.Dice[1]))
                         else: # Resource Distribution : 2 or more players
-                            cdu_dice = append_schema(root, 'Complex_discourse_unit', events.Dice[1:])
+                            cdu_dice = append_schema(
+                                root, 'Complex_discourse_unit', events.Dice[1:])
                             global_cdu_dice = '_'.join([subdoc, cdu_dice])
-                            errors.extend(append_relation(root, 'Result', events.Dice[0], global_cdu_dice))
-                            for i in range(1,len(events.Dice)-1):
-                                errors.extend(append_relation(root, 'Continuation', events.Dice[i], events.Dice[i+1]))
+                            errors.extend(append_relation(
+                                root, 'Result', events.Dice[0], global_cdu_dice))
+                            for i in range(1, len(events.Dice) - 1):
+                                errors.extend(append_relation(
+                                    root, 'Continuation', events.Dice[i], events.Dice[i+1]))
                         events.Dice[:] = []
                     events.Dice.append(global_id)
                 else: # M1 + M2 == 7 : Robber event
@@ -641,54 +710,67 @@ def add_discourse_annotations(tree, text, e, subdoc):
                         raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                     events.Robber.append(global_id)
                 if events.Roll != '':
-                    errors.extend(append_relation(root, 'Result', events.Roll, global_id))
+                    errors.extend(append_relation(
+                        root, 'Result', events.Roll, global_id))
                     events.Roll = ''
                 continue
 
-            elif GetRegEx.search(event) != None: #<Y> gets <N> <R>.
+            elif GetRegEx.search(event) != None:
+                # <Y> gets <N> <R>.
                 events.Dice.append(global_id)
                 continue
 
-            elif Get2RegEx.search(event) != None: #<Y> gets <N1> <R1>, <N2> <R2>.
+            elif Get2RegEx.search(event) != None:
+                # <Y> gets <N1> <R1>, <N2> <R2>.
                 events.Dice.append(global_id)
                 continue
 
-            elif NoGetRegEx.search(event) != None: #No player gets anything.
-                errors.extend(append_relation(root, 'Result', events.Dice[0], global_id))
+            elif NoGetRegEx.search(event) != None:
+                # No player gets anything.
+                errors.extend(append_relation(
+                    root, 'Result', events.Dice[0], global_id))
                 events.Dice[:] = []
                 continue
 
             # Robber events
-
-            elif SoldierRegEx.search(event) != None: #<X> played a Soldier card.
+            elif SoldierRegEx.search(event) != None:
+                # <X> played a Soldier card.
                 if events.Robber != []:
                     raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                 events.Robber.append(global_id)
                 continue
 
-            elif Discard1RegEx.search(event) != None: #<Y> needs to discard.
+            elif Discard1RegEx.search(event) != None:
+                # <Y> needs to discard.
                 events.Robber.append(global_id)
                 continue
 
-            elif Discard2RegEx.search(event) != None: #<Y> discarded <N> resources.
+            elif Discard2RegEx.search(event) != None:
+                # <Y> discarded <N> resources.
                 events.Robber.append(global_id)
                 continue
 
-            elif Robber1RegEx.search(event) != None: #<X> will move the robber.
+            elif Robber1RegEx.search(event) != None:
+                # <X> will move the robber.
                 events.Robber.append(global_id)
                 continue
 
-            elif Robber2RegEx.search(event) != None: #<X> moved the robber.
+            elif Robber2RegEx.search(event) != None:
+                # <X> moved the robber.
                 events.Robber.append(global_id)
-                cdu_robber = append_schema(root, 'Complex_discourse_unit', events.Robber[1:])
+                cdu_robber = append_schema(
+                    root, 'Complex_discourse_unit', events.Robber[1:])
                 global_cdu_robber = '_'.join([subdoc, cdu_robber])
-                errors.extend(append_relation(root, 'Result', events.Robber[0], global_cdu_robber))
-                for i in range(1,len(events.Robber)-1):
-                    errors.extend(append_relation(root, 'Sequence', events.Robber[i], events.Robber[i+1]))
+                errors.extend(append_relation(
+                    root, 'Result', events.Robber[0], global_cdu_robber))
+                for i in range(1, len(events.Robber) - 1):
+                    errors.extend(append_relation(
+                        root, 'Sequence', events.Robber[i], events.Robber[i+1]))
                 events.Robber[:] = []
                 continue
 
-            elif Robber3RegEx.search(event) != None: #<X> moved the robber, must choose a victim.
+            elif Robber3RegEx.search(event) != None:
+                # <X> moved the robber, must choose a victim.
                 events.Robber.append(global_id)
                 continue
 
@@ -719,7 +801,7 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 continue
 
             elif (FromRegEx.search(event) != None
-                  and TradeRegEx.search(event) == None):
+                  and TradeRegEx.search(event) is None):
                 # from <X>
                 events.Trade.append(global_id)
                 errors.extend(append_relation(
@@ -771,30 +853,31 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
 
     """
-    For resources distributions, we complete the XML tree and empty the list at the next dice roll.
+    For resources distributions, we complete the XML tree and empty the
+    list at the next dice roll.
     So for the last turn we may have forgotten to annotate some events.
     """
     if len(events.Dice) > 0:
         if len(events.Dice) == 2: # Resource distribution : 1 player
-            errors.extend(append_relation(root, 'Result', events.Dice[0], events.Dice[1]))
+            errors.extend(append_relation(
+                root, 'Result', events.Dice[0], events.Dice[1]))
         else: # Resource Distribution : 2 or more players
-            cdu_dice = append_schema(root, 'Complex_discourse_unit', events.Dice[1:])
+            cdu_dice = append_schema(
+                root, 'Complex_discourse_unit', events.Dice[1:])
             global_cdu_dice = '_'.join([subdoc, cdu_dice])
-            errors.extend(append_relation(root, 'Result', events.Dice[0], global_cdu_dice))
-            for i in range(1,len(events.Dice)-1):
-                errors.extend(append_relation(root, 'Continuation', events.Dice[i], events.Dice[i+1]))
+            errors.extend(append_relation(
+                root, 'Result', events.Dice[0], global_cdu_dice))
+            for i in range(1, len(events.Dice) - 1):
+                errors.extend(append_relation(
+                    root, 'Continuation', events.Dice[i], events.Dice[i+1]))
         events.Dice[:] = []
 
     return root, events, errors
 
 
-
-
 # ---------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------
-
-
 
 def main():
 
@@ -804,30 +887,31 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('Folder', help = 'folder where the files to annotate are')
-    parser.add_argument('Metal', help = 'version of the game you want to annotate : BRONZE, SILVER, or GOLD (or other)')
+    parser.add_argument('folder', help='folder where the files to annotate are')
+    parser.add_argument('metal', help=('version of the game you want to '
+                                       'annotate (ex: GOLD)'))
 
     args = parser.parse_args()
-    Folder = args.Folder
-    Metal = args.Metal
-    Name = Folder.split('/')[-2]
-    
-    UnitsFolder = Folder + 'units/' + Metal + '/'
-    DiscourseFolder = Folder + 'discourse/' + Metal + '/'
+    folder = os.path.abspath(args.folder)
+    metal = args.metal
+    name = os.path.basename(folder)
 
-    N = len(os.listdir(UnitsFolder)) / 2
-    
+    unitsfolder = os.path.join(folder, 'units', metal)
+    discoursefolder = os.path.join(folder, 'discourse', metal)
+
+    N = len(os.listdir(unitsfolder)) / 2
+
     Implicit_Relations = []
     events = Events()
 
     for i in range(1, N+1):
         e = events
 
-        subdoc = Name + '_%02d' % i
+        subdoc = name + '_%02d' % i
 
-        textname = Folder + 'unannotated/' + subdoc + '.ac'
-        unitsname = UnitsFolder + subdoc + '.aa'
-        discoursename = DiscourseFolder + subdoc + '.aa'
+        textname = os.path.join(folder, 'unannotated', subdoc + '.ac')
+        unitsname = os.path.join(unitsfolder, subdoc + '.aa')
+        discoursename = os.path.join(discoursefolder, subdoc + '.aa')
         textfile = codecs.open(textname, 'r', 'utf-8')
         unitsfile = codecs.open(unitsname, 'r', 'ascii')
         discoursefile = codecs.open(discoursename, 'r', 'ascii')
@@ -839,7 +923,8 @@ def main():
         discourse_tree = ET.fromstring(stringtree_discourse)
 
         units_root = add_units_annotations(units_tree, text)
-        discourse_root, events, errors = add_discourse_annotations(discourse_tree, text, e, subdoc)
+        discourse_root, events, errors = add_discourse_annotations(
+            discourse_tree, text, e, subdoc)
 
         Implicit_Relations.extend(errors)
 
@@ -854,7 +939,7 @@ def main():
 
     if Implicit_Relations != []:
         error_report = '\n'.join(Implicit_Relations)
-        filename = Folder + 'Implicit_Relations.txt'
+        filename = os.path.join(folder, 'Implicit_Relations.txt')
         with codecs.open(filename, 'w', 'ascii') as out:
             out.write(error_report)
 
