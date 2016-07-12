@@ -26,16 +26,12 @@ from __future__ import print_function
 
 import argparse
 import codecs
-import datetime
 import os
 import re
-import sys
-import time
 import xml.etree.ElementTree as ET
 
 
 from csvtoglozz import append_unit, init_mk_id, mk_id
-from educe.stac.util.glozz import anno_date
 from educe.stac.util.prettifyxml import prettify
 
 
@@ -45,10 +41,23 @@ _AUTHOR = 'stacnl'
 # "Units" annotations
 # ---------------------------------------------------------------------
 
+# trade offer with another player
+OFFER_RE = r'(?P<X>.+) made an offer to trade (?P<V>(\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*)? for (?P<W>(\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*)?\.'
+OFFER_PROG = re.compile(OFFER_RE)
+# [...] [from Y]
+FROM_PROG = re.compile(r'from (.+)')
+
+# trade offer with the bank or a port
+BANK_OFFER_RE = r'(?P<X>.+) made an offer to trade (?P<V>(\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*)? for (?P<W>(\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*)? from (?P<Y>the bank or a port)\.'
+BANK_OFFER_PROG = re.compile(BANK_OFFER_RE)
+
+# trade done
+TRADE_RE = r'(?P<X>.+) traded (?P<V>(\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*)? for (?P<W>(\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*)? from (?P<Y>.+)\.'
+TRADE_PROG = re.compile(TRADE_RE)
+
 
 def add_units_annotations(tree, text):
-    """
-    Add units annotations for non-linguistical event
+    """Add units annotations on non-linguistic events.
 
     Parameters
     ----------
@@ -60,38 +69,10 @@ def add_units_annotations(tree, text):
     Returns
     -------
     root :
-        modified XML tree with units annotations for non-linguistic event
+        modified XML tree with additional units annotations on
+        non-linguistic events
     """
     root = tree
-
-    #So I know this is like the ugliest possible way to solve a problem
-    #but those offer/trade events can be really tricky
-    #and for the moment I really see no other way than
-    #considering every possibilities in a exhaustive way...
-
-    Offer11RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer12RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer21RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer13RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer22RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer31RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer14RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer23RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer32RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-    Offer41RegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood)( from the bank or a port)?\.')
-
-    FromRegEx = re.compile(r'from (.+)')
-
-    Trade11RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade12RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade21RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade13RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade22RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade31RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade14RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade23RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade32RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
-    Trade41RegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood), (\d+) (clay|ore|sheep|wheat|wood) for (\d+) (clay|ore|sheep|wheat|wood) from (.+)\.')
 
     #That's the moment I hope I didn't make any typo...
 
@@ -107,85 +88,131 @@ def add_units_annotations(tree, text):
 
     Trader = ''
 
-    def parseOffer(mo, i, j, start, end, unit, root):
-        X = mo.group(1)
+    def parse_offer(m, start, end, unit, root):
+        """Reimplementation of parseOffer.
+
+        Parameters
+        ----------
+        m: TODO
+            Match object for the offer.
+        start: int
+            Start of the offer.
+        end: int
+            End of the offer.
+        unit: TODO
+            XML element for this unit annotation.
+        root: TODO
+            Root of the XML tree.
+        """
+        X = m.group('X')
+        # 1. update the unit annotation:
+        # * type = 'Offer'
         unit.find('characterisation/type').text = 'Offer'
+
         feats = unit.find('characterisation/featureSet')
+        # * surface act = 'Assertion'
         f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
         f_elm1.text = 'Assertion'
+        # * addressee = '?'
         f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
         f_elm2.text = '?'
-        #maybe we can shorten this function and make a single loop
-        for index in range(1, i+1):
-            N = mo.group(2*index)
-            R = mo.group(2*index+1)
-            if index == 1:
-                left = start + len(X) + 24
-                right = left + len(N) + 1 + len(R)
-            else:
+        # 2. add 'Resource' annotations for both offered and asked resources
+        # * resources offered
+        # expected position of the leftmost character of the first one
+        left = start + len(X) + 24
+        right = left  # useful when m.group('V') is None
+        if m.group('V') is not None:
+            resources_offered = m.group('V').split(', ')
+            for resource in resources_offered:
+                right = left + len(resource)  # end of span
+                qty, kind = resource.split(' ')
+                append_unit(root, 'Resource', [('Status', 'Givable'),
+                                               ('Quantity', qty),
+                                               ('Correctness', 'True'),
+                                               ('Kind', kind)],
+                            left, right, author=_AUTHOR)
+                # expected position of the leftmost character of the next
+                # offered resource (if any)
                 left = right + 2
-                right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource', [('Status', 'Givable'),
-                                           ('Quantity', N),
-                                           ('Correctness', 'True'),
-                                           ('Kind', R)],
-                        left, right, author=_AUTHOR)
-        for index in range(i+1, i+j+1):
-            N = mo.group(2*index)
-            R = mo.group(2*index+1)
-            if index == i+1:
-                left = right + 5
-                right = left + len(N) + 1 + len(R)
-            else:
+        # * resources asked
+        left = right + 5
+        right = left
+        if m.group('W') is not None:
+            resources_asked = m.group('W').split(', ')
+            for resource in resources_asked:
+                right = left + len(resource)  # end of span
+                qty, kind = resource.split(' ')
+                append_unit(root, 'Resource', [('Status', 'Receivable'),
+                                               ('Quantity', qty),
+                                               ('Correctness', 'True'),
+                                               ('Kind', kind)],
+                            left, right, author=_AUTHOR)
+                # expected position of the leftmost character of the next
+                # asked resource (if any)
                 left = right + 2
-                right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource', [('Status', 'Receivable'),
-                                           ('Quantity', N),
-                                           ('Correctness', 'True'),
-                                           ('Kind', R)],
-                        left, right, author=_AUTHOR)
+        # the eventual Y (if m comes from BANK_OFFER_PROG) is currently unused
 
-    def parseTrade(mo, i, j, start, end, unit, root):
-        X = mo.group(1)
-        Y = mo.group(2*(i+j+1))
+    def parse_trade(m, start, end, unit, root):
+        """Reimplementation of parseTrade.
+
+        Parameters
+        ----------
+        m: TODO
+            Match object for the offer.
+        start: int
+            Start of the offer.
+        end: int
+            End of the offer.
+        unit: TODO
+            XML element for this unit annotation.
+        root: TODO
+            Root of the XML tree.
+        """
+        X = m.group('X')
+        Y = m.group('Y')
+        # 1. update the unit annotation:
+        # * type = 'Offer'
         unit.find('characterisation/type').text = 'Accept'
         feats = unit.find('characterisation/featureSet')
+        # * surface act = 'Assertion'
         f_elm1 = ET.SubElement(feats, 'feature', {'name': 'Surface_act'})
         f_elm1.text = 'Assertion'
+        # * addressee = Y or 'All' if Y = 'the bank' or 'a port'
         f_elm2 = ET.SubElement(feats, 'feature', {'name': 'Addressee'})
         if Y == 'the bank' or Y == 'a port':
             f_elm2.text = 'All'
         else:
             f_elm2.text = Y
-        #maybe we can shorten this function and make a single loop
-        for index in range(1, i+1):
-            N = mo.group(2*index)
-            R = mo.group(2*index+1)
-            if index == 1:
-                left = start + len(X) + 8
-                right = left + len(N) + 1 + len(R)
-            else:
+        # 2. add 'Resource' annotations for both offered and asked resources
+        # * resources offered
+        # expected position of the leftmost character of the first one
+        left = start + len(X) + 8
+        right = left  # not sure it's useful here, but harmless anyway
+        if m.group('V') is not None:
+            resources_offered = m.group('V').split(', ')
+            for resource in resources_offered:
+                right = left + len(resource)  # end of span
+                qty, kind = resource.split(' ')
+                append_unit(root, 'Resource', [('Status', '?'),
+                                               ('Quantity', qty),
+                                               ('Correctness', 'True'),
+                                               ('Kind', kind)],
+                            left, right, author=_AUTHOR)
                 left = right + 2
-                right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource', [('Status', '?'),
-                                           ('Quantity', N),
-                                           ('Correctness', 'True'),
-                                           ('Kind', R)],
-                        left, right, author=_AUTHOR)
-        for index in range(i+1, i+j+1):
-            N = mo.group(2*index)
-            R = mo.group(2*index+1)
-            if index == i+1:
-                left = right + 5
-                right = left + len(N) + 1 + len(R)
-            else:
+        # * resources asked
+        left = right + 5  # ' for '
+        right = left
+        if m.group('W') is not None:
+            resources_asked = m.group('W').split(', ')
+            for resource in resources_asked:
+                right = left + len(resource)
+                qty, kind = resource.split(' ')
+                append_unit(root, 'Resource', [('Status', 'Possessed'),
+                                               ('Quantity', qty),
+                                               ('Correctness', 'True'),
+                                               ('Kind', kind)],
+                            left, right, author=_AUTHOR)
                 left = right + 2
-                right = left + len(N) + 1 + len(R)
-            append_unit(root, 'Resource', [('Status', 'Possessed'),
-                                           ('Quantity', N),
-                                           ('Correctness', 'True'),
-                                           ('Kind', R)],
-                        left, right, author=_AUTHOR)
 
     for unit in root:
         if unit.findtext('characterisation/type') == 'NonplayerSegment':
@@ -195,102 +222,28 @@ def add_units_annotations(tree, text):
                 'index'))
             event = text[start:end]
 
-            if Offer11RegEx.search(event) != None:
+            # WIP 2016-07-11
+            if OFFER_PROG.search(event) is not None:
                 # <X> made an offer to trade <N1> <R1> for <N2> <R2>.
-                mo = Offer11RegEx.search(event)
-                parseOffer(mo, 1, 1, start, end, unit, root)
-                Trader = mo.group(1)
+                m = OFFER_PROG.search(event)
+                parse_offer(m, start, end, unit, root)
+                Trader = m.group('X')
                 continue
-            elif Offer12RegEx.search(event) != None:
-                mo = Offer12RegEx.search(event)
-                parseOffer(mo, 1, 2, start, end, unit, root)
-                Trader = mo.group(1)
+            elif BANK_OFFER_PROG.search(event) is not None:
+                # <X> made an offer to trade <N1> <R1> for <N2> <R2> with
+                # the bank or a port.
+                m = BANK_OFFER_PROG.search(event)
+                parse_offer(m, start, end, unit, root)
+                Trader = m.group('X')
                 continue
-            elif Offer21RegEx.search(event) != None:
-                mo = Offer21RegEx.search(event)
-                parseOffer(mo, 2, 1, start, end, unit, root)
-                Trader = mo.group(1)
+            elif TRADE_PROG.search(event) is not None:
+                m = TRADE_PROG.search(event)
+                parse_trade(m, start, end, unit, root)
                 continue
-            elif Offer13RegEx.search(event) != None:
-                mo = Offer13RegEx.search(event)
-                parseOffer(mo, 1, 3, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
-            elif Offer22RegEx.search(event) != None:
-                mo = Offer22RegEx.search(event)
-                parseOffer(mo, 2, 2, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
-            elif Offer31RegEx.search(event) != None:
-                mo = Offer31RegEx.search(event)
-                parseOffer(mo, 3, 1, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
-            elif Offer14RegEx.search(event) != None:
-                mo = Offer14RegEx.search(event)
-                parseOffer(mo, 1, 4, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
-            elif Offer23RegEx.search(event) != None:
-                mo = Offer23RegEx.search(event)
-                parseOffer(mo, 2, 3, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
-            elif Offer32RegEx.search(event) != None:
-                mo = Offer32RegEx.search(event)
-                parseOffer(mo, 3, 2, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
-            elif Offer41RegEx.search(event) != None:
-                mo = Offer41RegEx.search(event)
-                parseOffer(mo, 4, 1, start, end, unit, root)
-                Trader = mo.group(1)
-                continue
+            # end WIP 2016-07-11
 
-            elif Trade11RegEx.search(event) != None:
-                # <X> traded <N1> <R1> for <N2> <R2> from <Y>.
-                parseTrade(Trade11RegEx.search(event),
-                           1, 1, start, end, unit, root)
-                continue
-            elif Trade12RegEx.search(event) != None:
-                parseTrade(Trade12RegEx.search(event),
-                           1, 2, start, end, unit, root)
-                continue
-            elif Trade21RegEx.search(event) != None:
-                parseTrade(Trade21RegEx.search(event),
-                           2, 1, start, end, unit, root)
-                continue
-            elif Trade13RegEx.search(event) != None:
-                parseTrade(Trade13RegEx.search(event),
-                           1, 3, start, end, unit, root)
-                continue
-            elif Trade22RegEx.search(event) != None:
-                parseTrade(Trade22RegEx.search(event),
-                           2, 2, start, end, unit, root)
-                continue
-            elif Trade31RegEx.search(event) != None:
-                parseTrade(Trade31RegEx.search(event),
-                           3, 1, start, end, unit, root)
-                continue
-            elif Trade14RegEx.search(event) != None:
-                parseTrade(Trade14RegEx.search(event),
-                           1, 4, start, end, unit, root)
-                continue
-            elif Trade23RegEx.search(event) != None:
-                parseTrade(Trade23RegEx.search(event),
-                           2, 3, start, end, unit, root)
-                continue
-            elif Trade32RegEx.search(event) != None:
-                parseTrade(Trade32RegEx.search(event),
-                           3, 2, start, end, unit, root)
-                continue
-            elif Trade41RegEx.search(event) != None:
-                parseTrade(Trade41RegEx.search(event),
-                           4, 1, start, end, unit, root)
-                continue
-
-
-            elif RejectRegEx.search(event) != None: #<Y> rejected trade offer.
+            elif RejectRegEx.search(event) != None:
+                # <Y> rejected trade offer.
                 mo = RejectRegEx.search(event)
                 Y = mo.group(1)
 
@@ -597,12 +550,7 @@ def add_discourse_annotations(tree, text, e, subdoc):
     Robber3RegEx = re.compile(r'(.+) moved the robber, must choose a victim\.')
     StoleRegEx = re.compile(r'(.+) stole a resource from (.+)')
 
-    #For discourse annotations, we can afford to use a single regex for every offer/trade events
-    #since we don't need to parse every resource that is exchanged.
-    OfferRegEx = re.compile(r'(.+) made an offer to trade (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))*( from the bank or a port)?\.')
-    FromRegEx = re.compile(r'from (.+)')
     CantRegEx = re.compile(r"You can't make that trade\.")
-    TradeRegEx = re.compile(r'(.+) traded (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* for (\d+) (clay|ore|sheep|wheat|wood)(, (\d+) (clay|ore|sheep|wheat|wood))* from (.+)\.')
     RejectRegEx = re.compile(r'(.+) rejected trade offer\.')
 
     CardRegEx = re.compile(r'(.+) played a Monopoly card\.')
@@ -620,14 +568,14 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
             # Join / sit down events
 
-            if JoinRegEx.search(event) != None:
+            if JoinRegEx.search(event) is not None:
                 # <X> joined the game.
                 mo = JoinRegEx.search(event)
                 X = mo.group(1)
                 events.Join[X] = global_id
                 continue
 
-            elif SitDownRegEx.search(event) != None:
+            elif SitDownRegEx.search(event) is not None:
                 # <X> sat down at seat <N>.
                 mo = SitDownRegEx.search(event)
                 X = mo.group(1)
@@ -652,7 +600,7 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
             # Building events
 
-            elif TurnToBuildRegEx.search(event) != None:
+            elif TurnToBuildRegEx.search(event) is not None:
                 # It's <X>'s turn to build a <C>.
                 mo = TurnToBuildRegEx.search(event)
                 X = mo.group(1)
@@ -664,7 +612,7 @@ def add_discourse_annotations(tree, text, e, subdoc):
                     del events.Building[('', '')]
                 continue
 
-            elif BuiltRegEx.search(event) != None:
+            elif BuiltRegEx.search(event) is not None:
                 # <X> built a <C>.
                 mo = BuiltRegEx.search(event)
                 X = mo.group(1)
@@ -679,12 +627,12 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 continue
 
             # Resource distribution events
-            elif TurnToRollRegEx.search(event) != None:
+            elif TurnToRollRegEx.search(event) is not None:
                 # It's <X>'s turn to roll the dice.
                 events.Roll = global_id
                 continue
 
-            elif DiceRegEx.search(event) != None:
+            elif DiceRegEx.search(event) is not None:
                 # <X> rolled a <M1> and a <M2>.
                 mo = DiceRegEx.search(event)
                 M1 = int(mo.group(2))
@@ -721,17 +669,17 @@ def add_discourse_annotations(tree, text, e, subdoc):
                     events.Roll = ''
                 continue
 
-            elif GetRegEx.search(event) != None:
+            elif GetRegEx.search(event) is not None:
                 # <Y> gets <N> <R>.
                 events.Dice.append(global_id)
                 continue
 
-            elif Get2RegEx.search(event) != None:
+            elif Get2RegEx.search(event) is not None:
                 # <Y> gets <N1> <R1>, <N2> <R2>.
                 events.Dice.append(global_id)
                 continue
 
-            elif NoGetRegEx.search(event) != None:
+            elif NoGetRegEx.search(event) is not None:
                 # No player gets anything.
                 errors.extend(append_relation(
                     root, 'Result', events.Dice[0], global_id))
@@ -739,29 +687,29 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 continue
 
             # Robber events
-            elif SoldierRegEx.search(event) != None:
+            elif SoldierRegEx.search(event) is not None:
                 # <X> played a Soldier card.
                 if events.Robber != []:
                     raise Exception("add_discourse_annotations : la liste RobberEvent n'a pas été vidée!")
                 events.Robber.append(global_id)
                 continue
 
-            elif Discard1RegEx.search(event) != None:
+            elif Discard1RegEx.search(event) is not None:
                 # <Y> needs to discard.
                 events.Robber.append(global_id)
                 continue
 
-            elif Discard2RegEx.search(event) != None:
+            elif Discard2RegEx.search(event) is not None:
                 # <Y> discarded <N> resources.
                 events.Robber.append(global_id)
                 continue
 
-            elif Robber1RegEx.search(event) != None:
+            elif Robber1RegEx.search(event) is not None:
                 # <X> will move the robber.
                 events.Robber.append(global_id)
                 continue
 
-            elif Robber2RegEx.search(event) != None:
+            elif Robber2RegEx.search(event) is not None:
                 # <X> moved the robber.
                 events.Robber.append(global_id)
                 cdu_robber = append_schema(
@@ -775,12 +723,12 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 events.Robber[:] = []
                 continue
 
-            elif Robber3RegEx.search(event) != None:
+            elif Robber3RegEx.search(event) is not None:
                 # <X> moved the robber, must choose a victim.
                 events.Robber.append(global_id)
                 continue
 
-            elif StoleRegEx.search(event) != None:
+            elif StoleRegEx.search(event) is not None:
                 # <X> stole a resource from <Z>.
                 events.Robber.append(global_id)
                 cdu_robber = append_schema(
@@ -796,19 +744,18 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
             # Trade events
 
-            elif OfferRegEx.search(event) != None:
+            elif OFFER_PROG.search(event) is not None:
                 # <X> made an offer to trade <M> <R1> for <N> <R2>.
                 events.Trade[:] = []
                 events.Trade.append(global_id)
                 continue
-
             elif event == '...':
+                # ...
                 events.Trade.append(global_id)
                 continue
-
-            elif (FromRegEx.search(event) != None
-                  and TradeRegEx.search(event) is None):
-                # from <X>
+            elif (FROM_PROG.search(event) is not None
+                  and BANK_OFFER_PROG.search(event) is None):
+                # from <Y>
                 events.Trade.append(global_id)
                 errors.extend(append_relation(
                     root, 'Elaboration', events.Trade[0], events.Trade[1]))
@@ -820,21 +767,28 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 events.Trade[0] = global_cdu_offer
                 continue
 
-            elif CantRegEx.search(event) != None:
+            elif BANK_OFFER_PROG.search(event) is not None:
+                # <X> made an offer to trade <M> <R1> for <N> <R2> from
+                # the bank or a port.
+                events.Trade[:] = []
+                events.Trade.append(global_id)
+                continue
+
+            elif CantRegEx.search(event) is not None:
                 # You can't make that trade.
                 errors.extend(append_relation(
                     root, 'Question-answer_pair', events.Trade[0], global_id))
                 events.Trade[:] = []
                 continue
 
-            elif TradeRegEx.search(event) != None:
+            elif TRADE_PROG.search(event) is not None:
                 # <X> traded <M> <R1> for <N> <R2> from <Y>.
                 errors.extend(append_relation(
                     root, 'Question-answer_pair', events.Trade[0], global_id))
                 events.Trade[:] = []
                 continue
 
-            elif RejectRegEx.search(event) != None:
+            elif RejectRegEx.search(event) is not None:
                 # <Y> rejected trade offer.
                 errors.extend(append_relation(
                     root, 'Question-answer_pair', events.Trade[0], global_id))
@@ -843,14 +797,14 @@ def add_discourse_annotations(tree, text, e, subdoc):
 
             # Monopoly events
 
-            elif CardRegEx.search(event) != None:
+            elif CardRegEx.search(event) is not None:
                 # <X> played a Monopoly card.
                 if events.Monopoly != "":
                     raise Exception("add_discourse_annotations : la chaîne MonopolyEvent n'a pas été vidée!")
                 events.Monopoly = global_id
                 continue
 
-            elif MonopolyRegEx.search(event) != None:
+            elif MonopolyRegEx.search(event) is not None:
                 # <X> monopolized <R>.
                 errors.extend(append_relation(
                     root, 'Sequence', events.Monopoly, global_id))
