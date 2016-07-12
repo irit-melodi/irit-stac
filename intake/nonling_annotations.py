@@ -754,6 +754,7 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 events.Trade.append(global_id)
                 continue
             elif (FROM_PROG.search(event) is not None
+                  and TRADE_PROG.search(event) is None
                   and BANK_OFFER_PROG.search(event) is None):
                 # from <Y>
                 events.Trade.append(global_id)
@@ -778,7 +779,13 @@ def add_discourse_annotations(tree, text, e, subdoc):
                 # You can't make that trade.
                 errors.extend(append_relation(
                     root, 'Question-answer_pair', events.Trade[0], global_id))
-                events.Trade[:] = []
+                # this message does not clear the pending trade offer,
+                # it just means that the trade can't be made right now
+                # for example, if the offering player is in a building phase,
+                # the addressee needs to wait until the offering player is
+                # done, but the trade offer is accepted afterwards
+                # ex: s1-league2-game1, turns 423..425
+                # events.Trade[:] = []
                 continue
 
             elif TRADE_PROG.search(event) is not None:
