@@ -53,14 +53,10 @@ def _soclog_to_csv(lconf, log):
     convert to the csv format more familiar to the
     rest of the scripts
     """
-    turns_path = lconf.tmp("turns")
-    with open(turns_path, "w") as turns_file:
-        lconf.pyt("txt2csv/extract_turns.py", lconf.soclog,
-                  stdout=turns_file)
-    lconf.pyt("txt2csv/extract_annot.py", turns_path,
-              stdout=log)
-    os.rename(turns_path + "csv", unseg_path(lconf))
-    os.unlink(turns_path)
+    lconf.pyt("intake/soclogtocsv.py",
+              lconf.soclog,
+              "--output", unseg_path(lconf),
+              stderr=log)
 
 
 def _segment_into_edus(lconf, log):

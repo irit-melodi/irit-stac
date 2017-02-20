@@ -244,8 +244,7 @@ def _get_decoding_jobs(mpack, lconf, econf):
     """
     makedirs(lconf.tmp("parsed"))
     output_path = attelo_result_path(lconf, econf)
-    cache = lconf.model_paths(econf.learner,
-                              None)
+    cache = lconf.model_paths(econf.learner, None, econf.parser)
     parser = econf.parser.payload
     parser.fit([], [], cache=cache)  # we assume everything is cached
     return ath_parse.jobs(mpack, parser, output_path)
