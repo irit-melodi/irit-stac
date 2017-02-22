@@ -20,6 +20,7 @@ from .local import (CONFIG_FILE,
                     FIXED_FOLD_FILE,
                     GRAPH_DOCS,
                     METRICS,
+                    REPORT_DIGITS,
                     TEST_CORPUS,
                     TEST_EVALUATION_KEY,
                     TRAINING_CORPUS)
@@ -68,11 +69,15 @@ class IritHarness(Harness):
     def detailed_evaluations(self):
         return DETAILED_EVALUATIONS
 
-    # WIP
+    # WIP harness-specific selection of metrics
     @property
     def metrics(self):
         return METRICS
-    # end WIP
+
+    # 2017-02-22 number of digits to display floats in reports
+    @property
+    def report_digits(self):
+        return REPORT_DIGITS
 
     @property
     def test_evaluation(self):

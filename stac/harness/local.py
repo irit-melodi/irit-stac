@@ -399,6 +399,9 @@ METRICS = [
     'edus',
 ]
 
+REPORT_DIGITS = 3
+"""Number of digits to display floats in reports."""
+
 # -------------------------------------------------------------------------------
 # settings for the standalone parser
 # -------------------------------------------------------------------------------
