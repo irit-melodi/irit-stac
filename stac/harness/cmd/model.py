@@ -60,12 +60,12 @@ def _mk_dialogue_act_model(hconf):
 def _do_corpus(hconf):
     "Run evaluation on a corpus"
     paths = hconf.mpack_paths(test_data=False)
-    if not fp.exists(paths[0]):
+    if not fp.exists(paths['edu_input']):
         exit_ungathered()
-    mpack = load_multipack(paths[0],
-                           paths[1],
-                           paths[2],
-                           paths[3],
+    mpack = load_multipack(paths['edu_input'],
+                           paths['pairings'],
+                           paths['features'],
+                           paths['vocab'],
                            verbose=True)
     dconf = DataConfig(pack=mpack,
                        folds=None)
