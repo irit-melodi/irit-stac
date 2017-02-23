@@ -251,10 +251,19 @@ def _get_decoding_jobs(mpack, lconf, econf):
 
 
 def decode(lconf, evaluations):
-    "Decode the input using all the model/learner combos we know"
+    """Decode the input using all the model/learner combos we know.
+
+    Parameters
+    ----------
+    lconf : ?
+        TODO
+
+    evaluations : iterable of ?
+        TODO
+    """
 
     fpath = minicorpus_path(lconf) + '.relations.sparse'
-    vocab_path = lconf.mpack_paths(test_data=False)[3]
+    vocab_path = lconf.mpack_paths(test_data=False)['vocab']
     mpack = load_multipack(fpath + '.edu_input',
                            fpath + '.pairings',
                            fpath,

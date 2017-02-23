@@ -153,7 +153,7 @@ def _feature_extraction(lconf, log):
     Extract features from our input glozz file
     """
     corpus_dir = minicorpus_path(lconf)
-    vocab_path = lconf.mpack_paths(test_data=False)[3]
+    vocab_path = lconf.mpack_paths(test_data=False)['vocab']
     cmd = ["stac-learning", "extract",
            "--parsing",
            "--vocab", vocab_path,
