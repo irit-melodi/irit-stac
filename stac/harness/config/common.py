@@ -122,16 +122,18 @@ def mk_post(klearner, kdecoder):
                             parser=Keyed(parser_key, parser))
 
 def mk_bypass(klearner, kdecoder):
-    """ Return a bypass decoder config
+    """Return a bypass decoder config.
 
-    Used if the decoder itself also labels the pairs """
+    Used if the decoder itself also labels the pairs.
+    """
     settings = _core_settings('AD.L-byp', klearner)
     parser_key = combined_key(settings, kdecoder)
     key = combined_key(klearner, parser_key)
-    steps = [('attach weights', AttachClassifierWrapper(klearner.attach.payload)),
-             ('label weights', LabelClassifierWrapper(klearner.label.payload)),
-             ('decode', kdecoder.payload),
-            ]
+    steps = [
+        ('attach_weights', AttachClassifierWrapper(klearner.attach.payload)),
+        ('label_weights', LabelClassifierWrapper(klearner.label.payload)),
+        ('decode', kdecoder.payload),
+    ]
     parser = Pipeline(steps=steps)
     return EvaluationConfig(key=key,
                             settings=settings,
