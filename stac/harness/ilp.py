@@ -10,6 +10,7 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from subprocess import call
 
+from educe.stac.annotation import SUBORDINATING_RELATIONS
 from attelo.table import UNRELATED
 from attelo.decoding import Decoder
 
@@ -218,11 +219,20 @@ def mk_zimpl_input(dpack, data_dir):
     with open(data_path, 'w') as f_data:
         print(pretty_data(last_mat), file=f_data)
 
+    # class indices that correspond to subordinating relations ;
+    # required for the ILP formulation of the Right Frontier Constraint
+    # in SCIP/ZIMPL
+    subord_idc = [i for i, lbl in enumerate(dpack.labels, start=1)
+                  if lbl in set(SUBORDINATING_RELATIONS)]
+
     header = '\n'.join((
         "param EDU_COUNT := {0} ;".format(len(edus)),
         "param TURN_COUNT := {0} ;".format(len(turn_off)),
         "param PLAYER_COUNT := {0} ;".format(len(speakers)),
         "param LABEL_COUNT := {0} ;".format(len(dpack.labels)),
+        "set RSub := {{{0}}} ;".format(
+            ', '.join(str(i) for i in subord_idc)),
+        "param SUB_LABEL_COUNT := {0} ;".format(len(subord_idc)),
     ))
 
     template_path = fp.join(ZPL_TEMPLATE_DIR, 'template.zpl')

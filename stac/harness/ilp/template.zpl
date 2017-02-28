@@ -5,14 +5,14 @@
 # param TURN_COUNT := ??? ;
 # param PLAYER_COUNT := ??? ;
 # param LABEL_COUNT := ??? ;
+# set RSub := {4, 5, 7, 8, 10, 13, 15, 18, 19} ;
+# param SUB_LABEL_COUNT := 9 ;
 
 set EDUs := {1 to EDU_COUNT} ;
 set Turns := {1 to TURN_COUNT} ;
 set Labels := {1 to LABEL_COUNT} ;
 set CSPs := {<i,j> in EDUs*EDUs with i < j} ;
 set CSTs := {<i,j,k> in EDUs*EDUs*EDUs with i < j and j < k} ;
-set RSub := {4, 5, 7, 8, 10, 13, 15, 18, 19} ;
-param SUB_LABEL_COUNT := 9 ;
 
 param TLEN[Turns] := read "./turn.dat" as "n+" ;
 param TOFF[Turns] := read "./turn.dat" as "n+" skip 1 ;
