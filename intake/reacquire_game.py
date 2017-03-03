@@ -14,7 +14,7 @@ import os
 import subprocess
 import sys
 
-from educe.stac.annotation import parse_turn_id
+from educe.stac.annotation import TurnId
 
 
 # path to the folder containing the intake scripts (including this one)
@@ -31,7 +31,7 @@ def read_portioning(seg_file):
 
     Returns
     -------
-    first_idx : list of parse_turn_id
+    first_idx : list of TurnId
         Identifier of the first turn of each portion.
     """
     first_idx = []
@@ -49,7 +49,7 @@ def read_portioning(seg_file):
                 continue
             # new portion
             if grab_next:
-                first_idx.append(parse_turn_id(line[0]))
+                first_idx.append(TurnId.from_string(line[0]))
                 grab_next = False
     return first_idx
 
@@ -66,7 +66,7 @@ def infer_portioning(disc_dir):
 
     Returns
     -------
-    first_idx : list of parse_turn_id
+    first_idx : list of TurnId.from_string
         Identifier of the first turn of each portion.
     """
     ac_files = glob(os.path.join(disc_dir, '*.ac'))
@@ -78,7 +78,7 @@ def infer_portioning(disc_dir):
     for ac_file in ac_files:
         with open(ac_file, 'rb') as ac_file:
             for line in ac_file:
-                fidx = parse_turn_id(line.split(':', 1)[0].strip())
+                fidx = TurnId.from_string(line.split(':', 1)[0].strip())
                 first_idx.append(fidx)
     return sorted(first_idx)
 
@@ -111,7 +111,7 @@ def backport_portioning(seg_file, first_idx):
                     continue
                 # insert an empty line just before a starting turn
                 # (except for the turn starting the first portion)
-                if parse_turn_id(line[0]) in first_idx[1:]:
+                if TurnId.from_string(line[0]) in first_idx[1:]:
                     writer.writerow([])
                 # write the normal line
                 writer.writerow(line)
@@ -160,7 +160,7 @@ def _backport_turn_text(f_orig, f_dest, f_res, verbose=0):
                not ''.join(line_orig).strip()):
             line_orig = reader_orig.next()
 
-        if parse_turn_id(line_orig[0]) != parse_turn_id(line_dest[0]):
+        if TurnId.from_string(line_orig[0]) != TurnId.from_string(line_dest[0]):
             err_msg = 'Weird state that should never be reached: {}\t{}'
             raise ValueError(err_msg.format(line_orig, line_dest))
 
@@ -265,7 +265,7 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
         # or all extra turns have been consumed
         if buff_orig:
             try:  # why try/catch: cf. DEBUG below
-                turn_id_orig = parse_turn_id(line_orig[0])
+                turn_id_orig = TurnId.from_string(line_orig[0])
             except ValueError:
                 print([i for i, c in enumerate(line_orig[0])
                        if c == '\t'])
@@ -276,7 +276,7 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
             # until we reach "It's X's turn to roll the dice." (or none
             # remains)
             try:
-                turn_id_dest = parse_turn_id(line_dest[0])
+                turn_id_dest = TurnId.from_string(line_dest[0])
             except ValueError:
                 print([i for i, c in enumerate(line_dest[0])
                        if c == '\t'])
@@ -291,7 +291,7 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
                 # read next turn from _dest
                 line_dest = reader_dest.next()
                 try:
-                    turn_id_dest = parse_turn_id(line_dest[0])
+                    turn_id_dest = TurnId.from_string(line_dest[0])
                 except ValueError:
                     print([i for i, c in enumerate(line_dest[0])
                            if c == '\t'])
@@ -308,7 +308,7 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
         # if one field contains a doubled double quote (supposedly read
         # as one double-quote)
         try:
-            parse_turn_id(line_orig[0])
+            TurnId.from_string(line_orig[0])
         except ValueError:
             print('line_orig[0]', line_orig[0])
             print('Positions of \\t in line_orig[0]',
@@ -318,16 +318,16 @@ def _transfer_turns(f_orig, f_dest, f_res, verbose=0):
             print(line_orig[0].split('\t'))
             raise
         # end DEBUG
-        if parse_turn_id(line_orig[0]) < parse_turn_id(line_dest[0]):
+        if TurnId.from_string(line_orig[0]) < TurnId.from_string(line_dest[0]):
             err_msg = 'Weird state that should never be reached: {}\t{}'
             raise ValueError(err_msg.format(line_orig, line_dest))
 
         # new turns in _dest: write as they are
-        while parse_turn_id(line_orig[0]) > parse_turn_id(line_dest[0]):
+        while TurnId.from_string(line_orig[0]) > TurnId.from_string(line_dest[0]):
             writer_res.writerow(line_dest)
             line_dest = reader_dest.next()
 
-        if parse_turn_id(line_orig[0]) != parse_turn_id(line_dest[0]):
+        if TurnId.from_string(line_orig[0]) != TurnId.from_string(line_dest[0]):
             err_msg = 'Weird state that should never be reached: {}\t{}'
             raise ValueError(err_msg.format(line_orig, line_dest))
 
