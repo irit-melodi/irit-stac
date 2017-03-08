@@ -99,7 +99,14 @@ EVENTS = {
         # roll could explain some messages, cf. pilot14
         # "go!" or "go go go!"
         "turn to",
-    ]
+    ],
+    # 4: bugfix for gen 3, forgotten messages
+    4: [
+        'need to discard',  # when >1 player need to discard
+        'received',  # after Year of Plenty
+        'bought a development card.',  # action a player can perform ; useful?
+        # 'cards left.',  # number of cards left ; useful? NA says no
+    ],
 }
 
 # private messages: explicitly ignored
@@ -197,6 +204,17 @@ OTHER_EVENTS = {
         r"SOCRejectOffer:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)",
         '{name} rejected trade offer.'
     ),
+}
+
+# 4th gen: forgotten events, bugfix for 3rd gen
+# 2017-03-08 attempt at having a game state
+EVENTS_GEN4 = {
+    'resource_count': (
+        # one such line per player when resources are distributed after a
+        # dice roll
+        r"SOCResourceCount:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)\|count=(?P<res_cnt>[0-9]+)",
+        ''
+    )
 }
 
 
@@ -327,6 +345,20 @@ def guess_generation(event):
     return gen
 
 
+# 2017-03-08 refactoring: extract from parse_line
+def mk_turn(turn_id, timestamp, speaker, text, state=None):
+    'convenience helper to construct Turn object'
+    state = state or EMPTY_STATE
+    return stac_csv.Turn(number=turn_id,
+                         timestamp=timestamp,
+                         emitter=speaker,
+                         res=state.resources_string() or YUCK,
+                         builds=state.buildups_string(),
+                         rawtext=text.replace('&', r'\&'),
+                         annot=YUCK,
+                         comment=YUCK)
+
+
 def parse_line(ctr, line, sel_gen=3, parsing_state=None):
     """Parse timestamped line.
 
@@ -369,18 +401,6 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
     timestamp = line.split(":+", 1)[0]
     timestamp = ":".join(timestamp.split(":")[-4:])
 
-    def mk_turn(turn_id, speaker, text, state=None):
-        'convenience helper to construct Turn object'
-        state = state or EMPTY_STATE
-        return stac_csv.Turn(number=turn_id,
-                             timestamp=timestamp,
-                             emitter=speaker,
-                             res=state.resources_string() or YUCK,
-                             builds=state.buildups_string(),
-                             rawtext=text.replace('&', r'\&'),
-                             annot=YUCK,
-                             comment=YUCK)
-
     # server message
     match_server = SERVER.search(line)
     if match_server:
@@ -392,10 +412,33 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
             # skip private messages
             return None
         ctr.incr_at_gen(gen)
-        return mk_turn(str(ctr),
-                       match_server.group("name"),
-                       event,
-                       state=None)
+        server_msg_turn = mk_turn(str(ctr),
+                                  timestamp,
+                                  match_server.group("name"),
+                                  event,
+                                  state=None)
+        turns = [server_msg_turn]
+        # 2017-03-08 generate UI message for each player's resource count
+        gen = 4
+        if gen <= sel_gen:
+            if 'SOCResourceCount' in parsing_state['line_prev']:
+                # if the current line is a Server message and the previous
+                # line is a SOCResourceCount, generate a UI msg after the
+                # Server msg
+                ctr.incr_at_gen(gen)
+                res_cnt_msg = 'Resources :'
+                for pl_nb, pl_name in sorted(parsing_state['plnb2name'],
+                                             key=lambda k, v: int(k)):
+                    pl_rescnt = parsing_state['res_cnt'][pl_nb]
+                    res_cnt_msg += '{pl_name}: {pl_rescnt}'.format(
+                        pl_name=pl_name, pl_rescnt=pl_rescnt)
+                res_cnt_turn = mk_turn(str(ctr),
+                                       timestamp,
+                                       'UI',
+                                       res_cnt_msg,
+                                       state=None)
+                turns.append(res_cnt_turn)
+                return turns
 
     # player message
     match_player = PLAYER.search(line)
@@ -403,10 +446,13 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
         gen = 1
         ctr.incr_at_gen(gen)
         state = parse_state(match_player.group("state"))
-        return mk_turn(str(ctr),
-                       match_player.group("name"),
-                       match_player.group("text"),
-                       state=state)
+        return [
+            mk_turn(str(ctr),
+                    timestamp,
+                    match_player.group("name"),
+                    match_player.group("text"),
+                    state=state),
+        ]
     else:
         # WIP non-ling event
         gen = 3
@@ -534,11 +580,42 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                     evt_fields['name'] = parsing_state['plnb2name'][pl_nb]
                 else:
                     raise ValueError("Fail to find required player name")
-            return mk_turn(str(ctr),
-                           'UI',  # custom emitter
-                           evt_msg.format(**evt_fields),  # defined text
-                           state=None)
+            return [
+                mk_turn(str(ctr),
+                        timestamp,
+                        'UI',  # custom emitter
+                        evt_msg.format(**evt_fields),  # defined text
+                        state=None),
+            ]
         # end WIP
+
+        # 2017-03-08 trial at having a message for game state: how
+        # much resources each player has, after the resource distribution
+        # following a dice roll
+        gen = 4
+        if sel_gen < gen:
+            return None
+
+        for k, evt_re_msg in EVENTS_GEN4.items():
+            evt_re, evt_msg = evt_re_msg  # unpack the event regex and msg
+            evt_re_obj = re.compile(evt_re)
+            evt_search = evt_re_obj.search(line)
+            if not evt_search:
+                continue
+
+            # get named groups from regex
+            evt_fields = evt_search.groupdict()
+            if k == 'resource_count':
+                # the soclog contains one line per player ; accumulate
+                # them, then generate a UI message after the Server msg
+                # on resource distribution
+                min_plnb = min(int(x) for x
+                               in parsing_state['plnb2name'].keys())
+                pl_nb = evt_fields['plnb']
+                if pl_nb == min_plnb:
+                    parsing_state['res_cnt'] = dict()
+                parsing_state['res_cnt'][pl_nb] = int(evt_fields['res_cnt'])
+                continue
 
         # last resort case
         return None
@@ -577,10 +654,11 @@ def soclog_to_turns(soclog, sel_gen=3):
 
         if len(timestamp_ht) == 2:
             # timestamped line
-            turn = parse_line(ctr, line, sel_gen=sel_gen,
+            turns = parse_line(ctr, line, sel_gen=sel_gen,
                               parsing_state=parsing_state)
-            if turn is not None:
-                yield turn
+            if turns is not None:
+                for turn in turns:
+                    yield turn
         elif len(timestamp_ht) == 1:
             # non-timestamped lines were included from gen2 on
             gen = 2
