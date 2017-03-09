@@ -421,24 +421,27 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
         # 2017-03-08 generate UI message for each player's resource count
         gen = 4
         if gen <= sel_gen:
-            if 'SOCResourceCount' in parsing_state['line_prev']:
+            if 'SOCResourceCount' in line_prev:
                 # if the current line is a Server message and the previous
                 # line is a SOCResourceCount, generate a UI msg after the
                 # Server msg
                 ctr.incr_at_gen(gen)
-                res_cnt_msg = 'Resources :'
-                for pl_nb, pl_name in sorted(parsing_state['plnb2name'],
-                                             key=lambda k, v: int(k)):
+                res_cnt_header = 'Resources :'
+                res_cnt_vals = []
+                for pl_nb, pl_name in sorted(parsing_state['plnb2name'].items(),
+                                             key=lambda kv: int(kv[0])):
                     pl_rescnt = parsing_state['res_cnt'][pl_nb]
-                    res_cnt_msg += '{pl_name}: {pl_rescnt}'.format(
-                        pl_name=pl_name, pl_rescnt=pl_rescnt)
+                    res_cnt_vals.append('{pl_name}: {pl_rescnt}'.format(
+                        pl_name=pl_name, pl_rescnt=pl_rescnt))
+                res_cnt_msg = '{header} {vals}'.format(
+                    header=res_cnt_header, vals=', '.join(res_cnt_vals))
                 res_cnt_turn = mk_turn(str(ctr),
                                        timestamp,
                                        'UI',
                                        res_cnt_msg,
                                        state=None)
                 turns.append(res_cnt_turn)
-                return turns
+        return turns
 
     # player message
     match_player = PLAYER.search(line)
@@ -612,7 +615,7 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                 min_plnb = min(int(x) for x
                                in parsing_state['plnb2name'].keys())
                 pl_nb = evt_fields['plnb']
-                if pl_nb == min_plnb:
+                if pl_nb == str(min_plnb):
                     parsing_state['res_cnt'] = dict()
                 parsing_state['res_cnt'][pl_nb] = int(evt_fields['res_cnt'])
                 continue
