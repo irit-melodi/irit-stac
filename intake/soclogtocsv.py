@@ -433,7 +433,7 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                     res_cnt_vals.append(
                         '{pl_name} has {pl_rescnt} resource{s}.'.format(
                             pl_name=pl_name, pl_rescnt=pl_rescnt,
-                            s=('s' if pl_rescnt in ('0', '1') else '')
+                            s=('s' if pl_rescnt in (0, 1) else '')
                         )
                     )
                 res_cnt_msg = ' '.join(res_cnt_vals)
