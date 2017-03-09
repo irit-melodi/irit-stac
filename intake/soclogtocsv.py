@@ -104,7 +104,7 @@ EVENTS = {
     4: [
         'need to discard',  # when >1 player need to discard
         'received',  # after Year of Plenty
-        'bought a development card.',  # action a player can perform ; useful?
+        'bought a development card',  # action a player can perform ; useful?
         # 'cards left.',  # number of cards left ; useful? NA says no
     ],
 }
@@ -430,9 +430,13 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                 for pl_nb, pl_name in sorted(parsing_state['plnb2name'].items(),
                                              key=lambda kv: int(kv[0])):
                     pl_rescnt = parsing_state['res_cnt'][pl_nb]
-                    res_cnt_vals.append('{pl_name}: {pl_rescnt} resources'.format(
-                        pl_name=pl_name, pl_rescnt=pl_rescnt))
-                res_cnt_msg = '. '.join(res_cnt_vals)
+                    res_cnt_vals.append(
+                        '{pl_name} has {pl_rescnt} resource{s}.'.format(
+                            pl_name=pl_name, pl_rescnt=pl_rescnt,
+                            s=('s' if pl_rescnt in ('0', '1') else '')
+                        )
+                    )
+                res_cnt_msg = ' '.join(res_cnt_vals)
                 res_cnt_turn = mk_turn(str(ctr),
                                        timestamp,
                                        'UI',
