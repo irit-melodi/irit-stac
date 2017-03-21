@@ -143,6 +143,11 @@ def fuse_segments(t,xs):
     # 2017-03-09 Game State message: resource count for each player
     resource_count = r'(.* has \d* resource(s)?\.)'
     # end Game State message
+    # 2017-03-21 time left Server message
+    # ">>> Less than X minutes remaining. Type *ADDTIME* to
+    # extend this game another Y minutes."
+    time_left = r'(>>> Less than \d+ minutes remaining[\.])'
+    # end time left Server message
     interjections  = [ r'a+r*g*h+'
                      , 'bah'
                      , 'eww'
@@ -158,7 +163,7 @@ def fuse_segments(t,xs):
     fusible_left_re  = re.compile('|'.join(fusible_left), flags=re.IGNORECASE)
 
     # should be fused with its right neighbour
-    fusible_right    = [resource_alloc, resource_count, interjection]
+    fusible_right = [resource_alloc, resource_count, interjection, time_left]
     fusible_right_re = re.compile('|'.join(fusible_right), flags=re.IGNORECASE)
 
     if len(xs) < 2:
