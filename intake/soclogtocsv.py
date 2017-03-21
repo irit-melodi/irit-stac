@@ -77,7 +77,7 @@ EVENTS = {
         # private by rights but treating as public
         # because it's so useful
         "can't end your turn yet",
-        'Type *ADDTIME* to',
+        # 'Type *ADDTIME* to',  # wrong regex: stars need escaping :-/
         'game will expire in',
         'has won the game',
         'discarded',
@@ -107,6 +107,10 @@ EVENTS = {
         'bought a development card',  # action a player can perform ; useful?
         # 'cards left.',  # number of cards left ; useful? NA says no
     ],
+    # 5: bugfix for gen4, incorrect regex for "Type *ADDTIME*"
+    5: [
+        'Type \*ADDTIME\* to',  # wrong regex: stars need escaping :-/
+    ]
 }
 
 # private messages: explicitly ignored
@@ -336,6 +340,12 @@ def guess_generation(event):
         Generation this event belongs to.
     """
     for gen_key, gen_events in EVENTS.items():
+        # 2017-03-21 ugly local fix to undo escaping of stars (MM);
+        # another solution would be to use re.escape() in the expression
+        # for SERVER_RE, but we are in a hurry and I am worried about
+        # potential side effects
+        gen_events = [x.replace('\*', '*') for x in gen_events]
+        # end ugly local fix
         if any(x in event for x in gen_events):
             gen = gen_key
             break
