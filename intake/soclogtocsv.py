@@ -109,7 +109,10 @@ EVENTS = {
     ],
     # 5: bugfix for gen4, incorrect regex for "Type *ADDTIME*"
     5: [
-        'Type \*ADDTIME\* to',  # wrong regex: stars need escaping :-/
+        r'Type \*ADDTIME\* to',  # (was expected in gen3 but bugged)
+        # Server messages after the end of game
+        'VP',  # enumeration of dev cards that increase VPs
+        r'rounds\, and took',  # duration of game
     ]
 }
 
@@ -219,6 +222,15 @@ EVENTS_GEN4 = {
         r"SOCResourceCount:game=[^|]+\|playerNumber=(?P<plnb>[0-9]+)\|count=(?P<res_cnt>[0-9]+)",
         ''
     )
+}
+
+# 5th gen: scores of each player (besides the winner)
+EVENTS_GEN5 = {
+    'player_scores': (
+        # one soclog msg contains the sequence of scores
+        r"SOCGameStats:game=[^|]+\|(?P<scores>\d+\|\d+\|\d+\|\d+)\|false\|false\|false\|false",
+        ''
+    ),
 }
 
 
@@ -344,7 +356,9 @@ def guess_generation(event):
         # another solution would be to use re.escape() in the expression
         # for SERVER_RE, but we are in a hurry and I am worried about
         # potential side effects
-        gen_events = [x.replace('\*', '*') for x in gen_events]
+        gen_events = [(x.replace(r'\*', '*')
+                       .replace(r'\,', ','))
+                      for x in gen_events]
         # end ugly local fix
         if any(x in event for x in gen_events):
             gen = gen_key
@@ -631,6 +645,47 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                     parsing_state['res_cnt'] = dict()
                 parsing_state['res_cnt'][pl_nb] = int(evt_fields['res_cnt'])
                 continue
+
+        # 2017-03-22 new message to display the score of each player
+        gen = 5
+        if sel_gen < gen:
+            return None
+
+        for k, evt_re_msg in EVENTS_GEN5.items():
+            evt_re, evt_msg = evt_re_msg  # unpack the event regex and msg
+            evt_re_obj = re.compile(evt_re)
+            evt_search = evt_re_obj.search(line)
+            if not evt_search:
+                continue
+
+            # get named groups from regex
+            evt_fields = evt_search.groupdict()
+            if k == 'player_scores':
+                pl_scores = evt_fields['scores'].split('|')
+                sorted_pl_names = [pl_name for pl_nb, pl_name in sorted(
+                    parsing_state['plnb2name'].items(),
+                    key=lambda kv: int(kv[0]))]
+                msg_fields = []
+                for pl_nb in sorted(parsing_state['plnb2name'].keys(),
+                                    key=int):
+                    msg_fields.append(
+                        '{pl_name} has {pl_sc} points.'.format(
+                            pl_name=parsing_state['plnb2name'][pl_nb],
+                            pl_sc=pl_scores[int(pl_nb)])
+                    )
+                msg = ' '.join(msg_fields)
+            # generate turn with the previously built message
+            # (simpler than for gen3 because it was simpler to directly
+            # build the final message)
+            ctr.incr_at_gen(gen)
+            return [
+                mk_turn(str(ctr),
+                        timestamp,
+                        'UI',  # custom emitter
+                        msg,
+                        state=None)
+            ]
+        # end gen5
 
         # last resort case
         return None
