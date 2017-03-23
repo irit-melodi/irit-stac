@@ -451,15 +451,23 @@ def parse_line(ctr, line, sel_gen=3, parsing_state=None):
                 # Server msg
                 ctr.incr_at_gen(gen)
                 res_cnt_vals = []
-                for pl_nb, pl_name in sorted(parsing_state['plnb2name'].items(),
-                                             key=lambda kv: int(kv[0])):
-                    pl_rescnt = parsing_state['res_cnt'][pl_nb]
-                    res_cnt_vals.append(
-                        '{pl_name} has {pl_rescnt} resource{s}.'.format(
-                            pl_name=pl_name, pl_rescnt=pl_rescnt,
-                            s=('' if pl_rescnt in (0, 1) else 's')
+                for pl_nb, pl_name in sorted(
+                        parsing_state['plnb2name'].items(),
+                        key=lambda kv: int(kv[0])):
+                    try:
+                        pl_rescnt = parsing_state['res_cnt'][pl_nb]
+                    except KeyError:
+                        # no resource count for missing player ;
+                        # useful when a distribution of resources happens
+                        # while a player is disconnected
+                        continue
+                    else:
+                        res_cnt_vals.append(
+                            '{pl_name} has {pl_rescnt} resource{s}.'.format(
+                                pl_name=pl_name, pl_rescnt=pl_rescnt,
+                                s=('' if pl_rescnt in (0, 1) else 's')
+                            )
                         )
-                    )
                 res_cnt_msg = ' '.join(res_cnt_vals)
                 res_cnt_turn = mk_turn(str(ctr),
                                        timestamp,
