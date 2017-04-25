@@ -38,7 +38,7 @@ import re
 import string
 import sys
 
-from educe.stac.util import csv as stac_csv
+from educe.stac.util import stac_csv_format as stac_csv
 
 # TODO write tests for these
 TEST1 = ("2011:10:10:17:46:57:481:+0100:GAME-TEXT-MESSAGE:"

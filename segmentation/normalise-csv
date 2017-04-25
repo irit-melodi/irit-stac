@@ -17,7 +17,7 @@ import os
 import os.path
 import sys
 
-import educe.stac.util.csv
+import educe.stac.util.stac_csv_format
 
 if len(sys.argv) == 3:
     filename_in  = sys.argv[1]
@@ -30,7 +30,7 @@ def normalise_file(filename_in, filename_out):
     with open(filename_in, 'rb') as infile:
         with open(filename_out, 'wb') as outfile:
             reader = csv.reader(infile,  delimiter='\t')
-            writer = educe.stac.util.csv.mk_plain_writer(outfile)
+            writer = educe.stac.util.stac_csv_format.mk_plain_writer(outfile)
             for row in reader:
                 writer.writerow(row)
 
