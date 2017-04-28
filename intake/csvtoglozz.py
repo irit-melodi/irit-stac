@@ -54,7 +54,7 @@ import sys
 import time
 
 from educe.stac.util.prettifyxml import prettify
-from educe.stac.util.csv import Turn
+from educe.stac.util.stac_csv_format import Turn
 
 
 class Span(namedtuple('Span', 'left right')):

@@ -12,7 +12,6 @@ import shutil
 import tempfile
 
 from attelo.harness.util import (makedirs, call, force_symlink)
-import sh
 
 from ..local import (CORENLP_SERVER_DIR, CORENLP_ADDRESS,
                      TAGGER_JAR, LEX_DIR,
@@ -288,8 +287,13 @@ def _copy_results(lconf, output_dir):
     # copy the svg graphs into single flat dir
     graphs_dir = fp.join(output_dir, "graphs")
     makedirs(graphs_dir)
-    svg_files = sh.find(minicorpus_path(lconf, result=True),
-                        "-name", "*.svg", _iter=True)
+    # svg_files = sh.find(minicorpus_path(lconf, result=True),
+    #                     "-name", "*.svg", _iter=True)
+    base_svg_dir = minicorpus_path(lconf, result=True)  # DEBUG
+    svg_files = [os.path.join(dirpath, fname)
+                 for dirpath, dirs, files in os.walk(base_svg_dir)
+                 for fname in (dirs + files)
+                 if fname.endswith('.svg')]
     for svg in (f.strip() for f in svg_files):
         svg2 = fp.join(graphs_dir,
                        fp.basename(fp.dirname(svg)) + ".svg")
