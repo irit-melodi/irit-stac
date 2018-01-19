@@ -420,6 +420,9 @@ def process_turn(root, dialoguetext, turn, is_player):
         turn_segments = [x for x in re.split('(?<![\\\])&', turn.rawtext)
                          if len(x) > 0]
         turn_segments = [x.replace('\&', '&') for x in turn_segments]
+    elif turn.emitter == 'UI' and turn.rawtext.startswith('... from'):
+        # 2nd part of trade offer: *do not* segment "[...] [from XXX]"
+        turn_segments = [turn.rawtext]  # unique segment
     else:
         pre_segments = [x for x in turn.rawtext.split('. ')]
         if pre_segments:
@@ -427,7 +430,6 @@ def process_turn(root, dialoguetext, turn, is_player):
             turn_segments.append(pre_segments[-1])
         else:
             turn_segments = pre_segments
-        turn_text = '. '.join(turn_segments)
 
     turn_text = ''.join(turn_segments)
     seg_spans = edu_spans(dialoguetext, turn_segments)
