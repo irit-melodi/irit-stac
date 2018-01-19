@@ -150,6 +150,9 @@ def fuse_segments(t,xs):
     time_left = r'(>>> Less than \d+ minutes remaining[\.])'
     # 2017-03-22 final scores
     final_scores = r'(.* has \d* points\.)'
+    # 2018-01-19 fix EDU segmentation for second part of trade offer:
+    # "... from gw4s"
+    dots_from = r'(\.\.\.)'  # useless because overridden in csvtoglozz
     # end gen5 messages
     interjections  = [ r'a+r*g*h+'
                      , 'bah'
@@ -167,7 +170,7 @@ def fuse_segments(t,xs):
 
     # should be fused with its right neighbour
     fusible_right = [resource_alloc, resource_count, interjection, time_left,
-                     final_scores]
+                     final_scores, dots_from]
     fusible_right_re = re.compile('|'.join(fusible_right), flags=re.IGNORECASE)
 
     if len(xs) < 2:

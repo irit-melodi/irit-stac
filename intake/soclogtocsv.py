@@ -113,6 +113,8 @@ EVENTS = {
         # Server messages after the end of game
         'VP',  # enumeration of dev cards that increase VPs
         r'rounds\, and took',  # duration of game
+        # 2017-01-18 time limit expired (3 occurrences, last line in soclog)
+        r'time limit on this game has expired and will now be',
     ]
 }
 
